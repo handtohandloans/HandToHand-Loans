@@ -4,7 +4,8 @@
 export function setCookie(name, value, days = 7) {
   if (typeof document === 'undefined') return;
   const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax; Secure`;
+  const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax${isSecure}`;
 }
 
 export function getCookie(name) {
@@ -89,10 +90,10 @@ export function cacheUserPreferences(theme, font) {
 
 export function getCachedUserTheme() {
   if (typeof window === 'undefined') return 'light';
-  return getCookie('h2h_theme') || (typeof localStorage !== 'undefined' ? localStorage.getItem('theme') : null) || 'light';
+  return (typeof localStorage !== 'undefined' ? localStorage.getItem('theme') : null) || getCookie('h2h_theme') || 'light';
 }
 
 export function getCachedUserFont() {
   if (typeof window === 'undefined') return 'Jakarta';
-  return getCookie('h2h_user_font') || (typeof localStorage !== 'undefined' ? localStorage.getItem('user-font') : null) || 'Jakarta';
+  return (typeof localStorage !== 'undefined' ? localStorage.getItem('user-font') : null) || getCookie('h2h_user_font') || 'Jakarta';
 }
