@@ -544,7 +544,9 @@ p {
   display: none;
 }
 
-/* Mobile Menu Hamburger Button (Rectangular Shape) */
+/* ==========================================================================
+   MOBILE MENU HAMBURGER BUTTON & RUNNING ANIMATION SYSTEM
+   ========================================================================== */
 .hamburger {
   display: none;
   flex-direction: column;
@@ -552,43 +554,147 @@ p {
   align-items: center;
   gap: 5px;
   cursor: pointer;
-  padding: 8px 10px;
-  width: 40px;
-  height: 40px;
+  padding: 8px;
+  width: 42px;
+  height: 42px;
+  position: relative;
   background: var(--color-bg-card, rgba(255, 255, 255, 0.08));
-  border: 1px solid var(--border-light, rgba(255, 255, 255, 0.15)) !important;
+  border: 1.5px solid var(--border-light, rgba(255, 255, 255, 0.18)) !important;
   border-radius: 8px !important; /* Rectangular shape */
-  box-shadow: var(--shadow-xs);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   z-index: calc(var(--z-overlay) + 20) !important;
-  transition: all var(--transition-base);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.3s ease,
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+  overflow: hidden;
+}
+
+/* Running Light Sheen Effect on Hamburger Border */
+.hamburger::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    var(--color-primary, #10b981) 25%,
+    #f59e0b 50%,
+    var(--color-primary, #10b981) 75%,
+    transparent 100%
+  );
+  opacity: 0.45;
+  animation: hamburgerRunningBorder 3.5s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Inner overlay container to maintain button background */
+.hamburger::after {
+  content: '';
+  position: absolute;
+  inset: 1.5px;
+  background: var(--color-bg-card, rgba(15, 23, 42, 0.88));
+  border-radius: 6.5px;
+  z-index: 1;
+  transition: background 0.3s ease;
+}
+
+[data-theme='light'] .hamburger::after {
+  background: #ffffff !important;
+}
+
+.hamburger:hover {
+  transform: scale(1.06);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+}
+
+.hamburger:active {
+  transform: scale(0.93);
 }
 
 .hamburger span {
+  position: relative;
+  z-index: 2;
   width: 22px;
-  height: 2px;
-  background: var(--color-text-primary);
-  border-radius: 2px !important; /* Rectangular bars */
-  transition: all var(--transition-base);
+  height: 2.5px;
+  background: var(--color-primary, #10b981);
+  border-radius: 3px !important;
+  transition: transform 0.35s cubic-bezier(0.68, -0.6, 0.32, 1.6),
+              opacity 0.25s ease,
+              background 0.3s ease,
+              width 0.3s ease;
+  transform-origin: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='light'] .hamburger span {
+  background: var(--color-primary, #0b3c11);
+}
+
+/* Hamburger Running Bar Micro-Pulse */
+.hamburger:not(.active) span:nth-child(1) {
+  animation: runningBarPulse 2.8s ease-in-out infinite;
+}
+
+.hamburger:not(.active) span:nth-child(2) {
+  animation: runningBarPulse 2.8s ease-in-out 0.4s infinite;
+  width: 17px;
+}
+
+.hamburger:not(.active) span:nth-child(3) {
+  animation: runningBarPulse 2.8s ease-in-out 0.8s infinite;
+}
+
+/* ACTIVE STATE (Smooth spring morph into 'X') */
+.hamburger.active {
+  border-color: var(--color-primary, #10b981) !important;
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.5) !important;
+}
+
+.hamburger.active::before {
+  opacity: 0.85;
+  animation-duration: 1.8s; /* Accelerated running light when active */
 }
 
 .hamburger.active span:nth-child(1) {
-  transform: rotate(45deg) translate(5px, 5px);
+  transform: translateY(7.5px) rotate(45deg);
+  width: 22px;
+  background: #ef4444 !important; /* Vivid Red close cross indicator */
 }
 
 .hamburger.active span:nth-child(2) {
   opacity: 0;
+  transform: translateX(-16px) scaleX(0);
 }
 
 .hamburger.active span:nth-child(3) {
-  transform: rotate(-45deg) translate(5px, -5px);
+  transform: translateY(-7.5px) rotate(-45deg);
+  width: 22px;
+  background: #ef4444 !important;
 }
 
-@keyframes pulseGlow {
+/* RUNNING ANIMATIONS KEYFRAMES */
+@keyframes hamburgerRunningBorder {
   0% {
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.5), 0 0 15px rgba(217, 119, 6, 0.3);
+    transform: rotate(0deg);
   }
   100% {
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.8), 0 0 25px rgba(217, 119, 6, 0.5);
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes runningBarPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 0px transparent);
+    opacity: 0.85;
+  }
+  50% {
+    filter: drop-shadow(0 0 4px var(--color-primary, #10b981));
+    opacity: 1;
   }
 }
 
@@ -650,6 +756,34 @@ p {
   visibility: visible !important;
   transform: translateX(0) !important;
   gap: 16px;
+}
+
+/* Staggered entrance animation for mobile menu items */
+.mobile-menu.open .nav-link,
+.mobile-menu.open .mobile-profile-card,
+.mobile-menu.open .mobile-menu-theme-row {
+  animation: mobileLinkSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.mobile-menu.open > *:nth-child(1) { animation-delay: 0.04s; }
+.mobile-menu.open > *:nth-child(2) { animation-delay: 0.08s; }
+.mobile-menu.open > *:nth-child(3) { animation-delay: 0.12s; }
+.mobile-menu.open > *:nth-child(4) { animation-delay: 0.16s; }
+.mobile-menu.open > *:nth-child(5) { animation-delay: 0.20s; }
+.mobile-menu.open > *:nth-child(6) { animation-delay: 0.24s; }
+.mobile-menu.open > *:nth-child(7) { animation-delay: 0.28s; }
+.mobile-menu.open > *:nth-child(8) { animation-delay: 0.32s; }
+.mobile-menu.open > *:nth-child(9) { animation-delay: 0.36s; }
+
+@keyframes mobileLinkSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* Rectangular structured menu links for mobile drawer */
