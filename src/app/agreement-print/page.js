@@ -125,6 +125,44 @@ export default function AgreementPrintPage() {
         prof.bank_ifsc ? `IFSC: ${prof.bank_ifsc}` : '',
       ].filter(Boolean).join(' | ') || 'N/A';
 
+      // ---- 4b. Load & Embed Agent Live Selfie (if available) ----
+      let selfieImg = null;
+      if (prof.selfie) {
+        try {
+          let selfieBytes;
+          let isPng = false;
+          if (prof.selfie.startsWith('data:')) {
+            selfieBytes = dataUriToBytes(prof.selfie);
+            isPng = prof.selfie.includes('image/png');
+          } else if (prof.selfie.startsWith('http://') || prof.selfie.startsWith('https://')) {
+            selfieBytes = await fetchImageBytes(prof.selfie);
+            isPng = prof.selfie.toLowerCase().includes('.png');
+          } else {
+            const { data: { session } } = await supabase.auth.getSession();
+            const signedRes = await fetch(`/api/admin/document-url?path=${encodeURIComponent(prof.selfie)}`, {
+              headers: session ? { 'Authorization': `Bearer ${session.access_token}` } : {}
+            });
+            if (signedRes.ok) {
+              const signedJson = await signedRes.json();
+              if (signedJson.signedUrl) {
+                selfieBytes = await fetchImageBytes(signedJson.signedUrl);
+                isPng = prof.selfie.toLowerCase().includes('.png');
+              }
+            }
+          }
+
+          if (selfieBytes) {
+            if (isPng) {
+              selfieImg = await pdfDoc.embedPng(selfieBytes);
+            } else {
+              selfieImg = await pdfDoc.embedJpg(selfieBytes);
+            }
+          }
+        } catch (err) {
+          console.warn('Failed to embed live selfie image in agreement:', err);
+        }
+      }
+
       // ---- 5. Overlay agent details on Page 2 ----
       // Clear placeholders helper with exact vertical centering
       const clearRowOnPage2 = (yCenter) => {
@@ -181,6 +219,52 @@ export default function AgreementPrintPage() {
       clearRowOnPage2(160.8);
       page2.drawText(joiningDateTime, { x: 222.2, y: 160.8, size: 11, font: timesNormal, color: darkText });
 
+      // Overlay Live Selfie on Page 2 (top-right passport frame)
+      if (selfieImg) {
+        try {
+          const sBoxX = 445;
+          const sBoxY = 540;
+          const sBoxW = 85;
+          const sBoxH = 105;
+
+          page2.drawRectangle({
+            x: sBoxX,
+            y: sBoxY,
+            width: sBoxW,
+            height: sBoxH,
+            color: lightGreen,
+            borderColor: borderGreen,
+            borderWidth: 1,
+          });
+
+          const sDims = selfieImg.scaleToFit(sBoxW - 6, sBoxH - 22);
+          page2.drawImage(selfieImg, {
+            x: sBoxX + (sBoxW - sDims.width) / 2,
+            y: sBoxY + 18 + (sBoxH - 22 - sDims.height) / 2,
+            width: sDims.width,
+            height: sDims.height,
+          });
+
+          page2.drawRectangle({
+            x: sBoxX,
+            y: sBoxY,
+            width: sBoxW,
+            height: 16,
+            color: green,
+          });
+
+          page2.drawText('VERIFIED SELFIE', {
+            x: sBoxX + 6,
+            y: sBoxY + 4,
+            size: 6.5,
+            font: timesBold,
+            color: rgb(1, 1, 1),
+          });
+        } catch (e) {
+          console.warn('Page 2 selfie overlay failed:', e);
+        }
+      }
+
 
       // ---- 6. Overlay agent signature & details on Page 11 ----
       // Clear Agent Name placeholder on page 11 (original label 'Agent Name' at y=524.7)
@@ -217,6 +301,52 @@ export default function AgreementPrintPage() {
         } catch (e) {
           console.warn('Signature embed failed:', e);
           page11.drawText('[Signature]', { x: 65, y: 590, size: 10, font: timesItalic, color: midText });
+        }
+      }
+
+      // Overlay Live Selfie on Page 11 (centered between Signature & QR Code)
+      if (selfieImg) {
+        try {
+          const s11X = 245;
+          const s11Y = 560;
+          const s11W = 105;
+          const s11H = 135;
+
+          page11.drawRectangle({
+            x: s11X,
+            y: s11Y,
+            width: s11W,
+            height: s11H,
+            color: lightGreen,
+            borderColor: borderGreen,
+            borderWidth: 1,
+          });
+
+          const s11Dims = selfieImg.scaleToFit(s11W - 8, s11H - 24);
+          page11.drawImage(selfieImg, {
+            x: s11X + (s11W - s11Dims.width) / 2,
+            y: s11Y + 4 + (s11H - 24 - s11Dims.height) / 2,
+            width: s11Dims.width,
+            height: s11Dims.height,
+          });
+
+          page11.drawRectangle({
+            x: s11X,
+            y: s11Y + s11H - 16,
+            width: s11W,
+            height: 16,
+            color: green,
+          });
+
+          page11.drawText('VERIFIED LIVE SELFIE', {
+            x: s11X + 10,
+            y: s11Y + s11H - 12,
+            size: 7,
+            font: timesBold,
+            color: rgb(1, 1, 1),
+          });
+        } catch (e) {
+          console.warn('Page 11 selfie overlay failed:', e);
         }
       }
 
