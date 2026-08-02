@@ -12,25 +12,7 @@ export default function AgreementPrintPage() {
   const [agreement, setAgreement] = useState(null);
   const [error, setError] = useState('');
   const [pdfUrl, setPdfUrl] = useState('');
-  const [clientIp, setClientIp] = useState('');
   const iframeRef = useRef(null);
-
-  useEffect(() => {
-    async function fetchIp() {
-      try {
-        const res = await fetch('https://api.ipify.org?format=json');
-        const json = await res.json();
-        if (json?.ip) setClientIp(json.ip);
-      } catch (e) {
-        try {
-          const res2 = await fetch('https://api.db-ip.com/v2/free/self');
-          const json2 = await res2.json();
-          if (json2?.ipAddress) setClientIp(json2.ipAddress);
-        } catch (err) {}
-      }
-    }
-    fetchIp();
-  }, []);
 
   // Helper: convert base64 data URI to Uint8Array
   function dataUriToBytes(dataUri) {
@@ -328,8 +310,8 @@ export default function AgreementPrintPage() {
       // Draw Date next to the label 'Date:' at y=497.9 (no placeholder needs clearing)
       page11.drawText(signedDateTime, { x: 98.0, y: 497.9, size: 11, font: timesNormal, color: darkText });
 
-      // Draw Agent Device IP Address just below Date & Time for authenticity & security
-      const displayIp = agr.ip_address || agr.agent_ip || agr.device_ip || prof.ip_address || clientIp || '103.217.158.42';
+      // Draw Agent Device IP Address strictly from DB signature record for authenticity & security
+      const displayIp = agr.ip_address || agr.agent_ip || agr.device_ip || prof.ip_address || 'N/A';
       page11.drawText(`Device IP: ${displayIp} (Verified)`, { x: 65.1, y: 483.5, size: 9.5, font: timesBold, color: darkText });
 
       // Embed agent signature image

@@ -4062,7 +4062,19 @@ export default function UserDashboard() {
                                       const ipRes = await fetch('https://api.ipify.org?format=json');
                                       const ipData = await ipRes.json();
                                       if (ipData?.ip) deviceIp = ipData.ip;
-                                    } catch (e) {}
+                                    } catch (e) {
+                                      try {
+                                        const res2 = await fetch('https://api.db-ip.com/v2/free/self');
+                                        const json2 = await res2.json();
+                                        if (json2?.ipAddress) deviceIp = json2.ipAddress;
+                                      } catch (e2) {
+                                        try {
+                                          const res3 = await fetch('https://ipapi.co/json/');
+                                          const json3 = await res3.json();
+                                          if (json3?.ip) deviceIp = json3.ip;
+                                        } catch (e3) {}
+                                      }
+                                    }
                                     
                                     const { data, error } = await supabase
                                       .from('agent_agreements')
