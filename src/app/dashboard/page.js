@@ -4056,6 +4056,13 @@ export default function UserDashboard() {
                                     const codeNo = profile.agent_code || '';
                                     const formattedCode = codeNo.replace('H2H-', '');
                                     const agreementNo = `H2H-DSA-${formattedCode || Math.floor(10000 + Math.random() * 90000)}`;
+
+                                    let deviceIp = '';
+                                    try {
+                                      const ipRes = await fetch('https://api.ipify.org?format=json');
+                                      const ipData = await ipRes.json();
+                                      if (ipData?.ip) deviceIp = ipData.ip;
+                                    } catch (e) {}
                                     
                                     const { data, error } = await supabase
                                       .from('agent_agreements')
@@ -4063,7 +4070,8 @@ export default function UserDashboard() {
                                         agent_id: profile.id,
                                         agreement_no: agreementNo,
                                         signature_base64: signatureFile,
-                                        status: 'pending'
+                                        status: 'pending',
+                                        ip_address: deviceIp
                                       })
                                       .select()
                                       .single();
