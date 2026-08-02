@@ -62,23 +62,6 @@ export default function FloatingThemeWidget() {
 
     window.addEventListener('h2h-theme-change', handleSync);
 
-    // MutationObserver to protect data-theme from being reset by external scripts or hydration
-    let observer;
-    try {
-      observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.attributeName === 'data-theme') {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const targetTheme = getCachedUserTheme();
-            if (currentTheme !== targetTheme) {
-              document.documentElement.setAttribute('data-theme', targetTheme);
-            }
-          }
-        });
-      });
-      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    } catch (e) {}
-
     const handleClickOutside = (event) => {
       if (widgetRef.current && !widgetRef.current.contains(event.target)) {
         setIsOpen(false);
@@ -88,7 +71,6 @@ export default function FloatingThemeWidget() {
 
     return () => {
       window.removeEventListener('h2h-theme-change', handleSync);
-      if (observer) observer.disconnect();
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
