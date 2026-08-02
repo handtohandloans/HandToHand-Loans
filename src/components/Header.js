@@ -1012,22 +1012,20 @@ export default function Header() {
           </Link>
         )}
         {/* 1. Home */}
-        <Link href="/" className={`nav-link ${isLinkActive('/') ? 'active' : ''}`} onClick={closeMenu}>
+        <Link href="/" className={`btn btn-primary btn-sm header-btn-primary nav-link ${isLinkActive('/') ? 'active' : ''}`} onClick={closeMenu}>
           Home
         </Link>
         
         {/* 2. Check Eligibility (Dark Button) */}
         <Link 
           href="/check" 
-          className="nav-link" 
+          className={`btn btn-sm header-btn-dark nav-link ${isLinkActive('/check') ? 'active' : ''}`} 
           style={{ 
-            background: 'var(--color-primary)', 
-            color: 'var(--color-btn-primary-text)', 
             borderRadius: '8px', 
             fontWeight: 700, 
-            margin: '4px 0',
             textAlign: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            width: '100%'
           }} 
           onClick={closeMenu}
         >
@@ -1035,10 +1033,10 @@ export default function Header() {
         </Link>
 
         {/* 3. Mobile Loans Accordion */}
-        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '4px 0', width: '100%' }}>
+        <div style={{ padding: '2px 0', width: '100%' }}>
           <button
             onClick={() => setMobileLoansOpen(!mobileLoansOpen)}
-            className="nav-link"
+            className={`btn btn-primary btn-sm header-btn-primary nav-link ${mobileLoansOpen ? 'active' : ''}`}
             style={{ justifyContent: 'space-between', cursor: 'pointer', width: '100%' }}
           >
             <span>Loans</span>
@@ -1048,14 +1046,14 @@ export default function Header() {
           </button>
           
           {mobileLoansOpen && (
-            <div style={{ display: 'flex', flexDirection: 'column', background: 'none', padding: '4px 0 4px 12px' }}>
-              <Link href="/banks/instant" className="mobile-dropdown-item" onClick={closeMenu}>
+            <div style={{ display: 'flex', flexDirection: 'column', background: 'none', padding: '6px 0 6px 10px', gap: '6px' }}>
+              <Link href="/banks/instant" className="mobile-dropdown-item btn btn-sm" onClick={closeMenu}>
                 ⚡ Instant Loan
               </Link>
-              <Link href="/banks/business" className="mobile-dropdown-item" onClick={closeMenu}>
+              <Link href="/banks/business" className="mobile-dropdown-item btn btn-sm" onClick={closeMenu}>
                 🏢 Business Loan
               </Link>
-              <Link href="/banks/salary" className="mobile-dropdown-item" onClick={closeMenu}>
+              <Link href="/banks/salary" className="mobile-dropdown-item btn btn-sm" onClick={closeMenu}>
                 💼 Salary Loan
               </Link>
             </div>
@@ -1063,10 +1061,10 @@ export default function Header() {
         </div>
 
         {/* 4. Our Services Accordion */}
-        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '4px 0', width: '100%' }}>
+        <div style={{ padding: '2px 0', width: '100%' }}>
           <button
             onClick={() => setMobileServicesOpen(!mobileServicesOpen)}
-            className="nav-link"
+            className={`btn btn-primary btn-sm header-btn-primary nav-link ${mobileServicesOpen ? 'active' : ''}`}
             style={{
               justifyContent: 'space-between',
               cursor: 'pointer',
@@ -1084,16 +1082,17 @@ export default function Header() {
               display: 'flex', 
               flexDirection: 'column', 
               background: 'none',
-              padding: '4px 0 4px 12px'
+              padding: '6px 0 6px 10px',
+              gap: '6px'
             }}>
               {OUR_SERVICES_ITEMS.map((service, idx) => (
-                <Link key={idx} href={service.href} className="mobile-dropdown-item" onClick={closeMenu}>
+                <Link key={idx} href={service.href} className="mobile-dropdown-item btn btn-sm" onClick={closeMenu}>
                   {service.name}
                 </Link>
               ))}
               <Link
                 href="/services"
-                className="mobile-dropdown-item"
+                className="mobile-dropdown-item btn btn-sm"
                 onClick={closeMenu}
                 style={{ color: 'var(--color-primary)', fontWeight: 800, borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '4px', paddingTop: '6px' }}
               >
@@ -1104,10 +1103,10 @@ export default function Header() {
         </div>
 
         {/* 5. Mobile EMI Calculator Dropdown */}
-        <div style={{ width: '100%' }}>
+        <div style={{ width: '100%', padding: '2px 0' }}>
           <button
             onClick={() => setMobileEmiOpen(!mobileEmiOpen)}
-            className="nav-link"
+            className={`btn btn-primary btn-sm header-btn-primary nav-link ${mobileEmiOpen ? 'active' : ''}`}
             style={{
               justifyContent: 'space-between',
               cursor: 'pointer',
@@ -1125,21 +1124,22 @@ export default function Header() {
               display: 'flex', 
               flexDirection: 'column', 
               background: 'none',
-              padding: '4px 0 4px 12px'
+              padding: '6px 0 6px 10px',
+              gap: '6px'
             }}>
-              <Link href="/emi-calculator" className="mobile-dropdown-item" onClick={closeMenu} style={{ fontWeight: 700 }}>
+              <Link href="/emi-calculator" className="mobile-dropdown-item btn btn-sm" onClick={closeMenu} style={{ fontWeight: 700 }}>
                 All Types EMI Calculator
               </Link>
-              <Link href="/personal-loan-emi-calculator" className="mobile-dropdown-item" onClick={closeMenu}>
+              <Link href="/personal-loan-emi-calculator" className="mobile-dropdown-item btn btn-sm" onClick={closeMenu}>
                 Personal Loan EMI
               </Link>
-              <Link href="/home-loan-emi-calculator" className="mobile-dropdown-item" onClick={closeMenu}>
+              <Link href="/home-loan-emi-calculator" className="mobile-dropdown-item btn btn-sm" onClick={closeMenu}>
                 Home Loan EMI
               </Link>
-              <Link href="/business-loan-emi-calculator" className="mobile-dropdown-item" onClick={closeMenu}>
+              <Link href="/business-loan-emi-calculator" className="mobile-dropdown-item btn btn-sm" onClick={closeMenu}>
                 Business Loan EMI
               </Link>
-              <Link href="/calculators" className="mobile-dropdown-item" onClick={closeMenu} style={{ color: 'var(--color-primary)', fontWeight: 700 }}>
+              <Link href="/calculators" className="mobile-dropdown-item btn btn-sm" onClick={closeMenu} style={{ color: 'var(--color-primary)', fontWeight: 700 }}>
                 More Calculators ➔
               </Link>
             </div>
@@ -1149,7 +1149,7 @@ export default function Header() {
         {/* 6. CIBIL */}
         <Link
           href="/cibil"
-          className={`nav-link ${isLinkActive('/cibil') ? 'active' : ''}`}
+          className={`btn btn-primary btn-sm header-btn-primary nav-link ${isLinkActive('/cibil') ? 'active' : ''}`}
           onClick={closeMenu}
         >
           CIBIL
@@ -1158,7 +1158,7 @@ export default function Header() {
         {/* 7. Blogs */}
         <Link
           href="/blog"
-          className={`nav-link ${isLinkActive('/blog') ? 'active' : ''}`}
+          className={`btn btn-primary btn-sm header-btn-primary nav-link ${isLinkActive('/blog') ? 'active' : ''}`}
           onClick={closeMenu}
         >
           Blogs
@@ -1167,25 +1167,30 @@ export default function Header() {
         {/* 8. Verify Agent */}
         <Link
           href="/verify-agreement"
-          className={`nav-link ${isLinkActive('/verify-agreement') ? 'active' : ''}`}
+          className={`btn btn-primary btn-sm header-btn-primary nav-link ${isLinkActive('/verify-agreement') ? 'active' : ''}`}
           onClick={closeMenu}
         >
           Verify Agent
         </Link>
 
-        {/* Become a Partner */}
+        {/* 9. Become a Partner */}
         <Link
           href="/become-a-partner"
-          className={`nav-link ${isLinkActive('/become-a-partner') ? 'active' : ''}`}
-          style={{ color: 'var(--color-primary)', fontWeight: 700 }}
+          className={`btn btn-primary btn-sm header-btn-primary nav-link ${isLinkActive('/become-a-partner') ? 'active' : ''}`}
+          style={{
+            background: 'var(--color-primary-light)',
+            border: '1px solid var(--color-primary)',
+            color: 'var(--color-primary)',
+            fontWeight: 700
+          }}
           onClick={closeMenu}
         >
           Become a Partner
         </Link>
 
-        {/* Sign In Button (only when logged out) */}
+        {/* 10. Sign In Button (only when logged out) */}
         {!user && (
-          <Link href="/login" className="nav-link nav-cta" style={{ width: '100%' }} onClick={closeMenu}>
+          <Link href="/login" className="btn btn-primary btn-sm header-btn-primary nav-link nav-cta" style={{ width: '100%', textAlign: 'center', justifyContent: 'center' }} onClick={closeMenu}>
             Sign In
           </Link>
         )}
