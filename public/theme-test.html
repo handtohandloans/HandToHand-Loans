@@ -1,0 +1,23 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<style>
+:root { --bg-base: #061508; --color-bg-primary: var(--bg-base); }
+:root[data-theme='navy'], [data-theme='navy'] { --bg-base: #070f1e; --color-bg-primary: var(--bg-base); }
+:root[data-theme='light'], [data-theme='light'] { --bg-base: #FAF7EC; --color-bg-primary: var(--bg-base); }
+body { background: var(--color-bg-primary); }
+</style>
+</head>
+<body>
+<script>
+  var t = document.documentElement.getAttribute('data-theme');
+  var bg = getComputedStyle(document.documentElement).getPropertyValue('--bg-base').trim();
+  document.body.innerHTML = '<h1>theme=' + t + ' bg-base=' + bg + '</h1>';
+  document.documentElement.setAttribute('data-theme', 'navy');
+  setTimeout(function(){
+    var bg2 = getComputedStyle(document.documentElement).getPropertyValue('--bg-base').trim();
+    document.body.innerHTML += '<h1>after navy: bg-base=' + bg2 + ' body-bg=' + getComputedStyle(document.body).backgroundColor + '</h1>';
+  }, 100);
+</script>
+</body>
+</html>

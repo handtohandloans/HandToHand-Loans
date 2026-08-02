@@ -1,242 +1,270 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { usePathname } from 'next/navigation';
-import { cacheUserPreferences, getCachedUserTheme, getCachedUserFont, applyThemeCSS } from '@/lib/cookieCache';
 
 const THEMES = [
-  { id: 'light', name: 'Warm Cream', desc: 'Ivory & Forest Emerald', accent: '#0B3C11', bg: '#FAF7EC' },
-  { id: 'dark', name: 'Deep Forest', desc: 'Dark Night Emerald', accent: '#1cb239', bg: '#061508' },
-  { id: 'navy', name: 'Royal Navy', desc: 'Corporate Blue & Gold', accent: '#f59e0b', bg: '#0a192f' },
-  { id: 'cyber', name: 'Cyberpunk', desc: 'Midnight & Neon Cyan', accent: '#06b6d4', bg: '#080c14' },
-  { id: 'rose', name: 'Rose Luxury', desc: 'Deep Velvet & Blush', accent: '#fb7185', bg: '#18091e' },
-  { id: 'slate', name: 'Nordic Slate', desc: 'Steel Slate & Sapphire', accent: '#3b82f6', bg: '#0f172a' },
-  { id: 'emerald-gold', name: 'Royal Gold', desc: 'Emerald & Metallic Gold', accent: '#eab308', bg: '#022c22' },
-  { id: 'sunset', name: 'Terracotta', desc: 'Warm Earth & Sand', accent: '#ea580c', bg: '#1c100b' },
+  { id: 'light',        name: 'Warm Cream',    desc: 'Ivory & Forest Emerald', accent: '#0B3C11', bg: '#FAF7EC' },
+  { id: 'dark',         name: 'Deep Forest',   desc: 'Dark Night Emerald',     accent: '#1cb239', bg: '#061508' },
+  { id: 'navy',         name: 'Royal Navy',    desc: 'Corporate Blue & Gold',  accent: '#f59e0b', bg: '#070f1e' },
+  { id: 'cyber',        name: 'Cyberpunk',     desc: 'Midnight & Neon Cyan',   accent: '#06b6d4', bg: '#080c14' },
+  { id: 'rose',         name: 'Rose Luxury',   desc: 'Deep Velvet & Blush',    accent: '#fb7185', bg: '#18091e' },
+  { id: 'slate',        name: 'Nordic Slate',  desc: 'Steel Slate & Sapphire', accent: '#3b82f6', bg: '#0f172a' },
+  { id: 'emerald-gold', name: 'Royal Gold',    desc: 'Emerald & Metallic Gold',accent: '#eab308', bg: '#022c22' },
+  { id: 'sunset',       name: 'Terracotta',    desc: 'Warm Earth & Sand',      accent: '#ea580c', bg: '#1c100b' },
 ];
 
 const FONTS = [
-  { id: 'Jakarta', name: 'Plus Jakarta Sans', fontClass: 'font-jakarta', preview: 'Modern & Clean' },
-  { id: 'Inter', name: 'Inter', fontClass: 'font-inter', preview: 'Minimalist & Crisp' },
-  { id: 'Poppins', name: 'Poppins', fontClass: 'font-poppins', preview: 'Friendly & Rounded' },
-  { id: 'Outfit', name: 'Outfit', fontClass: 'font-outfit', preview: 'Bold & Geometric' },
-  { id: 'Roboto', name: 'Roboto', fontClass: 'font-roboto', preview: 'Corporate & Universal' },
-  { id: 'Raleway', name: 'Raleway', fontClass: 'font-raleway', preview: 'Elegant & Ultra-Modern' },
-  { id: 'Montserrat', name: 'Montserrat', fontClass: 'font-montserrat', preview: 'Premium Geometric' },
-  { id: 'Lora', name: 'Lora', fontClass: 'font-lora', preview: 'Classic Serif' },
-  { id: 'Playfair', name: 'Playfair Display', fontClass: 'font-playfair', preview: 'Luxury Serif' },
-  { id: 'Merriweather', name: 'Merriweather', fontClass: 'font-merriweather', preview: 'Editorial Serif' },
-  { id: 'JetBrains', name: 'JetBrains Mono', fontClass: 'font-jetbrains', preview: 'Technical Code' },
-  { id: 'SpaceMono', name: 'Space Mono', fontClass: 'font-spacemono', preview: 'Futuristic Tech' },
+  { id: 'Jakarta',    name: 'Plus Jakarta Sans',  preview: 'Modern & Clean'       },
+  { id: 'Inter',      name: 'Inter',              preview: 'Minimalist & Crisp'   },
+  { id: 'Poppins',    name: 'Poppins',            preview: 'Friendly & Rounded'   },
+  { id: 'Outfit',     name: 'Outfit',             preview: 'Bold & Geometric'     },
+  { id: 'Roboto',     name: 'Roboto',             preview: 'Corporate & Universal' },
+  { id: 'Raleway',    name: 'Raleway',            preview: 'Elegant & Ultra-Modern'},
+  { id: 'Montserrat', name: 'Montserrat',         preview: 'Premium Geometric'    },
+  { id: 'Lora',       name: 'Lora',               preview: 'Classic Serif'        },
+  { id: 'Playfair',   name: 'Playfair Display',   preview: 'Luxury Serif'         },
+  { id: 'Merriweather',name:'Merriweather',       preview: 'Editorial Serif'      },
+  { id: 'JetBrains',  name: 'JetBrains Mono',     preview: 'Technical Code'       },
+  { id: 'SpaceMono',  name: 'Space Mono',         preview: 'Futuristic Tech'      },
 ];
 
+const FONT_MAP = {
+  Inter:       'Inter, sans-serif',
+  Poppins:     'Poppins, sans-serif',
+  Outfit:      'Outfit, sans-serif',
+  Lora:        'Lora, serif',
+  Playfair:    '"Playfair Display", serif',
+  JetBrains:   '"JetBrains Mono", monospace',
+  Roboto:      'Roboto, sans-serif',
+  Raleway:     'Raleway, sans-serif',
+  Montserrat:  'Montserrat, sans-serif',
+  Merriweather:'Merriweather, serif',
+  SpaceMono:   '"Space Mono", monospace',
+};
+
+const VALID_THEMES = ['light','dark','navy','cyber','rose','slate','emerald-gold','sunset'];
+
+function getSavedTheme() {
+  try { return localStorage.getItem('h2h-theme') || 'light'; } catch { return 'light'; }
+}
+
+function getSavedFont() {
+  try { return localStorage.getItem('h2h-font') || 'Jakarta'; } catch { return 'Jakarta'; }
+}
+
+function applyTheme(themeId) {
+  const t = VALID_THEMES.includes(themeId) ? themeId : 'light';
+  document.documentElement.setAttribute('data-theme', t);
+  try { localStorage.setItem('h2h-theme', t); } catch {}
+  // Also set cookie for SSR
+  try {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 1);
+    document.cookie = `h2h_theme=${encodeURIComponent(t)}; expires=${d.toUTCString()}; path=/; SameSite=Lax`;
+  } catch {}
+}
+
+function applyFont(fontId) {
+  const fontVal = FONT_MAP[fontId] || 'var(--font-inter), "Plus Jakarta Sans", sans-serif';
+  document.documentElement.style.setProperty('--font-body', fontVal);
+  document.documentElement.style.setProperty('--font-heading', fontVal);
+  try { localStorage.setItem('h2h-font', fontId); } catch {}
+}
+
 export default function FloatingThemeWidget() {
-  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [theme, setTheme] = useState('light');
-  const [activeFont, setActiveFont] = useState('Jakarta');
+  const [font, setFont] = useState('Jakarta');
   const [mounted, setMounted] = useState(false);
   const widgetRef = useRef(null);
 
-  // Sync theme and font on route changes and component mount
+  // On mount, read saved preferences and apply them
   useEffect(() => {
-    setMounted(true);
-    const savedTheme = getCachedUserTheme();
-    const savedFont = getCachedUserFont();
+    const savedTheme = getSavedTheme();
+    const savedFont = getSavedFont();
     setTheme(savedTheme);
-    setActiveFont(savedFont);
-    applyThemeCSS(savedTheme);
+    setFont(savedFont);
+    applyTheme(savedTheme);
     applyFont(savedFont);
-  }, [pathname]);
-
-  // Global event listener for real-time synchronization
-  useEffect(() => {
-    const handleSync = () => {
-      const savedTheme = getCachedUserTheme();
-      const savedFont = getCachedUserFont();
-      setTheme(savedTheme);
-      setActiveFont(savedFont);
-      applyThemeCSS(savedTheme);
-      applyFont(savedFont);
-    };
-
-    window.addEventListener('h2h-theme-change', handleSync);
-
-    const handleClickOutside = (event) => {
-      if (widgetRef.current && !widgetRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      window.removeEventListener('h2h-theme-change', handleSync);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    setMounted(true);
   }, []);
 
-  const applyFont = (fontId) => {
-    let fontBody = '';
-    let fontHeading = '';
-    if (fontId === 'Inter') {
-      fontBody = 'Inter, sans-serif';
-      fontHeading = 'Inter, sans-serif';
-    } else if (fontId === 'Poppins') {
-      fontBody = 'Poppins, sans-serif';
-      fontHeading = 'Poppins, sans-serif';
-    } else if (fontId === 'Outfit') {
-      fontBody = 'Outfit, sans-serif';
-      fontHeading = 'Outfit, sans-serif';
-    } else if (fontId === 'Lora') {
-      fontBody = 'Lora, serif';
-      fontHeading = 'Lora, serif';
-    } else if (fontId === 'Playfair') {
-      fontBody = '"Playfair Display", serif';
-      fontHeading = '"Playfair Display", serif';
-    } else if (fontId === 'JetBrains') {
-      fontBody = '"JetBrains Mono", monospace';
-      fontHeading = '"JetBrains Mono", monospace';
-    } else if (fontId === 'Roboto') {
-      fontBody = 'Roboto, sans-serif';
-      fontHeading = 'Roboto, sans-serif';
-    } else if (fontId === 'Raleway') {
-      fontBody = 'Raleway, sans-serif';
-      fontHeading = 'Raleway, sans-serif';
-    } else if (fontId === 'Montserrat') {
-      fontBody = 'Montserrat, sans-serif';
-      fontHeading = 'Montserrat, sans-serif';
-    } else if (fontId === 'Merriweather') {
-      fontBody = 'Merriweather, serif';
-      fontHeading = 'Merriweather, serif';
-    } else if (fontId === 'SpaceMono') {
-      fontBody = '"Space Mono", monospace';
-      fontHeading = '"Space Mono", monospace';
-    } else {
-      fontBody = 'var(--font-inter), "Plus Jakarta Sans", sans-serif';
-      fontHeading = 'var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif';
+  // Close panel when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (widgetRef.current && !widgetRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
     }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-    document.documentElement.style.setProperty('--font-body', fontBody);
-    document.documentElement.style.setProperty('--font-heading', fontHeading);
-  };
+  function handleThemeClick(themeId) {
+    setTheme(themeId);
+    applyTheme(themeId);
+  }
 
-  const handleThemeChange = (newTheme) => {
-    setTheme(newTheme);
-    cacheUserPreferences(newTheme, activeFont);
-    document.documentElement.setAttribute('data-theme', newTheme);
-    if (typeof window !== 'undefined') window.dispatchEvent(new Event('h2h-theme-change'));
-  };
-
-  const handleFontChange = (fontId) => {
-    setActiveFont(fontId);
-    cacheUserPreferences(theme, fontId);
+  function handleFontClick(fontId) {
+    setFont(fontId);
     applyFont(fontId);
-    if (typeof window !== 'undefined') window.dispatchEvent(new Event('h2h-theme-change'));
-  };
+  }
 
   if (!mounted) return null;
 
   return (
-    <div className="floating-widget-wrapper" ref={widgetRef}>
-      {/* Floating Panel Drawer */}
+    <div ref={widgetRef} style={{ position: 'fixed', bottom: '24px', left: '24px', zIndex: 99999 }}>
+      {/* Theme Panel */}
       {isOpen && (
-        <div className="floating-theme-panel" role="dialog" aria-label="Theme and Font Customization">
-          <div className="floating-panel-header">
-            <div className="floating-panel-title">
+        <div style={{
+          position: 'absolute',
+          bottom: '60px',
+          left: 0,
+          width: '320px',
+          maxWidth: 'calc(100vw - 48px)',
+          background: 'var(--color-bg-card, #1e293b)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: '16px',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+          padding: '18px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px',
+          zIndex: 99999,
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          animation: 'floatPanelSlideIn 0.25s cubic-bezier(0.16,1,0.3,1)',
+        }}>
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 700, color: 'var(--color-text-primary, #f8fafc)' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
-                <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
-                <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
-                <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle>
-                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.7-.72 1.7-1.61 0-.43-.17-.83-.44-1.13-.27-.3-.43-.7-.43-1.13 0-.89.72-1.61 1.61-1.61h1.9c3.09 0 5.66-2.57 5.66-5.66 0-4.97-4.26-8.87-9.5-8.87z"></path>
+                <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+                <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+                <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+                <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.7-.72 1.7-1.61 0-.43-.17-.83-.44-1.13-.27-.3-.43-.7-.43-1.13 0-.89.72-1.61 1.61-1.61h1.9c3.09 0 5.66-2.57 5.66-5.66 0-4.97-4.26-8.87-9.5-8.87z"/>
               </svg>
-              <span>Appearance & Typography</span>
+              Appearance &amp; Typography
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="floating-panel-close-btn"
-              aria-label="Close panel"
-            >
-              &times;
-            </button>
+              style={{ background: 'none', border: 'none', color: 'var(--color-text-tertiary, #94a3b8)', fontSize: '20px', cursor: 'pointer', padding: '4px', lineHeight: 1 }}
+            >&times;</button>
           </div>
 
-          <div className="floating-panel-body">
-            {/* Section 1: Theme Switcher */}
-            <div className="floating-section">
-              <label className="floating-section-label">Website Theme (8 Palettes)</label>
-              <div className="theme-options-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-                {THEMES.map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => handleThemeChange(t.id)}
-                    className={`theme-option-card ${theme === t.id ? 'active' : ''}`}
-                    style={{ position: 'relative', overflow: 'hidden' }}
-                  >
-                    <div className="theme-preview-swatch" style={{ background: t.bg, border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <span className="swatch-accent" style={{ background: t.accent }}></span>
-                      <span className="swatch-bg" style={{ background: t.bg }}></span>
-                    </div>
-                    <div className="theme-option-info">
-                      <span className="theme-option-title">{t.name}</span>
-                      <span className="theme-option-desc">{t.desc}</span>
-                    </div>
-                    {theme === t.id && (
-                      <svg className="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    )}
-                  </button>
-                ))}
-              </div>
+          {/* Themes Section */}
+          <div>
+            <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-tertiary, #94a3b8)', marginBottom: '10px' }}>
+              Website Theme (8 Palettes)
             </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              {THEMES.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => handleThemeClick(t.id)}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    padding: '10px',
+                    borderRadius: '10px',
+                    background: theme === t.id ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)',
+                    border: theme === t.id ? '2px solid #10b981' : '1px solid rgba(255,255,255,0.08)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    position: 'relative',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {/* Color swatch preview */}
+                  <div style={{ height: '24px', borderRadius: '6px', overflow: 'hidden', display: 'flex', border: '1px solid rgba(0,0,0,0.1)' }}>
+                    <span style={{ width: '35%', background: t.accent, display: 'block' }} />
+                    <span style={{ width: '65%', background: t.bg, display: 'block' }} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-primary, #fff)' }}>{t.name}</span>
+                    <span style={{ fontSize: '10px', color: 'var(--color-text-tertiary, #94a3b8)' }}>{t.desc}</span>
+                  </div>
+                  {theme === t.id && (
+                    <svg style={{ position: 'absolute', top: '8px', right: '8px', color: '#10b981' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
 
-            {/* Section 2: Font Switcher */}
-            <div className="floating-section">
-              <label className="floating-section-label">Typography Style (12 Fonts)</label>
-              <div className="font-options-list">
-                {FONTS.map((font) => (
-                  <button
-                    key={font.id}
-                    type="button"
-                    onClick={() => handleFontChange(font.id)}
-                    className={`font-option-item ${activeFont === font.id ? 'active' : ''}`}
-                  >
-                    <div className="font-item-text">
-                      <span className={`font-name ${font.fontClass}`}>{font.name}</span>
-                      <span className="font-preview-tag">{font.preview}</span>
-                    </div>
-                    {activeFont === font.id && (
-                      <svg className="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    )}
-                  </button>
-                ))}
-              </div>
+          {/* Fonts Section */}
+          <div>
+            <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-tertiary, #94a3b8)', marginBottom: '10px' }}>
+              Typography Style (12 Fonts)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', maxHeight: '180px', overflowY: 'auto' }}>
+              {FONTS.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => handleFontClick(f.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    background: font === f.id ? 'rgba(16,185,129,0.12)' : 'transparent',
+                    border: font === f.id ? '1px solid #10b981' : '1px solid transparent',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-primary, #fff)' }}>{f.name}</span>
+                    <span style={{ fontSize: '10px', color: 'var(--color-text-tertiary, #94a3b8)' }}>{f.preview}</span>
+                  </div>
+                  {font === f.id && (
+                    <svg style={{ color: '#10b981', flexShrink: 0 }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  )}
+                </button>
+              ))}
             </div>
           </div>
         </div>
       )}
 
-      {/* Floating Bottom-Left Trigger Button */}
+      {/* Trigger Button */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`floating-theme-trigger ${isOpen ? 'open' : ''}`}
         aria-label="Customize Theme & Font"
-        title="Customize Theme & Font"
+        style={{
+          width: '48px',
+          height: '48px',
+          borderRadius: '12px',
+          background: 'var(--gradient-primary, linear-gradient(135deg, #0B3C11 0%, #10b981 100%))',
+          color: '#ffffff',
+          border: '1px solid rgba(255,255,255,0.2)',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.3s ease',
+          transform: isOpen ? 'scale(1.05) rotate(45deg)' : 'scale(1)',
+        }}
       >
-        <div className="trigger-icons">
-          <svg className="palette-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
-            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
-            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
-            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle>
-            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.7-.72 1.7-1.61 0-.43-.17-.83-.44-1.13-.27-.3-.43-.7-.43-1.13 0-.89.72-1.61 1.61-1.61h1.9c3.09 0 5.66-2.57 5.66-5.66 0-4.97-4.26-8.87-9.5-8.87z"></path>
-          </svg>
-        </div>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+          <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+          <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+          <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.7-.72 1.7-1.61 0-.43-.17-.83-.44-1.13-.27-.3-.43-.7-.43-1.13 0-.89.72-1.61 1.61-1.61h1.9c3.09 0 5.66-2.57 5.66-5.66 0-4.97-4.26-8.87-9.5-8.87z"/>
+        </svg>
       </button>
     </div>
   );
