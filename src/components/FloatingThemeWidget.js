@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { cacheUserPreferences, getCachedUserTheme, getCachedUserFont } from '@/lib/cookieCache';
 
 const THEMES = [
   { id: 'light', name: 'Warm Cream', desc: 'Ivory & Forest Emerald', accent: '#0B3C11', bg: '#FAF7EC' },
@@ -37,10 +38,12 @@ export default function FloatingThemeWidget() {
 
   useEffect(() => {
     setMounted(true);
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    const savedFont = localStorage.getItem('user-font') || 'Jakarta';
+    const savedTheme = getCachedUserTheme();
+    const savedFont = getCachedUserFont();
     setTheme(savedTheme);
     setActiveFont(savedFont);
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    applyFont(savedFont);
 
     const handleClickOutside = (event) => {
       if (widgetRef.current && !widgetRef.current.contains(event.target)) {
@@ -100,13 +103,13 @@ export default function FloatingThemeWidget() {
 
   const handleThemeChange = (newTheme) => {
     setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
+    cacheUserPreferences(newTheme, activeFont);
     document.documentElement.setAttribute('data-theme', newTheme);
   };
 
   const handleFontChange = (fontId) => {
     setActiveFont(fontId);
-    localStorage.setItem('user-font', fontId);
+    cacheUserPreferences(theme, fontId);
     applyFont(fontId);
   };
 

@@ -73,3 +73,26 @@ export function clearUserCache() {
     localStorage.removeItem('h2h_cached_profile');
   }
 }
+
+// User Theme & Font Preference Caching Helpers
+export function cacheUserPreferences(theme, font) {
+  if (typeof document === 'undefined') return;
+  if (theme) {
+    setCookie('h2h_theme', theme, 365);
+    if (typeof localStorage !== 'undefined') localStorage.setItem('theme', theme);
+  }
+  if (font) {
+    setCookie('h2h_user_font', font, 365);
+    if (typeof localStorage !== 'undefined') localStorage.setItem('user-font', font);
+  }
+}
+
+export function getCachedUserTheme() {
+  if (typeof window === 'undefined') return 'light';
+  return getCookie('h2h_theme') || (typeof localStorage !== 'undefined' ? localStorage.getItem('theme') : null) || 'light';
+}
+
+export function getCachedUserFont() {
+  if (typeof window === 'undefined') return 'Jakarta';
+  return getCookie('h2h_user_font') || (typeof localStorage !== 'undefined' ? localStorage.getItem('user-font') : null) || 'Jakarta';
+}

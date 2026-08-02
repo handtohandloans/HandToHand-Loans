@@ -66,13 +66,17 @@ export default function RootLayout({ children }) {
             __html: `
               (function() {
                 try {
-                  var savedTheme = localStorage.getItem('theme') || 'light';
+                  function getCookieVal(name) {
+                    var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+                    return m ? decodeURIComponent(m[1]) : null;
+                  }
+                  var savedTheme = localStorage.getItem('theme') || getCookieVal('h2h_theme') || 'light';
                   var validThemes = ['light', 'dark', 'navy', 'cyber', 'rose', 'slate', 'emerald-gold', 'sunset'];
                   if (validThemes.indexOf(savedTheme) === -1) savedTheme = 'light';
                   document.documentElement.setAttribute('data-theme', savedTheme);
 
-                  // Set global typography from localStorage
-                  var savedFont = localStorage.getItem('user-font') || 'Jakarta';
+                  // Set global typography from localStorage / cookie
+                  var savedFont = localStorage.getItem('user-font') || getCookieVal('h2h_user_font') || 'Jakarta';
                   var fontBody = '';
                   var fontHeading = '';
                   if (savedFont === 'Inter') { fontBody = 'Inter, sans-serif'; fontHeading = 'Inter, sans-serif'; }
