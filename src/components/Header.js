@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { clearUserCache, cacheUserProfile } from '@/lib/cookieCache';
+import { clearUserCache, cacheUserProfile, getCachedUserTheme, getCachedUserFont, cacheUserPreferences } from '@/lib/cookieCache';
 
 // Security (F11): Strict schema validation for localStorage pending application payload.
 // Prevents poisoned data (via XSS or manual injection) from being committed to DB.
@@ -125,21 +125,18 @@ export default function Header() {
   const [userFont, setUserFont] = useState('Jakarta');
 
   useEffect(() => {
-    let savedTheme = localStorage.getItem('theme') || 'light';
-    if (savedTheme !== 'dark' && savedTheme !== 'light') savedTheme = 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-
-    const savedFont = localStorage.getItem('user-font') || 'Jakarta';
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    const savedTheme = getCachedUserTheme();
+    const savedFont = getCachedUserFont();
     setMounted(true);
     setUserFont(savedFont);
     setTheme(savedTheme);
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    changeFont(savedFont);
   }, []);
 
   const changeFont = (newFont) => {
     setUserFont(newFont);
-    localStorage.setItem('user-font', newFont);
+    cacheUserPreferences(theme, newFont);
 
     let fontBody = '';
     let fontHeading = '';
@@ -149,6 +146,11 @@ export default function Header() {
     else if (newFont === 'Lora') { fontBody = 'Lora, serif'; fontHeading = 'Lora, serif'; }
     else if (newFont === 'Playfair') { fontBody = '"Playfair Display", serif'; fontHeading = '"Playfair Display", serif'; }
     else if (newFont === 'JetBrains') { fontBody = '"JetBrains Mono", monospace'; fontHeading = '"JetBrains Mono", monospace'; }
+    else if (newFont === 'Roboto') { fontBody = 'Roboto, sans-serif'; fontHeading = 'Roboto, sans-serif'; }
+    else if (newFont === 'Raleway') { fontBody = 'Raleway, sans-serif'; fontHeading = 'Raleway, sans-serif'; }
+    else if (newFont === 'Montserrat') { fontBody = 'Montserrat, sans-serif'; fontHeading = 'Montserrat, sans-serif'; }
+    else if (newFont === 'Merriweather') { fontBody = 'Merriweather, serif'; fontHeading = 'Merriweather, serif'; }
+    else if (newFont === 'SpaceMono') { fontBody = '"Space Mono", monospace'; fontHeading = '"Space Mono", monospace'; }
     else { fontBody = 'var(--font-inter), "Plus Jakarta Sans", sans-serif'; fontHeading = 'var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif'; }
     
     if (fontBody) {
@@ -158,7 +160,7 @@ export default function Header() {
   };
 
   const cycleFont = () => {
-    const fontOrder = ['Jakarta', 'Inter', 'Poppins', 'Outfit', 'Lora', 'Playfair', 'JetBrains'];
+    const fontOrder = ['Jakarta', 'Inter', 'Poppins', 'Outfit', 'Roboto', 'Raleway', 'Montserrat', 'Lora', 'Playfair', 'Merriweather', 'JetBrains', 'SpaceMono'];
     const currentIndex = fontOrder.indexOf(userFont);
     const nextIndex = (currentIndex + 1) % fontOrder.length;
     const nextFont = fontOrder[nextIndex];
@@ -166,9 +168,12 @@ export default function Header() {
   };
 
   const toggleTheme = () => {
-    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    const themeOrder = ['light', 'dark', 'navy', 'cyber', 'rose', 'slate', 'emerald-gold', 'sunset'];
+    const currentIndex = themeOrder.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % themeOrder.length;
+    const nextTheme = themeOrder[nextIndex];
     setTheme(nextTheme);
-    localStorage.setItem('theme', nextTheme);
+    cacheUserPreferences(nextTheme, userFont);
     document.documentElement.setAttribute('data-theme', nextTheme);
   };
 
