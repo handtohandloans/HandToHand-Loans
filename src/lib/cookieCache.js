@@ -272,10 +272,10 @@ export function cacheUserPreferences(theme, font) {
 
 export function getCachedUserTheme() {
   if (typeof window === 'undefined') return 'light';
-  return (typeof localStorage !== 'undefined' ? localStorage.getItem('theme') : null) || getCookie('h2h_theme') || 'light';
+  return (typeof localStorage !== 'undefined' ? (localStorage.getItem('h2h-theme') || localStorage.getItem('theme')) : null) || getCookie('h2h_theme') || 'light';
 }
 
 export function getCachedUserFont() {
   if (typeof window === 'undefined') return 'Jakarta';
-  return (typeof localStorage !== 'undefined' ? localStorage.getItem('user-font') : null) || getCookie('h2h_user_font') || 'Jakarta';
+  return (typeof localStorage !== 'undefined' ? (localStorage.getItem('h2h-font') || localStorage.getItem('user-font')) : null) || getCookie('h2h_user_font') || 'Jakarta';
 }
