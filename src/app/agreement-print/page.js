@@ -30,6 +30,36 @@ export default function AgreementPrintPage() {
     return new Uint8Array(buf);
   }
 
+  // Helper: Convert any image URL / Data URI (WebP, PNG, JPG) to JPEG bytes using canvas
+  async function loadAnyImageAsJpegBytes(src) {
+    if (!src) return null;
+    if (src.startsWith('data:image/jpeg') || src.startsWith('data:image/jpg')) {
+      return dataUriToBytes(src);
+    }
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width || 300;
+          canvas.height = img.naturalHeight || img.height || 400;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+          resolve(dataUriToBytes(jpegDataUrl));
+        } catch (e) {
+          console.warn('Canvas conversion error:', e);
+          resolve(null);
+        }
+      };
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+  }
+
   // Helper: mask Aadhaar
   function maskAadhaar(num) {
     if (!num) return 'N/A';
@@ -127,35 +157,37 @@ export default function AgreementPrintPage() {
 
       // ---- 4b. Load & Embed Agent Live Selfie (if available) ----
       let selfieImg = null;
-      if (prof.selfie) {
+      const selfiePath = prof.selfie || prof.avatar;
+      if (selfiePath) {
         try {
-          let selfieBytes;
-          let isPng = false;
-          if (prof.selfie.startsWith('data:')) {
-            selfieBytes = dataUriToBytes(prof.selfie);
-            isPng = prof.selfie.includes('image/png');
-          } else if (prof.selfie.startsWith('http://') || prof.selfie.startsWith('https://')) {
-            selfieBytes = await fetchImageBytes(prof.selfie);
-            isPng = prof.selfie.toLowerCase().includes('.png');
+          let imageUrl = null;
+          if (selfiePath.startsWith('data:') || selfiePath.startsWith('http://') || selfiePath.startsWith('https://')) {
+            imageUrl = selfiePath;
           } else {
-            const { data: { session } } = await supabase.auth.getSession();
-            const signedRes = await fetch(`/api/admin/document-url?path=${encodeURIComponent(prof.selfie)}`, {
-              headers: session ? { 'Authorization': `Bearer ${session.access_token}` } : {}
-            });
-            if (signedRes.ok) {
-              const signedJson = await signedRes.json();
-              if (signedJson.signedUrl) {
-                selfieBytes = await fetchImageBytes(signedJson.signedUrl);
-                isPng = prof.selfie.toLowerCase().includes('.png');
+            // Fetch signed URL directly from Supabase storage bucket 'agent-documents'
+            const { data: signedData } = await supabase.storage
+              .from('agent-documents')
+              .createSignedUrl(selfiePath, 3600);
+            
+            if (signedData?.signedUrl) {
+              imageUrl = signedData.signedUrl;
+            } else {
+              // Try via document URL API endpoint fallback
+              const { data: { session } } = await supabase.auth.getSession();
+              const signedRes = await fetch(`/api/admin/document-url?path=${encodeURIComponent(selfiePath)}`, {
+                headers: session ? { 'Authorization': `Bearer ${session.access_token}` } : {}
+              });
+              if (signedRes.ok) {
+                const signedJson = await signedRes.json();
+                if (signedJson.signedUrl) imageUrl = signedJson.signedUrl;
               }
             }
           }
 
-          if (selfieBytes) {
-            if (isPng) {
-              selfieImg = await pdfDoc.embedPng(selfieBytes);
-            } else {
-              selfieImg = await pdfDoc.embedJpg(selfieBytes);
+          if (imageUrl) {
+            const jpegBytes = await loadAnyImageAsJpegBytes(imageUrl);
+            if (jpegBytes && jpegBytes.length > 0) {
+              selfieImg = await pdfDoc.embedJpg(jpegBytes);
             }
           }
         } catch (err) {
@@ -307,10 +339,10 @@ export default function AgreementPrintPage() {
       // Overlay Live Selfie on Page 11 (centered between Signature & QR Code)
       if (selfieImg) {
         try {
-          const s11X = 245;
-          const s11Y = 560;
-          const s11W = 105;
-          const s11H = 135;
+          const s11X = 275;
+          const s11Y = 565;
+          const s11W = 95;
+          const s11H = 120;
 
           page11.drawRectangle({
             x: s11X,
@@ -322,26 +354,26 @@ export default function AgreementPrintPage() {
             borderWidth: 1,
           });
 
-          const s11Dims = selfieImg.scaleToFit(s11W - 8, s11H - 24);
+          const s11Dims = selfieImg.scaleToFit(s11W - 8, s11H - 22);
           page11.drawImage(selfieImg, {
             x: s11X + (s11W - s11Dims.width) / 2,
-            y: s11Y + 4 + (s11H - 24 - s11Dims.height) / 2,
+            y: s11Y + 3 + (s11H - 22 - s11Dims.height) / 2,
             width: s11Dims.width,
             height: s11Dims.height,
           });
 
           page11.drawRectangle({
             x: s11X,
-            y: s11Y + s11H - 16,
+            y: s11Y + s11H - 15,
             width: s11W,
-            height: 16,
+            height: 15,
             color: green,
           });
 
           page11.drawText('VERIFIED LIVE SELFIE', {
-            x: s11X + 10,
-            y: s11Y + s11H - 12,
-            size: 7,
+            x: s11X + 6,
+            y: s11Y + s11H - 11,
+            size: 6.5,
             font: timesBold,
             color: rgb(1, 1, 1),
           });
@@ -351,10 +383,10 @@ export default function AgreementPrintPage() {
       }
 
       // Draw QR Code block on the right side of Page 11
-      const rightColX = 370;
-      const rightColY = 560;
-      const rightColW = 120;
-      const rightColH = 135;
+      const rightColX = 395;
+      const rightColY = 565;
+      const rightColW = 110;
+      const rightColH = 120;
 
       page11.drawRectangle({
         x: rightColX,
@@ -367,9 +399,9 @@ export default function AgreementPrintPage() {
       });
 
       page11.drawText('DIGITAL VERIFICATION', {
-        x: rightColX + 10,
-        y: rightColY + rightColH - 15,
-        size: 7.5,
+        x: rightColX + 8,
+        y: rightColY + rightColH - 14,
+        size: 7,
         font: timesBold,
         color: green,
       });
@@ -381,28 +413,28 @@ export default function AgreementPrintPage() {
         const QRCode = (await import('qrcode')).default;
         // Generate as PNG data URL, then decode to bytes for pdf-lib
         const qrDataUrl = await QRCode.toDataURL(verificationUrl, {
-          width: 180,
+          width: 160,
           margin: 1,
           color: { dark: '#000000', light: '#ffffff' },
         });
         const qrBytes = dataUriToBytes(qrDataUrl);
         const qrImg = await pdfDoc.embedPng(qrBytes);
-        const qrDims = qrImg.scaleToFit(90, 90);
+        const qrDims = qrImg.scaleToFit(80, 80);
         page11.drawImage(qrImg, {
           x: rightColX + (rightColW - qrDims.width) / 2,
-          y: rightColY + 15,
+          y: rightColY + 16,
           width: qrDims.width,
           height: qrDims.height,
         });
       } catch (e) {
         console.warn('QR embed failed:', e);
-        page11.drawText('[QR Code]', { x: rightColX + 30, y: rightColY + 50, size: 9, font: timesNormal, color: midText });
+        page11.drawText('[QR Code]', { x: rightColX + 25, y: rightColY + 45, size: 9, font: timesNormal, color: midText });
       }
 
       page11.drawText('Scan to verify authenticity', {
-        x: rightColX + 10,
+        x: rightColX + 6,
         y: rightColY + 5,
-        size: 7,
+        size: 6.5,
         font: timesNormal,
         color: lightText,
       });
@@ -467,12 +499,9 @@ export default function AgreementPrintPage() {
           }
         }
 
-        // Security (F12): Only fetch columns needed for PDF generation.
-        // Excludes selfie, id_file, id_file_2, cancelled_cheque (large base64 blobs)
-        // which are not needed for the agreement PDF overlay.
         const { data: prof, error: profErr } = await supabase
           .from('profiles')
-          .select('id, full_name, phone, email, id_type, id_number, id_type_2, id_number_2, current_address, city, state, pincode, bank_name, bank_account_no, bank_ifsc, created_at')
+          .select('id, full_name, phone, email, id_type, id_number, id_type_2, id_number_2, current_address, city, state, pincode, bank_name, bank_account_no, bank_ifsc, created_at, selfie, avatar')
           .eq('id', profileId)
           .single();
 
