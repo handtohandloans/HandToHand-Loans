@@ -16,12 +16,24 @@ function validatePendingApplication(obj) {
   if (typeof obj.clientMobile !== 'string' || !/^\d{10}$/.test(obj.clientMobile.trim())) return false;
   if (typeof obj.bankName !== 'string' || obj.bankName.trim().length === 0 || obj.bankName.length > 100) return false;
   if (typeof obj.loanAmount !== 'number' || obj.loanAmount <= 0 || obj.loanAmount > 100000000) return false;
-  if (typeof obj.loanType !== 'string' || !VALID_LOAN_TYPES.includes(obj.loanType)) return false;
   return true;
 }
 
+const OUR_SERVICES_ITEMS = [
+  { name: '🏦 Banks & Partner Lenders', href: '/banks' },
+  { name: '💼 Personal Loan', href: '/services/personal-loan' },
+  { name: '🏢 Business Loan', href: '/services/business-loan' },
+  { name: '⚡ Instant Loan', href: '/services/instant-loan' },
+  { name: '🏠 Home Loan', href: '/services/home-loan' },
+  { name: '🏘️ Loan Against Property (LAP)', href: '/services/loan-against-property' },
+  { name: '🎓 Education Loan', href: '/services/education-loan' },
+  { name: '💳 Credit Cards', href: '/credit-cards' },
+];
+
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
   const [loansDropdownOpen, setLoansDropdownOpen] = useState(false);
   const [mobileLoansOpen, setMobileLoansOpen] = useState(false);
   const [emiDropdownOpen, setEmiDropdownOpen] = useState(false);
@@ -449,13 +461,21 @@ export default function Header() {
         {/* Desktop Navigation */}
         <nav className="desktop-nav">
           <ul className="nav-links">
+            {/* 1. Home */}
             <li>
-              <Link href="/" className={`nav-link ${isLinkActive('/') ? 'active' : ''}`}>
+              <Link href="/" className={`btn btn-primary btn-sm header-btn-primary ${isLinkActive('/') ? 'active' : ''}`}>
                 Home
               </Link>
             </li>
             
-            {/* Loans Dropdown */}
+            {/* 2. Check Eligibility (Dark Button) */}
+            <li>
+              <Link href="/check" className={`btn btn-sm header-btn-dark ${isLinkActive('/check') ? 'active' : ''}`}>
+                Check Eligibility
+              </Link>
+            </li>
+
+            {/* 3. Loans Dropdown */}
             <li 
               className="dropdown-container"
               onMouseEnter={() => setLoansDropdownOpen(true)}
@@ -463,20 +483,8 @@ export default function Header() {
               style={{ position: 'relative', display: 'inline-block' }}
             >
               <button 
-                className={`nav-link dropdown-toggle ${loansDropdownOpen ? 'active' : ''}`}
-                style={{ 
-                  background: 'none', 
-                  border: 'none', 
-                  cursor: 'pointer', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '4px',
-                  fontFamily: 'inherit',
-                  fontSize: 'inherit',
-                  fontWeight: 'inherit',
-                  color: 'inherit',
-                  padding: '8px 0'
-                }}
+                className={`btn btn-primary btn-sm header-btn-primary dropdown-toggle ${loansDropdownOpen ? 'active' : ''}`}
+                style={{ cursor: 'pointer', gap: '4px' }}
                 onClick={() => setLoansDropdownOpen(!loansDropdownOpen)}
               >
                 Loans
@@ -497,7 +505,7 @@ export default function Header() {
                   padding: '8px 0',
                   margin: '4px 0 0 0',
                   listStyle: 'none',
-                  minWidth: '160px',
+                  minWidth: '180px',
                   zIndex: 99999
                 }}>
                   <li>
@@ -505,33 +513,9 @@ export default function Header() {
                       href="/banks/instant" 
                       className="dropdown-item" 
                       onClick={() => setLoansDropdownOpen(false)}
-                      style={{
-                        display: 'block',
-                        padding: '8px 16px',
-                        color: 'var(--color-text-primary)',
-                        textDecoration: 'none',
-                        fontSize: '13px',
-                        transition: 'background 0.2s'
-                      }}
+                      style={{ display: 'block', padding: '8px 16px', color: 'var(--color-text-primary)', textDecoration: 'none', fontSize: '13px', transition: 'background 0.2s' }}
                     >
-                      Instant Loan
-                    </Link>
-                  </li>
-                  <li>
-                    <Link 
-                      href="/banks/salary" 
-                      className="dropdown-item" 
-                      onClick={() => setLoansDropdownOpen(false)}
-                      style={{
-                        display: 'block',
-                        padding: '8px 16px',
-                        color: 'var(--color-text-primary)',
-                        textDecoration: 'none',
-                        fontSize: '13px',
-                        transition: 'background 0.2s'
-                      }}
-                    >
-                      Salary Loan
+                      ⚡ Instant Loan
                     </Link>
                   </li>
                   <li>
@@ -539,65 +523,116 @@ export default function Header() {
                       href="/banks/business" 
                       className="dropdown-item" 
                       onClick={() => setLoansDropdownOpen(false)}
-                      style={{
-                        display: 'block',
-                        padding: '8px 16px',
-                        color: 'var(--color-text-primary)',
-                        textDecoration: 'none',
-                        fontSize: '13px',
-                        transition: 'background 0.2s'
-                      }}
+                      style={{ display: 'block', padding: '8px 16px', color: 'var(--color-text-primary)', textDecoration: 'none', fontSize: '13px', transition: 'background 0.2s' }}
                     >
-                      Business Loan
+                      🏢 Business Loan
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      href="/banks/salary" 
+                      className="dropdown-item" 
+                      onClick={() => setLoansDropdownOpen(false)}
+                      style={{ display: 'block', padding: '8px 16px', color: 'var(--color-text-primary)', textDecoration: 'none', fontSize: '13px', transition: 'background 0.2s' }}
+                    >
+                      💼 Salary Loan
                     </Link>
                   </li>
                 </ul>
               )}
             </li>
 
-            {/* Banks */}
-            <li>
-              <Link 
-                href="/banks" 
-                className={`nav-link ${isLinkActive('/banks') ? 'active' : ''}`}
+            {/* 4. Our Services Dropdown */}
+            <li 
+              className="dropdown-container"
+              onMouseEnter={() => setServicesDropdownOpen(true)}
+              onMouseLeave={() => setServicesDropdownOpen(false)}
+              style={{ position: 'relative', display: 'inline-block' }}
+            >
+              <button 
+                className={`btn btn-primary btn-sm header-btn-primary dropdown-toggle ${servicesDropdownOpen ? 'active' : ''}`}
+                style={{ 
+                  cursor: 'pointer', 
+                  gap: '4px'
+                }}
+                onClick={() => setServicesDropdownOpen(!servicesDropdownOpen)}
               >
-                Banks
-              </Link>
+                Our Services
+                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s', transform: servicesDropdownOpen ? 'rotate(180deg)' : 'none' }}>
+                  <path d="M1 1l4 4 4-4" />
+                </svg>
+              </button>
+              {servicesDropdownOpen && (
+                <ul className="dropdown-menu" style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  background: 'var(--color-bg-glass-heavy)',
+                  backdropFilter: 'blur(20px)',
+                  border: 'var(--border-light)',
+                  borderRadius: '12px',
+                  boxShadow: 'var(--shadow-lg)',
+                  padding: '10px 0',
+                  margin: '4px 0 0 0',
+                  listStyle: 'none',
+                  minWidth: '280px',
+                  maxHeight: '440px',
+                  overflowY: 'auto',
+                  zIndex: 99999
+                }}>
+                  {OUR_SERVICES_ITEMS.map((service, idx) => (
+                    <li key={idx}>
+                      <Link 
+                        href={service.href} 
+                        className="dropdown-item" 
+                        onClick={() => setServicesDropdownOpen(false)}
+                        style={{
+                          display: 'block',
+                          padding: '8px 16px',
+                          color: 'var(--color-text-primary)',
+                          textDecoration: 'none',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          transition: 'background 0.2s'
+                        }}
+                      >
+                        {service.name}
+                      </Link>
+                    </li>
+                  ))}
+                  <li style={{ borderTop: '1px solid var(--border-default)', marginTop: '4px', paddingTop: '4px' }}>
+                    <Link 
+                      href="/services" 
+                      className="dropdown-item" 
+                      onClick={() => setServicesDropdownOpen(false)}
+                      style={{
+                        display: 'block',
+                        padding: '8px 16px',
+                        color: 'var(--color-primary)',
+                        fontWeight: '800',
+                        textDecoration: 'none',
+                        fontSize: '13px',
+                        transition: 'background 0.2s'
+                      }}
+                    >
+                      See All 15 Services ➔
+                    </Link>
+                  </li>
+                </ul>
+              )}
             </li>
 
-            {/* Credit Cards */}
-            <li>
-              <Link 
-                href="/credit-cards" 
-                className={`nav-link ${isLinkActive('/credit-cards') ? 'active' : ''}`}
-              >
-                Credit Cards
-              </Link>
-            </li>
-            <li>
-              <Link href="/check" className="btn btn-primary btn-sm" style={{ borderRadius: '8px' }}>
-                Check Eligibility
-              </Link>
-            </li>
-            {/* EMI Calculator Dropdown */}
+            {/* 5. EMI Calculator Dropdown */}
             <li 
               style={{ position: 'relative' }}
               onMouseEnter={() => setEmiDropdownOpen(true)}
               onMouseLeave={() => setEmiDropdownOpen(false)}
             >
               <button
-                className={`nav-link ${isLinkActive('/emi-calculator') || isLinkActive('/personal-loan-emi-calculator') || isLinkActive('/home-loan-emi-calculator') || isLinkActive('/business-loan-emi-calculator') ? 'active' : ''}`}
+                className={`btn btn-primary btn-sm header-btn-primary ${isLinkActive('/emi-calculator') || isLinkActive('/personal-loan-emi-calculator') || isLinkActive('/home-loan-emi-calculator') || isLinkActive('/business-loan-emi-calculator') ? 'active' : ''}`}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
                   gap: '6px',
-                  background: 'none',
-                  border: 'none',
-                  fontFamily: 'inherit',
-                  fontSize: 'inherit',
-                  cursor: 'pointer',
-                  color: 'inherit',
-                  padding: '8px 0'
+                  cursor: 'pointer'
                 }}
                 onClick={() => setEmiDropdownOpen(!emiDropdownOpen)}
               >
@@ -627,9 +662,9 @@ export default function Header() {
                       href="/emi-calculator" 
                       className="dropdown-item" 
                       onClick={() => setEmiDropdownOpen(false)}
-                      style={{ display: 'block', padding: '8px 16px', color: 'var(--color-text-primary)', textDecoration: 'none', fontSize: '13px', transition: 'background 0.2s' }}
+                      style={{ display: 'block', padding: '8px 16px', color: 'var(--color-primary)', fontWeight: '700', textDecoration: 'none', fontSize: '13px', transition: 'background 0.2s' }}
                     >
-                      All-in-One Calculator
+                      All Types EMI Calculator
                     </Link>
                   </li>
                   <li>
@@ -667,7 +702,7 @@ export default function Header() {
                       href="/calculators" 
                       className="dropdown-item" 
                       onClick={() => setEmiDropdownOpen(false)}
-                      style={{ display: 'block', padding: '8px 16px', color: 'var(--color-primary, #00d756)', fontWeight: 'bold', textDecoration: 'none', fontSize: '13px', transition: 'background 0.2s' }}
+                      style={{ display: 'block', padding: '8px 16px', color: 'var(--color-primary)', fontWeight: 'bold', textDecoration: 'none', fontSize: '13px', transition: 'background 0.2s' }}
                     >
                       More Calculators ➔
                     </Link>
@@ -675,55 +710,61 @@ export default function Header() {
                 </ul>
               )}
             </li>
-            <li>
-              <Link href="/verify-agreement" className={`nav-link ${isLinkActive('/verify-agreement') ? 'active' : ''}`}>
-                Verify Agreement
-              </Link>
-            </li>
-            <li>
-              <Link href="/blog" className={`nav-link ${isLinkActive('/blog') ? 'active' : ''}`}>
-                Blog
-              </Link>
-            </li>
+
+            {/* 6. CIBIL */}
             <li>
               <Link
                 href="/cibil"
-                className={`nav-link ${isLinkActive('/cibil') ? 'active' : ''}`}
-                style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--color-primary)', fontWeight: 700, fontSize: 'var(--text-xs)' }}
+                className={`btn btn-primary btn-sm header-btn-primary ${isLinkActive('/cibil') ? 'active' : ''}`}
                 title="Free CIBIL report check in collaboration with PNB"
               >
-                CIBIL Score <span className="cibil-subtext">(PNB Partnership)</span>
+                CIBIL
               </Link>
             </li>
-            {user ? (
-              <>
-                {/* Hidden banks from here as it is public now */}
-                <li>
-                  <Link href="/dashboard" className={`nav-link ${isLinkActive('/dashboard') ? 'active' : ''}`}>
-                    Dashboard
-                  </Link>
-                </li>
-                {userRole === 'admin' && (
-                  <li>
-                    <Link href="/admin" className={`nav-link ${isLinkActive('/admin') ? 'active' : ''}`} style={{ color: 'var(--color-success)', fontWeight: 600 }}>
-                      Admin Panel
-                    </Link>
-                  </li>
-                )}
-                <li>
-                  <button onClick={handleLogout} className="nav-link nav-logout">
-                    Logout
-                  </button>
-                </li>
-              </>
-            ) : (
-              <>
-                <li>
-                  <Link href="/login" className="btn btn-secondary btn-sm" style={{ borderRadius: '8px' }}>
-                    Sign In
-                  </Link>
-                </li>
-              </>
+
+            {/* 7. Blogs */}
+            <li>
+              <Link
+                href="/blog"
+                className={`btn btn-primary btn-sm header-btn-primary ${isLinkActive('/blog') ? 'active' : ''}`}
+              >
+                Blogs
+              </Link>
+            </li>
+
+            {/* 8. Verify Agent */}
+            <li>
+              <Link
+                href="/verify-agreement"
+                className={`btn btn-primary btn-sm header-btn-primary ${isLinkActive('/verify-agreement') ? 'active' : ''}`}
+              >
+                Verify Agent
+              </Link>
+            </li>
+
+            {/* Become a Partner Button */}
+            <li>
+              <Link
+                href="/become-a-partner"
+                className={`btn btn-primary btn-sm header-btn-primary ${isLinkActive('/become-a-partner') ? 'active' : ''}`}
+                style={{
+                  background: 'var(--color-primary-light)',
+                  border: '1px solid var(--color-primary)',
+                  color: 'var(--color-primary)',
+                  fontWeight: '700'
+                }}
+              >
+                Become a Partner
+              </Link>
+            </li>
+
+            {/* Sign In Button (only when logged out) */}
+            {!user && (
+              <li>
+                <Link href="/login" className="btn btn-primary btn-sm header-btn-primary">
+                  Sign In
+                </Link>
+              </li>
             )}
           </ul>
         </nav>
@@ -923,67 +964,7 @@ export default function Header() {
             </div>
           )}
 
-          {/* Font Cycler Button */}
-          <button
-            onClick={mounted ? cycleFont : undefined}
-            className="theme-toggle-btn nav-font-cycler"
-            style={{ 
-              margin: 0, 
-              marginRight: '6px', 
-              padding: '0', 
-              fontSize: '14px', 
-              fontWeight: 700, 
-              fontFamily: 'var(--font-body)', 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              width: '36px',
-              height: '36px',
-              textTransform: 'none',
-              cursor: 'pointer',
-              flexShrink: 0
-            }}
-            title={mounted ? `Font: ${userFont} (Tap to cycle)` : "Font: Jakarta (Tap to cycle)"}
-            aria-label="Cycle Font Style"
-          >
-            Aa
-          </button>
 
-          <button 
-            onClick={mounted ? toggleTheme : undefined} 
-            className="theme-toggle-btn nav-theme-toggle"
-            aria-label="Toggle Theme"
-            title={mounted ? (theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode') : 'Switch Theme'}
-            style={{ margin: 0, flexShrink: 0 }}
-          >
-            {mounted ? (
-              theme === 'dark' ? (
-                <>
-                  {/* Moon Icon */}
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                  </svg>
-                  <span className="theme-toggle-text">Dark Mode</span>
-                </>
-              ) : (
-                <>
-                  {/* Sun Icon */}
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                  </svg>
-                  <span className="theme-toggle-text">Light Mode</span>
-                </>
-              )
-            ) : (
-              <>
-                {/* Fallback while mounting: Light Mode default */}
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                </svg>
-                <span className="theme-toggle-text">Light Mode</span>
-              </>
-            )}
-          </button>
 
           <button
             className={`hamburger ${mounted && menuOpen ? 'active' : ''}`}
@@ -1027,27 +1008,35 @@ export default function Header() {
             </div>
           </Link>
         )}
+        {/* 1. Home */}
         <Link href="/" className={`nav-link ${isLinkActive('/') ? 'active' : ''}`} onClick={closeMenu}>
           Home
         </Link>
         
-        {/* Mobile Loans Dropdown (Accordion) */}
-        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '4px 0' }}>
+        {/* 2. Check Eligibility (Dark Button) */}
+        <Link 
+          href="/check" 
+          className="nav-link" 
+          style={{ 
+            background: 'var(--color-primary)', 
+            color: 'var(--color-btn-primary-text)', 
+            borderRadius: '8px', 
+            fontWeight: 700, 
+            margin: '4px 0',
+            textAlign: 'center',
+            justifyContent: 'center'
+          }} 
+          onClick={closeMenu}
+        >
+          Check Eligibility
+        </Link>
+
+        {/* 3. Mobile Loans Accordion */}
+        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '4px 0', width: '100%' }}>
           <button
             onClick={() => setMobileLoansOpen(!mobileLoansOpen)}
             className="nav-link"
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: 600,
-              padding: '12px 16px',
-              color: 'var(--color-text-primary)'
-            }}
+            style={{ justifyContent: 'space-between', cursor: 'pointer', width: '100%' }}
           >
             <span>Loans</span>
             <svg width="12" height="8" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s', transform: mobileLoansOpen ? 'rotate(180deg)' : 'none' }}>
@@ -1056,63 +1045,70 @@ export default function Header() {
           </button>
           
           {mobileLoansOpen && (
-            <div style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              background: 'none',
-              padding: '4px 0'
-            }}>
+            <div style={{ display: 'flex', flexDirection: 'column', background: 'none', padding: '4px 0 4px 12px' }}>
               <Link href="/banks/instant" className="mobile-dropdown-item" onClick={closeMenu}>
-                Instant Loan
-              </Link>
-              <Link href="/banks/salary" className="mobile-dropdown-item" onClick={closeMenu}>
-                Salary Loan
+                ⚡ Instant Loan
               </Link>
               <Link href="/banks/business" className="mobile-dropdown-item" onClick={closeMenu}>
-                Business Loan
+                🏢 Business Loan
+              </Link>
+              <Link href="/banks/salary" className="mobile-dropdown-item" onClick={closeMenu}>
+                💼 Salary Loan
               </Link>
             </div>
           )}
         </div>
 
-        {/* Mobile Credit Cards */}
-        <Link href="/credit-cards" className={`nav-link ${isLinkActive('/credit-cards') ? 'active' : ''}`} onClick={closeMenu}>
-          Credit Cards
-        </Link>
-        <Link href="/check" className={`nav-link ${isLinkActive('/check') ? 'active' : ''}`} onClick={closeMenu}>
-          Check Eligibility
-        </Link>
-        <Link href="/blog" className={`nav-link ${isLinkActive('/blog') ? 'active' : ''}`} onClick={closeMenu}>
-          Blog
-        </Link>
-        <Link
-          href="/cibil"
-          className={`nav-link ${isLinkActive('/cibil') ? 'active' : ''}`}
-          style={{ color: 'var(--color-primary)', fontWeight: 700 }}
-          onClick={closeMenu}
-        >
-          Check CIBIL Score <span style={{ fontSize: '10px', fontWeight: 500, color: 'var(--color-text-tertiary)' }}>(PNB Partnership)</span>
-        </Link>
-        <Link href="/banks" className={`nav-link ${isLinkActive('/banks') ? 'active' : ''}`} onClick={closeMenu}>
-          Banks
-        </Link>
-        {/* Mobile EMI Calculator Dropdown */}
+        {/* 4. Our Services Accordion */}
+        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '4px 0', width: '100%' }}>
+          <button
+            onClick={() => setMobileServicesOpen(!mobileServicesOpen)}
+            className="nav-link"
+            style={{
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              width: '100%'
+            }}
+          >
+            <span>Our Services</span>
+            <svg width="12" height="8" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s', transform: mobileServicesOpen ? 'rotate(180deg)' : 'none' }}>
+              <path d="M1 1l4 4 4-4" />
+            </svg>
+          </button>
+          
+          {mobileServicesOpen && (
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              background: 'none',
+              padding: '4px 0 4px 12px'
+            }}>
+              {OUR_SERVICES_ITEMS.map((service, idx) => (
+                <Link key={idx} href={service.href} className="mobile-dropdown-item" onClick={closeMenu}>
+                  {service.name}
+                </Link>
+              ))}
+              <Link
+                href="/services"
+                className="mobile-dropdown-item"
+                onClick={closeMenu}
+                style={{ color: 'var(--color-primary)', fontWeight: 800, borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '4px', paddingTop: '6px' }}
+              >
+                See All 15 Services ➔
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* 5. Mobile EMI Calculator Dropdown */}
         <div style={{ width: '100%' }}>
           <button
             onClick={() => setMobileEmiOpen(!mobileEmiOpen)}
             className="nav-link"
             style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
               justifyContent: 'space-between',
-              background: 'none',
-              border: 'none',
               cursor: 'pointer',
-              fontWeight: 600,
-              padding: '12px 16px',
-              color: 'var(--color-text-primary)',
-              textAlign: 'left'
+              width: '100%'
             }}
           >
             <span>EMI Calculator</span>
@@ -1126,10 +1122,10 @@ export default function Header() {
               display: 'flex', 
               flexDirection: 'column', 
               background: 'none',
-              padding: '4px 0'
+              padding: '4px 0 4px 12px'
             }}>
-              <Link href="/emi-calculator" className="mobile-dropdown-item" onClick={closeMenu}>
-                All-in-One Calculator
+              <Link href="/emi-calculator" className="mobile-dropdown-item" onClick={closeMenu} style={{ fontWeight: 700 }}>
+                All Types EMI Calculator
               </Link>
               <Link href="/personal-loan-emi-calculator" className="mobile-dropdown-item" onClick={closeMenu}>
                 Personal Loan EMI
@@ -1140,62 +1136,58 @@ export default function Header() {
               <Link href="/business-loan-emi-calculator" className="mobile-dropdown-item" onClick={closeMenu}>
                 Business Loan EMI
               </Link>
-              <Link href="/calculators" className="mobile-dropdown-item" onClick={closeMenu} style={{ color: 'var(--color-primary, #00d756)', fontWeight: 700 }}>
+              <Link href="/calculators" className="mobile-dropdown-item" onClick={closeMenu} style={{ color: 'var(--color-primary)', fontWeight: 700 }}>
                 More Calculators ➔
               </Link>
             </div>
           )}
         </div>
-        <Link href="/verify-agreement" className={`nav-link ${isLinkActive('/verify-agreement') ? 'active' : ''}`} onClick={closeMenu}>
-          Verify Agent Agreement
+
+        {/* 6. CIBIL */}
+        <Link
+          href="/cibil"
+          className={`nav-link ${isLinkActive('/cibil') ? 'active' : ''}`}
+          onClick={closeMenu}
+        >
+          CIBIL
         </Link>
-        {user ? (
-          <>
-            <Link href="/dashboard" className={`nav-link ${isLinkActive('/dashboard') ? 'active' : ''}`} onClick={closeMenu}>
-              Dashboard
-            </Link>
-             {userRole === 'admin' && (
-              <Link href="/admin" className={`nav-link nav-admin ${isLinkActive('/admin') ? 'active' : ''}`} onClick={closeMenu}>
-                Admin Panel
-              </Link>
-            )}
-            <button onClick={handleLogout} className="nav-link nav-logout" style={{ width: '100%' }}>
-              Logout
-            </button>
-          </>
-        ) : (
+
+        {/* 7. Blogs */}
+        <Link
+          href="/blog"
+          className={`nav-link ${isLinkActive('/blog') ? 'active' : ''}`}
+          onClick={closeMenu}
+        >
+          Blogs
+        </Link>
+
+        {/* 8. Verify Agent */}
+        <Link
+          href="/verify-agreement"
+          className={`nav-link ${isLinkActive('/verify-agreement') ? 'active' : ''}`}
+          onClick={closeMenu}
+        >
+          Verify Agent
+        </Link>
+
+        {/* Become a Partner */}
+        <Link
+          href="/become-a-partner"
+          className={`nav-link ${isLinkActive('/become-a-partner') ? 'active' : ''}`}
+          style={{ color: 'var(--color-primary)', fontWeight: 700 }}
+          onClick={closeMenu}
+        >
+          Become a Partner
+        </Link>
+
+        {/* Sign In Button (only when logged out) */}
+        {!user && (
           <Link href="/login" className="nav-link nav-cta" style={{ width: '100%' }} onClick={closeMenu}>
             Sign In
           </Link>
         )}
 
-        {/* Font Changer — only shown in mobile menu */}
-        <div className="mobile-font-changer">
-          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-text-tertiary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
-            Font Style
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-            {['Jakarta', 'Inter', 'Poppins', 'Outfit', 'Lora', 'Playfair', 'JetBrains'].map((font) => (
-              <button
-                key={font}
-                onClick={mounted ? () => changeFont(font) : undefined}
-                style={{
-                  padding: '5px 12px',
-                  borderRadius: '20px',
-                  border: userFont === font ? '1.5px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.1)',
-                  background: userFont === font ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.03)',
-                  color: userFont === font ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                  fontSize: '12px',
-                  fontWeight: userFont === font ? 700 : 500,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
-              >
-                {font}
-              </button>
-            ))}
-          </div>
-        </div>
+
       </div>
 
       {/* Global Applied/Not Applied Return Popup */}

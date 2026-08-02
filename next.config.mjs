@@ -41,8 +41,8 @@ const securityHeaders = [
       "img-src 'self' data: blob: https:",
       // Development mode needs ws/wss and local network connect headers for Fast Refresh
       process.env.NODE_ENV === 'development'
-        ? "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.resend.com https://api.postalpincode.in ws: wss: http: https:"
-        : "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.resend.com https://api.postalpincode.in",
+        ? "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.resend.com https://api.postalpincode.in ws: wss: http: https: https://cdn.jsdelivr.net https://latest.currency-api.pages.dev"
+        : "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.resend.com https://api.postalpincode.in https://cdn.jsdelivr.net https://latest.currency-api.pages.dev",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -62,6 +62,9 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   async headers() {
+    if (process.env.NODE_ENV === 'development') {
+      return [];
+    }
     return [
       {
         // Apply security headers to all routes

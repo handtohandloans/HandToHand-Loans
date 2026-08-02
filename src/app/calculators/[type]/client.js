@@ -856,6 +856,16 @@ const CALCS_CONFIG = {
 export default function CalculatorsClient({ type }) {
   const config = CALCS_CONFIG[type];
 
+  // Setup initial states dynamically based on config
+  const [inputVals, setInputVals] = useState(() => {
+    if (!config || !config.inputs) return {};
+    const initialVals = {};
+    config.inputs.forEach((input) => {
+      initialVals[input.id] = input.default;
+    });
+    return initialVals;
+  });
+
   // Safeguard if type is unsupported
   if (!config) {
     return (
@@ -876,14 +886,6 @@ export default function CalculatorsClient({ type }) {
       </>
     );
   }
-
-  // Setup initial states dynamically based on config
-  const initialVals = {};
-  config.inputs.forEach((input) => {
-    initialVals[input.id] = input.default;
-  });
-
-  const [inputVals, setInputVals] = useState(initialVals);
 
   const handleInputChange = (id, value) => {
     setInputVals((prev) => ({

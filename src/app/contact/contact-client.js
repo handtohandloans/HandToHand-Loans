@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 export default function ContactClient() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [mobile, setMobile] = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   
@@ -25,12 +26,21 @@ export default function ContactClient() {
     return Date.now() - last < RATE_LIMIT_MS;
   };
 
-  const MAX_LENGTHS = { name: 100, email: 254, subject: 200, message: 2000 };
+  const handleMobileChange = (e) => {
+    setMobile(e.target.value.replace(/\D/g, '').slice(0, 10));
+  };
+
+  const MAX_LENGTHS = { name: 100, email: 254, mobile: 15, subject: 200, message: 2000 };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !message.trim() || !subject.trim()) {
+    if (!name.trim() || !email.trim() || !mobile.trim() || !message.trim() || !subject.trim()) {
       setError('Please fill in all required fields.');
+      return;
+    }
+
+    if (!/^\d{10}$/.test(mobile.trim())) {
+      setError('Please enter a valid 10-digit mobile number.');
       return;
     }
 
@@ -45,6 +55,7 @@ export default function ContactClient() {
     // Security (F7): Enforce input length limits.
     if (name.trim().length > MAX_LENGTHS.name) { setError(`Name must be under ${MAX_LENGTHS.name} characters.`); return; }
     if (email.trim().length > MAX_LENGTHS.email) { setError(`Email must be under ${MAX_LENGTHS.email} characters.`); return; }
+    if (mobile.trim().length > MAX_LENGTHS.mobile) { setError(`Mobile number must be under ${MAX_LENGTHS.mobile} characters.`); return; }
     if (subject.trim().length > MAX_LENGTHS.subject) { setError(`Subject must be under ${MAX_LENGTHS.subject} characters.`); return; }
     if (message.trim().length > MAX_LENGTHS.message) { setError(`Message must be under ${MAX_LENGTHS.message} characters.`); return; }
 
@@ -52,22 +63,20 @@ export default function ContactClient() {
     setError('');
 
     try {
-      const fullMessage = `[Contact Page Query] Subject: ${subject.trim()}\n\n${message.trim()}`;
       const { error: insertErr } = await supabase
-        .from('site_feedbacks')
+        .from('contact_messages')
         .insert([
           {
             name: name.trim(),
             email: email.trim(),
-            message: fullMessage,
-            rating: 5
+            mobile: mobile.trim(),
+            subject: subject.trim(),
+            message: message.trim()
           }
         ]);
 
       if (insertErr) {
-        // Security (Issue2): DB-level rate limit via RLS policy rejects inserts
-        // if the same email submitted within the last 60 seconds.
-        // RLS violations return code '42501' (insufficient_privilege).
+        // Security (Issue2): DB-level rate limit check
         if (insertErr.code === '42501' || insertErr.message?.toLowerCase().includes('policy')) {
           setError('Please wait at least 60 seconds before sending another message.');
         } else {
@@ -82,6 +91,7 @@ export default function ContactClient() {
       setSubmitted(true);
       setName('');
       setEmail('');
+      setMobile('');
       setSubject('');
       setMessage('');
     } catch (err) {
@@ -261,6 +271,19 @@ export default function ContactClient() {
                       placeholder="name@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  {/* Mobile input */}
+                  <div className="input-group">
+                    <label className="input-label" style={{ fontSize: '12px', fontWeight: 600 }}>Your Mobile Number *</label>
+                    <input
+                      type="tel"
+                      className="input-field"
+                      placeholder="Enter 10-digit mobile number"
+                      value={mobile}
+                      onChange={handleMobileChange}
                       required
                     />
                   </div>

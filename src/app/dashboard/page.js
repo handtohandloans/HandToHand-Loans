@@ -69,6 +69,51 @@ const calculateAge = (dobString) => {
   return age;
 };
 
+function AgentSelfiePreview({ selfiePath }) {
+  const [signedUrl, setSignedUrl] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+    const getUrl = async () => {
+      if (!selfiePath) return;
+      if (selfiePath.startsWith('data:') || selfiePath.startsWith('http://') || selfiePath.startsWith('https://')) {
+        if (isMounted) setSignedUrl(selfiePath);
+        return;
+      }
+      try {
+        const { data, error } = await supabase.storage
+          .from('agent-documents')
+          .createSignedUrl(selfiePath, 3600);
+        if (isMounted && !error && data?.signedUrl) {
+          setSignedUrl(data.signedUrl);
+        }
+      } catch (err) {
+        console.error('Selfie signed URL error:', err);
+      }
+    };
+    getUrl();
+    return () => { isMounted = false; };
+  }, [selfiePath]);
+
+  if (!signedUrl) {
+    return (
+      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: 'var(--color-text-tertiary)' }}>
+        Loading...
+      </div>
+    );
+  }
+
+  return (
+    /* eslint-disable-next-line @next/next/no-img-element */
+    <img
+      src={signedUrl}
+      alt="Selfie Preview"
+      style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
+      onClick={() => window.open(signedUrl, '_blank', 'noopener,noreferrer')}
+    />
+  );
+}
+
 const getExpirationCountdown = (createdAt) => {
   const createdTime = new Date(createdAt).getTime();
   const expireTime = createdTime + 14 * 24 * 60 * 60 * 1000;
@@ -371,7 +416,7 @@ export default function UserDashboard() {
       const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
       const { data } = await supabase
         .from('agent_updates')
-        .select('*')
+        .select('id, title, description, image_url, is_active, created_at')
         .eq('is_active', true)
         .gte('created_at', fourteenDaysAgo)
         .order('created_at', { ascending: false });
@@ -487,7 +532,8 @@ export default function UserDashboard() {
       .from('user_inquiries')
       .select('*')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(100);
 
     if (error) {
       console.error('Error fetching inquiries:', error);
@@ -580,7 +626,7 @@ export default function UserDashboard() {
       // 3. Fetch referred sub-agents
       const { data: saData, error: saErr } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, full_name, email, phone, agent_code, approved, created_at, referred_by')
         .eq('referred_by', agentCode)
         .order('created_at', { ascending: false });
 
@@ -593,7 +639,7 @@ export default function UserDashboard() {
           const saIds = saData.map(sa => sa.id);
           const { data: saApps, error: saAppsErr } = await supabase
             .from('applications')
-            .select('*')
+            .select('id, agent_id, loan_amount, status, disbursed_at, commission')
             .in('agent_id', saIds)
             .or('status.eq.Disbursed,status.eq.disbursed')
             .order('created_at', { ascending: false });
@@ -704,16 +750,15 @@ export default function UserDashboard() {
         }
 
         setUser(session.user);
-
         // Fetch bank policies for resolving logos in real time
         // Security: portal_password and portal_username are intentionally excluded — bank credentials must not reach the browser.
         const { data: polData } = await supabase.from('bank_policies').select('id, bank_name, logo_url, apply_url, direct_submit, policy_pdf');
         if (polData) setPolicies(polData);
 
-        // Fetch profile to determine role
+        // Fetch profile to determine role — specific columns to save PostgREST egress
         const { data: prof, error: profErr } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id, email, full_name, role, approved, phone, agent_code, demoted_at, created_at, profile_completed, profile_locked, avatar, city, state, dob, fathers_name, current_address, permanent_address, pincode, marital_status, id_type, id_number, id_file, id_file_back, id_type_2, id_number_2, id_file_2, id_file_2_back, selfie, cancelled_cheque, bank_holder_name, bank_name, bank_account_no, bank_ifsc, referred_by')
           .eq('id', session.user.id)
           .single();
 
@@ -881,7 +926,7 @@ export default function UserDashboard() {
           if (app && app.agent_id === user.id) {
             const { data: appData } = await supabase
               .from('applications')
-              .select('*')
+              .select('id, agent_id, applicant_name, mobile, loan_type, loan_amount, bank_name, status, created_at, updated_at, notes, commission, disbursed_at')
               .eq('agent_id', user.id)
               .order('created_at', { ascending: false });
             if (appData) {
@@ -1037,21 +1082,59 @@ export default function UserDashboard() {
     }
   };
 
+  const uploadPrivateDocToStorage = async (file, fieldName) => {
+    if (!file || !user) return null;
+    const ext = file.name.split('.').pop() || (file.type === 'application/pdf' ? 'pdf' : 'jpg');
+    const filePath = `${user.id}/${fieldName}_${Date.now()}.${ext}`;
+
+    const { error: uploadErr } = await supabase.storage
+      .from('agent-documents')
+      .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+    if (uploadErr) {
+      console.error(`Storage upload error [${fieldName}]:`, uploadErr);
+      throw new Error(`Failed to upload ${fieldName}: ${uploadErr.message}`);
+    }
+    return filePath;
+  };
+
+  const viewPrivateDocument = async (filePath) => {
+    if (!filePath) return;
+    if (filePath.startsWith('data:')) {
+      const win = window.open();
+      if (win) {
+        win.document.write(`<iframe src="${filePath}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+      }
+      return;
+    }
+    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+      window.open(filePath, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    try {
+      const { data, error } = await supabase.storage
+        .from('agent-documents')
+        .createSignedUrl(filePath, 3600);
+      if (error || !data?.signedUrl) {
+        alert('Could not generate document link: ' + (error?.message || 'Access denied'));
+        return;
+      }
+      window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+    } catch (e) {
+      alert('Error viewing document: ' + e.message);
+    }
+  };
+
   const handleIdFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     try {
       setProfileSuccess('');
       setProfileError('');
-      if (file.type === 'application/pdf') {
-        const base64 = await processPdf(file);
-        setProfileFormData(prev => ({ ...prev, id_file: base64 }));
-      } else if (file.type.startsWith('image/')) {
-        const base64 = await compressImage(file);
-        setProfileFormData(prev => ({ ...prev, id_file: base64 }));
-      } else {
-        alert('Please upload a valid JPEG/PNG image or PDF document.');
-        setProfileError('Please upload a valid JPEG/PNG image or PDF document.');
+      const filePath = await uploadPrivateDocToStorage(file, 'id_file');
+      if (filePath) {
+        setProfileFormData(prev => ({ ...prev, id_file: filePath }));
+        showToast('Front Document uploaded securely!');
       }
     } catch (err) {
       alert(err.message);
@@ -1065,15 +1148,10 @@ export default function UserDashboard() {
     try {
       setProfileSuccess('');
       setProfileError('');
-      if (file.type === 'application/pdf') {
-        const base64 = await processPdf(file);
-        setProfileFormData(prev => ({ ...prev, id_file_back: base64 }));
-      } else if (file.type.startsWith('image/')) {
-        const base64 = await compressImage(file);
-        setProfileFormData(prev => ({ ...prev, id_file_back: base64 }));
-      } else {
-        alert('Please upload a valid JPEG/PNG image or PDF document.');
-        setProfileError('Please upload a valid JPEG/PNG image or PDF document.');
+      const filePath = await uploadPrivateDocToStorage(file, 'id_file_back');
+      if (filePath) {
+        setProfileFormData(prev => ({ ...prev, id_file_back: filePath }));
+        showToast('Back Document uploaded securely!');
       }
     } catch (err) {
       alert(err.message);
@@ -1087,15 +1165,10 @@ export default function UserDashboard() {
     try {
       setProfileSuccess('');
       setProfileError('');
-      if (file.type === 'application/pdf') {
-        const base64 = await processPdf(file);
-        setProfileFormData(prev => ({ ...prev, id_file_2: base64 }));
-      } else if (file.type.startsWith('image/')) {
-        const base64 = await compressImage(file);
-        setProfileFormData(prev => ({ ...prev, id_file_2: base64 }));
-      } else {
-        alert('Please upload a valid JPEG/PNG image or PDF document.');
-        setProfileError('Please upload a valid JPEG/PNG image or PDF document.');
+      const filePath = await uploadPrivateDocToStorage(file, 'id_file_2');
+      if (filePath) {
+        setProfileFormData(prev => ({ ...prev, id_file_2: filePath }));
+        showToast('Secondary ID Document uploaded securely!');
       }
     } catch (err) {
       alert(err.message);
@@ -1109,15 +1182,10 @@ export default function UserDashboard() {
     try {
       setProfileSuccess('');
       setProfileError('');
-      if (file.type === 'application/pdf') {
-        const base64 = await processPdf(file);
-        setProfileFormData(prev => ({ ...prev, id_file_2_back: base64 }));
-      } else if (file.type.startsWith('image/')) {
-        const base64 = await compressImage(file);
-        setProfileFormData(prev => ({ ...prev, id_file_2_back: base64 }));
-      } else {
-        alert('Please upload a valid JPEG/PNG image or PDF document.');
-        setProfileError('Please upload a valid JPEG/PNG image or PDF document.');
+      const filePath = await uploadPrivateDocToStorage(file, 'id_file_2_back');
+      if (filePath) {
+        setProfileFormData(prev => ({ ...prev, id_file_2_back: filePath }));
+        showToast('Secondary Back Document uploaded securely!');
       }
     } catch (err) {
       alert(err.message);
@@ -1131,12 +1199,10 @@ export default function UserDashboard() {
     try {
       setProfileSuccess('');
       setProfileError('');
-      if (file.type.startsWith('image/')) {
-        const base64 = await compressImage(file);
-        setProfileFormData(prev => ({ ...prev, selfie: base64 }));
-      } else {
-        alert('Please upload a valid JPEG/PNG image for selfie.');
-        setProfileError('Please upload a valid JPEG/PNG image for selfie.');
+      const filePath = await uploadPrivateDocToStorage(file, 'selfie');
+      if (filePath) {
+        setProfileFormData(prev => ({ ...prev, selfie: filePath }));
+        showToast('Selfie uploaded securely!');
       }
     } catch (err) {
       alert(err.message);
@@ -1150,15 +1216,10 @@ export default function UserDashboard() {
     try {
       setProfileSuccess('');
       setProfileError('');
-      if (file.type === 'application/pdf') {
-        const base64 = await processPdf(file);
-        setProfileFormData(prev => ({ ...prev, cancelled_cheque: base64 }));
-      } else if (file.type.startsWith('image/')) {
-        const base64 = await compressImage(file);
-        setProfileFormData(prev => ({ ...prev, cancelled_cheque: base64 }));
-      } else {
-        alert('Please upload a valid JPEG/PNG image or PDF document.');
-        setProfileError('Please upload a valid JPEG/PNG image or PDF document.');
+      const filePath = await uploadPrivateDocToStorage(file, 'cancelled_cheque');
+      if (filePath) {
+        setProfileFormData(prev => ({ ...prev, cancelled_cheque: filePath }));
+        showToast('Cancelled Cheque uploaded securely!');
       }
     } catch (err) {
       alert(err.message);
@@ -1316,6 +1377,34 @@ export default function UserDashboard() {
       console.error(err);
     } finally {
       setSavingProfile(false);
+    }
+  };
+
+  // Agent self-service document signed URL viewer
+  const viewMyDocument = async (filePath) => {
+    if (!filePath) {
+      showToast('No document file path available.', 'error');
+      return;
+    }
+
+    if (filePath.startsWith('data:') || filePath.startsWith('http://') || filePath.startsWith('https://')) {
+      window.open(filePath, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.storage
+        .from('agent-documents')
+        .createSignedUrl(filePath, 3600);
+
+      if (error || !data?.signedUrl) {
+        showToast('Could not generate document link: ' + (error?.message || 'File not found'), 'error');
+        return;
+      }
+
+      window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+    } catch (e) {
+      showToast('Error opening document: ' + e.message, 'error');
     }
   };
 
@@ -2656,26 +2745,18 @@ export default function UserDashboard() {
                                           <p className="input-hint" style={{ marginTop: '4px' }}>JPEG/PNG or PDF. Size limit: 500kb.</p>
                                           {profileFormData.id_file && (
                                             <div style={{ marginTop: '8px' }}>
-                                              {profileFormData.id_file.startsWith('data:application/pdf') || !profileFormData.id_file.startsWith('data:image/') ? (
-                                                <a
-                                                  href={profileFormData.id_file}
-                                                  download={`aadhar-front-${profileFormData.id_number || 'card'}`}
-                                                  className="btn btn-secondary btn-sm"
-                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                                                >
-                                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
-                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                    <polyline points="14 2 14 8 20 8" />
-                                                  </svg>
-                                                  Download / View Front Document
-                                                </a>
-                                              ) : (
-                                                <div style={{ display: 'grid', gap: '4px' }}>
-                                                  <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>Front Preview / Combined:</span>
-                                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                  <img src={profileFormData.id_file} alt="Aadhaar Front Preview" style={{ maxWidth: '240px', maxHeight: '180px', borderRadius: '8px', border: 'var(--border-light)' }} />
-                                                </div>
-                                              )}
+                                              <button
+                                                type="button"
+                                                onClick={() => viewMyDocument(profileFormData.id_file)}
+                                                className="btn btn-secondary btn-sm"
+                                                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                              >
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
+                                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                  <polyline points="14 2 14 8 20 8" />
+                                                </svg>
+                                                🔒 Download / View Front Document
+                                              </button>
                                             </div>
                                           )}
                                         </div>
@@ -2687,26 +2768,18 @@ export default function UserDashboard() {
                                           <p className="input-hint" style={{ marginTop: '4px' }}>Submit separate back side image. Or leave blank if front file contains both sides.</p>
                                           {profileFormData.id_file_back && (
                                             <div style={{ marginTop: '8px' }}>
-                                              {profileFormData.id_file_back.startsWith('data:application/pdf') || !profileFormData.id_file_back.startsWith('data:image/') ? (
-                                                <a
-                                                  href={profileFormData.id_file_back}
-                                                  download={`aadhar-back-${profileFormData.id_number || 'card'}`}
-                                                  className="btn btn-secondary btn-sm"
-                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                                                >
-                                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
-                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                    <polyline points="14 2 14 8 20 8" />
-                                                  </svg>
-                                                  Download / View Back Document
-                                                </a>
-                                              ) : (
-                                                <div style={{ display: 'grid', gap: '4px' }}>
-                                                  <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>Back Preview:</span>
-                                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                  <img src={profileFormData.id_file_back} alt="Aadhaar Back Preview" style={{ maxWidth: '240px', maxHeight: '180px', borderRadius: '8px', border: 'var(--border-light)' }} />
-                                                </div>
-                                              )}
+                                              <button
+                                                type="button"
+                                                onClick={() => viewMyDocument(profileFormData.id_file_back)}
+                                                className="btn btn-secondary btn-sm"
+                                                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                              >
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
+                                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                  <polyline points="14 2 14 8 20 8" />
+                                                </svg>
+                                                🔒 Download / View Back Document
+                                              </button>
                                             </div>
                                           )}
                                         </div>
@@ -2719,26 +2792,18 @@ export default function UserDashboard() {
                                       <p className="input-hint">JPEG/PNG images will be auto-compressed. PDF size limit: 500kb.</p>
                                       {profileFormData.id_file && (
                                         <div style={{ marginTop: '8px' }}>
-                                          {profileFormData.id_file.startsWith('data:application/pdf') || !profileFormData.id_file.startsWith('data:image/') ? (
-                                            <a
-                                              href={profileFormData.id_file}
-                                              download={`identity-document-1-${profileFormData.id_type || 'proof'}`}
-                                              className="btn btn-secondary btn-sm"
-                                              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                                            >
-                                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
-                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                <polyline points="14 2 14 8 20 8" />
-                                              </svg>
-                                              Download / View Uploaded PDF
-                                            </a>
-                                          ) : (
-                                            <div style={{ display: 'grid', gap: '4px' }}>
-                                              <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>ID File Preview:</span>
-                                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                                              <img src={profileFormData.id_file} alt="ID Document Preview" style={{ maxWidth: '240px', maxHeight: '180px', borderRadius: '8px', border: 'var(--border-light)' }} />
-                                            </div>
-                                          )}
+                                          <button
+                                            type="button"
+                                            onClick={() => viewMyDocument(profileFormData.id_file)}
+                                            className="btn btn-secondary btn-sm"
+                                            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                          >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
+                                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                              <polyline points="14 2 14 8 20 8" />
+                                            </svg>
+                                            🔒 Download / View Uploaded PDF
+                                          </button>
                                         </div>
                                       )}
                                     </div>
@@ -2787,26 +2852,18 @@ export default function UserDashboard() {
                                           <p className="input-hint" style={{ marginTop: '4px' }}>JPEG/PNG or PDF. Size limit: 500kb.</p>
                                           {profileFormData.id_file_2 && (
                                             <div style={{ marginTop: '8px' }}>
-                                              {profileFormData.id_file_2.startsWith('data:application/pdf') || !profileFormData.id_file_2.startsWith('data:image/') ? (
-                                                <a
-                                                  href={profileFormData.id_file_2}
-                                                  download={`aadhar-2-front-${profileFormData.id_number_2 || 'card'}`}
-                                                  className="btn btn-secondary btn-sm"
-                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                                                >
-                                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
-                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                    <polyline points="14 2 14 8 20 8" />
-                                                  </svg>
-                                                  Download / View Front Document
-                                                </a>
-                                              ) : (
-                                                <div style={{ display: 'grid', gap: '4px' }}>
-                                                  <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>Front Preview / Combined:</span>
-                                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                  <img src={profileFormData.id_file_2} alt="Aadhaar 2 Front Preview" style={{ maxWidth: '240px', maxHeight: '180px', borderRadius: '8px', border: 'var(--border-light)' }} />
-                                                </div>
-                                              )}
+                                              <button
+                                                type="button"
+                                                onClick={() => viewMyDocument(profileFormData.id_file_2)}
+                                                className="btn btn-secondary btn-sm"
+                                                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                              >
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
+                                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                  <polyline points="14 2 14 8 20 8" />
+                                                </svg>
+                                                🔒 Download / View Front Document
+                                              </button>
                                             </div>
                                           )}
                                         </div>
@@ -2818,26 +2875,18 @@ export default function UserDashboard() {
                                           <p className="input-hint" style={{ marginTop: '4px' }}>Submit separate back side image. Or leave blank if front file contains both sides.</p>
                                           {profileFormData.id_file_2_back && (
                                             <div style={{ marginTop: '8px' }}>
-                                              {profileFormData.id_file_2_back.startsWith('data:application/pdf') || !profileFormData.id_file_2_back.startsWith('data:image/') ? (
-                                                <a
-                                                  href={profileFormData.id_file_2_back}
-                                                  download={`aadhar-2-back-${profileFormData.id_number_2 || 'card'}`}
-                                                  className="btn btn-secondary btn-sm"
-                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                                                >
-                                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
-                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                    <polyline points="14 2 14 8 20 8" />
-                                                  </svg>
-                                                  Download / View Back Document
-                                                </a>
-                                              ) : (
-                                                <div style={{ display: 'grid', gap: '4px' }}>
-                                                  <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>Back Preview:</span>
-                                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                  <img src={profileFormData.id_file_2_back} alt="Aadhaar 2 Back Preview" style={{ maxWidth: '240px', maxHeight: '180px', borderRadius: '8px', border: 'var(--border-light)' }} />
-                                                </div>
-                                              )}
+                                              <button
+                                                type="button"
+                                                onClick={() => viewMyDocument(profileFormData.id_file_2_back)}
+                                                className="btn btn-secondary btn-sm"
+                                                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                              >
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
+                                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                  <polyline points="14 2 14 8 20 8" />
+                                                </svg>
+                                                🔒 Download / View Back Document
+                                              </button>
                                             </div>
                                           )}
                                         </div>
@@ -2850,26 +2899,18 @@ export default function UserDashboard() {
                                       <p className="input-hint">JPEG/PNG images will be auto-compressed. PDF size limit: 500kb.</p>
                                       {profileFormData.id_file_2 && (
                                         <div style={{ marginTop: '8px' }}>
-                                          {profileFormData.id_file_2.startsWith('data:application/pdf') || !profileFormData.id_file_2.startsWith('data:image/') ? (
-                                            <a
-                                              href={profileFormData.id_file_2}
-                                              download={`identity-document-2-${profileFormData.id_type_2 || 'proof'}`}
-                                              className="btn btn-secondary btn-sm"
-                                              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                                            >
-                                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
-                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                <polyline points="14 2 14 8 20 8" />
-                                              </svg>
-                                              Download / View Uploaded PDF
-                                            </a>
-                                          ) : (
-                                            <div style={{ display: 'grid', gap: '4px' }}>
-                                              <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>ID File Preview:</span>
-                                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                                              <img src={profileFormData.id_file_2} alt="ID Document 2 Preview" style={{ maxWidth: '240px', maxHeight: '180px', borderRadius: '8px', border: 'var(--border-light)' }} />
-                                            </div>
-                                          )}
+                                          <button
+                                            type="button"
+                                            onClick={() => viewMyDocument(profileFormData.id_file_2)}
+                                            className="btn btn-secondary btn-sm"
+                                            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                          >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
+                                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                              <polyline points="14 2 14 8 20 8" />
+                                            </svg>
+                                            🔒 Download / View Uploaded Document
+                                          </button>
                                         </div>
                                       )}
                                     </div>
@@ -2883,8 +2924,7 @@ export default function UserDashboard() {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
                                   <div style={{ width: '100px', height: '100px', borderRadius: '8px', background: 'var(--color-bg-tertiary)', border: 'var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                                     {profileFormData.selfie ? (
-                                      // eslint-disable-next-line @next/next/no-img-element
-                                      <img src={profileFormData.selfie} alt="Selfie Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                      <AgentSelfiePreview selfiePath={profileFormData.selfie} />
                                     ) : (
                                       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-text-secondary)' }}>
                                         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
@@ -2966,26 +3006,18 @@ export default function UserDashboard() {
                                   <p className="input-hint">Formats: JPG, PNG, PDF. Autocompressed. Limit: 500kb.</p>
                                   {profileFormData.cancelled_cheque && (
                                     <div style={{ marginTop: '12px' }}>
-                                      {profileFormData.cancelled_cheque.startsWith('data:application/pdf') || !profileFormData.cancelled_cheque.startsWith('data:image/') ? (
-                                        <a
-                                          href={profileFormData.cancelled_cheque}
-                                          download={`cancelled-cheque-${profileFormData.bank_name || 'bank'}`}
-                                          className="btn btn-secondary btn-sm"
-                                          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                                        >
-                                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
-                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                            <polyline points="14 2 14 8 20 8" />
-                                          </svg>
-                                          Download / View Uploaded PDF
-                                        </a>
-                                      ) : (
-                                        <div style={{ display: 'grid', gap: '4px' }}>
-                                          <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>Cancelled Cheque Preview:</span>
-                                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                                          <img src={profileFormData.cancelled_cheque} alt="Cancelled Cheque Preview" style={{ maxWidth: '240px', maxHeight: '180px', borderRadius: '8px', border: 'var(--border-light)' }} />
-                                        </div>
-                                      )}
+                                      <button
+                                        type="button"
+                                        onClick={() => viewMyDocument(profileFormData.cancelled_cheque)}
+                                        className="btn btn-secondary btn-sm"
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                      >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
+                                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                          <polyline points="14 2 14 8 20 8" />
+                                        </svg>
+                                        🔒 Download / View Uploaded Cheque
+                                      </button>
                                     </div>
                                   )}
                                 </div>

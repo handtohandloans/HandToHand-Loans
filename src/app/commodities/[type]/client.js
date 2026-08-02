@@ -102,30 +102,24 @@ export default function CommodityClient({ type }) {
   const [inputWeight, setInputWeight] = useState(10);
   const [includeGST, setIncludeGST] = useState(true);
 
-  // ─── Fetch real data from @fawazahmed0/currency-api (free, no key) ───────────
+  // ─── Fetch via our internal server-side proxy (avoids CORS/CSP on hosted domain) ─
   const fetchSpotPrice = useCallback(async () => {
     try {
       const ticker = type === 'gold' ? 'xau' : 'xag';
-      // Primary CDN, fallback to raw.githubusercontent
-      let data;
-      try {
-        const res = await fetch(
-          `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${ticker}.json`,
-          { cache: 'no-store' }
-        );
-        data = await res.json();
-      } catch {
-        const res = await fetch(
-          `https://latest.currency-api.pages.dev/v1/currencies/${ticker}.json`,
-          { cache: 'no-store' }
-        );
-        data = await res.json();
+      // Use our own API route — server fetches the data, bypassing any
+      // browser CORS / hosting-platform CSP restrictions on the live domain
+      const res = await fetch(`/api/commodity-price?ticker=${ticker}`, {
+        cache: 'no-store',
+      });
+
+      if (!res.ok) {
+        throw new Error(`Proxy returned HTTP ${res.status}`);
       }
 
-      const inrPerTroyOz = data[ticker]?.inr;
-      if (!inrPerTroyOz) throw new Error('Missing INR rate');
+      const data = await res.json();
+      const perGram = data.perGram;
 
-      const perGram = Math.round((inrPerTroyOz / TROY_OZ_GRAMS) * 100) / 100;
+      if (!perGram) throw new Error('Missing perGram in proxy response');
 
       setPrevSpot(prev => {
         if (prev !== null && prev !== perGram) {

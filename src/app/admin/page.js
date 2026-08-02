@@ -45,6 +45,83 @@ function ExpirationTimer({ createdAt }) {
   );
 }
 
+function AdminSelfieImage({ selfiePath, onViewDocument }) {
+  const [signedUrl, setSignedUrl] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadUrl = async () => {
+      if (!selfiePath) return;
+      if (selfiePath.startsWith('data:') || selfiePath.startsWith('http://') || selfiePath.startsWith('https://')) {
+        if (isMounted) {
+          setSignedUrl(selfiePath);
+          setLoading(false);
+        }
+        return;
+      }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        const res = await fetch(`/api/admin/document-url?path=${encodeURIComponent(selfiePath)}`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+        const result = await res.json();
+        if (isMounted && res.ok && result.signedUrl) {
+          setSignedUrl(result.signedUrl);
+        }
+      } catch (e) {
+        console.error('Selfie signed url fetch error:', e);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    loadUrl();
+    return () => { isMounted = false; };
+  }, [selfiePath]);
+
+  if (loading) {
+    return <div style={{ fontSize: '11px', color: 'var(--color-text-tertiary)' }}>Loading live selfie...</div>;
+  }
+
+  if (!signedUrl) {
+    return (
+      <button
+        type="button"
+        onClick={() => onViewDocument(selfiePath)}
+        className="btn btn-secondary btn-sm"
+        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+      >
+        🔒 View Agent Live Selfie
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ display: 'inline-block', position: 'relative' }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={signedUrl}
+        alt="Agent Live Selfie"
+        onClick={() => onViewDocument(selfiePath)}
+        title="Click to expand selfie in new tab"
+        style={{
+          maxWidth: '160px',
+          maxHeight: '160px',
+          borderRadius: '8px',
+          border: '1px solid var(--color-primary-alpha)',
+          objectFit: 'cover',
+          cursor: 'pointer',
+          boxShadow: 'var(--shadow-sm)'
+        }}
+      />
+      <div style={{ fontSize: '10px', color: 'var(--color-primary)', marginTop: '4px', cursor: 'pointer' }} onClick={() => onViewDocument(selfiePath)}>
+        🔍 Click to Enlarge
+      </div>
+    </div>
+  );
+}
+
 const getExpirationCountdown = (createdAt) => {
   const createdTime = new Date(createdAt).getTime();
   const expireTime = createdTime + 14 * 24 * 60 * 60 * 1000;
@@ -269,11 +346,55 @@ export default function AdminDashboard() {
     }
   };
 
+  const viewPrivateDocument = async (filePath) => {
+    if (!filePath) {
+      alert('No document file path available.');
+      return;
+    }
+
+    // Handle legacy Base64 or external HTTP URLs
+    if (filePath.startsWith('data:')) {
+      const win = window.open();
+      if (win) {
+        win.document.write(`<iframe src="${filePath}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+      }
+      return;
+    }
+    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+      window.open(filePath, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Session expired. Please log in again.');
+        return;
+      }
+
+      const res = await fetch(`/api/admin/document-url?path=${encodeURIComponent(filePath)}`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      const result = await res.json();
+      if (res.ok && result.signedUrl) {
+        window.open(result.signedUrl, '_blank', 'noopener,noreferrer');
+      } else {
+        alert('Could not generate document link: ' + (result.error || 'Object not found'));
+      }
+    } catch (err) {
+      console.error('Error fetching admin document URL:', err);
+      alert('Failed to fetch document link: ' + err.message);
+    }
+  };
+
   const fetchPolicies = async () => {
     try {
       const { data, error } = await supabase
         .from('bank_policies')
-        .select('*')
+        .select('id, bank_name, logo_url, apply_url, direct_submit, policy_pdf, created_at')
         .order('bank_name', { ascending: true });
       if (error) console.error('Error fetching policies:', error.message);
       else setPolicies(data || []);
@@ -295,7 +416,7 @@ export default function AdminDashboard() {
       setSelectedPincodeIds([]);
       const { data, error } = await supabase
         .from('bank_pincodes')
-        .select('*')
+        .select('id, bank_name, pincode, district, state')
         .eq('bank_name', bankName)
         .order('pincode', { ascending: true });
       if (error) console.error('Error fetching bank pincodes:', error.message);
@@ -614,13 +735,16 @@ export default function AdminDashboard() {
     }
   };
 
+
+
   const fetchInquiries = async () => {
     try {
-      // Fetch user inquiries and join profiles to identify role (agent vs customer)
+      // Fetch user inquiries and join profiles to identify role
       const { data, error } = await supabase
         .from('user_inquiries')
         .select('*, agent:profiles(full_name, email, agent_code, role, phone)')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(200);
 
       if (error) {
         console.error('Error fetching inquiries:', error.message);
@@ -670,51 +794,35 @@ export default function AdminDashboard() {
 
   const fetchAgentsData = async () => {
     try {
-      // 1. Fetch Active Approved Agents
-      const { data: activeA, error: activeAErr } = await supabase
+      // Fetch all profile fields (since documents now store short storage paths instead of base64)
+      const { data: allProfiles, error: profilesErr } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('role', 'agent')
-        .eq('approved', true)
+        .select('id, email, full_name, role, approved, phone, agent_code, demoted_at, created_at, profile_completed, profile_locked, avatar, city, state, dob, fathers_name, current_address, permanent_address, pincode, marital_status, id_type, id_number, id_file, id_file_back, id_type_2, id_number_2, id_file_2, id_file_2_back, selfie, cancelled_cheque, bank_holder_name, bank_name, bank_account_no, bank_ifsc, referred_by')
         .order('created_at', { ascending: false });
 
-      if (activeAErr) console.error('Error fetching active agents:', activeAErr.message);
-      else setActiveAgents(activeA || []);
+      if (profilesErr) {
+        console.error('Error fetching profiles data:', profilesErr.message);
+        return;
+      }
 
-      // 2. Fetch Pending Unapproved Agents
-      const { data: pendingA, error: pendingAErr } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'agent')
-        .eq('approved', false)
-        .order('created_at', { ascending: false });
+      const profiles = allProfiles || [];
 
-      if (pendingAErr) console.error('Error fetching pending agents:', pendingAErr.message);
-      else setPendingAgents(pendingA || []);
+      // 1. Active Approved Agents
+      setActiveAgents(profiles.filter(p => p.role === 'agent' && p.approved));
 
-      // 3. Fetch Demoted Users
-      const { data: demotedU, error: demotedUErr } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'user')
-        .not('demoted_at', 'is', null)
-        .order('demoted_at', { ascending: false });
+      // 2. Pending Unapproved Agents
+      setPendingAgents(profiles.filter(p => p.role === 'agent' && !p.approved));
 
-      if (demotedUErr) console.error('Error fetching demoted users:', demotedUErr.message);
-      else setDemotedUsers(demotedU || []);
+      // 3. Demoted Users (sort by demoted_at descending)
+      const demoted = profiles
+        .filter(p => p.role === 'user' && p.demoted_at != null)
+        .sort((a, b) => new Date(b.demoted_at || 0) - new Date(a.demoted_at || 0));
+      setDemotedUsers(demoted);
 
-      // 4. Fetch Normal Users (registered users who are not demoted agents)
-      const { data: normalU, error: normalUErr } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'user')
-        .is('demoted_at', null)
-        .order('created_at', { ascending: false });
-
-      if (normalUErr) console.error('Error fetching normal users:', normalUErr.message);
-      else setNormalUsers(normalU || []);
+      // 4. Normal Users (registered users who are not demoted agents)
+      setNormalUsers(profiles.filter(p => p.role === 'user' && !p.demoted_at));
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching agents data:', err);
     }
   };
 
@@ -938,7 +1046,8 @@ export default function AdminDashboard() {
       const { data, error } = await supabase
         .from('contact_messages')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(150);
 
       if (error) console.error('Error fetching contact messages:', error.message);
       else setContactMessages(data || []);
@@ -976,7 +1085,8 @@ export default function AdminDashboard() {
       const { data, error } = await supabase
         .from('site_feedbacks')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(150);
 
       if (error) console.error('Error fetching feedbacks:', error.message);
       else setSiteFeedbacks(data || []);
@@ -1012,7 +1122,8 @@ export default function AdminDashboard() {
       const { data, error } = await supabase
         .from('audit_logs')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(150);
 
       if (error) console.error('Error fetching audit logs:', error.message);
       else setAuditLogs(data || []);
@@ -1045,7 +1156,7 @@ export default function AdminDashboard() {
 
       const { data, error } = await supabase
         .from('agent_updates')
-        .select('*')
+        .select('id, title, description, image_url, is_active, created_at')
         .order('created_at', { ascending: false });
       if (!error) setAgentUpdates(data || []);
     } catch (err) { console.error(err); }
@@ -1130,7 +1241,7 @@ export default function AdminDashboard() {
     try {
       const { data, error } = await supabase
         .from('blogs')
-        .select('*')
+        .select('id, title, slug, excerpt, content, cover_image, author, tags, is_published, created_at, updated_at')
         .order('created_at', { ascending: false });
       if (!error) setBlogs(data || []);
     } catch (err) {
@@ -2051,7 +2162,12 @@ export default function AdminDashboard() {
           gap: '24px'
         }}>
           {/* Card 1: Total Leads */}
-          <div className="form-card" style={{ padding: '24px', textAlign: 'center', backdropFilter: 'blur(20px)' }}>
+          <div 
+            className="form-card clickable-metric-card" 
+            onClick={() => setActiveTab('customer_leads')}
+            title="Click to view Customer Inquiries tab"
+            style={{ padding: '24px', textAlign: 'center', backdropFilter: 'blur(20px)' }}
+          >
             <div style={{ fontSize: '32px', marginBottom: '8px' }}></div>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Total Leads Checked
@@ -2059,10 +2175,18 @@ export default function AdminDashboard() {
             <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--color-text-primary)', marginTop: '4px' }}>
               {totalLeads}
             </div>
+            <span style={{ fontSize: '11px', color: 'var(--color-primary)', marginTop: '6px', fontWeight: 600, display: 'block' }}>
+              View Inquiries ➔
+            </span>
           </div>
 
           {/* Card 2: Total Applications */}
-          <div className="form-card" style={{ padding: '24px', textAlign: 'center', backdropFilter: 'blur(20px)' }}>
+          <div 
+            className="form-card clickable-metric-card" 
+            onClick={() => setActiveTab('agent_applications')}
+            title="Click to view Agent Applications tab"
+            style={{ padding: '24px', textAlign: 'center', backdropFilter: 'blur(20px)' }}
+          >
             <div style={{ fontSize: '32px', marginBottom: '8px' }}></div>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Total Applications
@@ -2070,10 +2194,18 @@ export default function AdminDashboard() {
             <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--color-text-primary)', marginTop: '4px' }}>
               {totalApps}
             </div>
+            <span style={{ fontSize: '11px', color: 'var(--color-primary)', marginTop: '6px', fontWeight: 600, display: 'block' }}>
+              View Applications ➔
+            </span>
           </div>
 
           {/* Card 3: Total Disbursed Volume */}
-          <div className="form-card" style={{ padding: '24px', textAlign: 'center', backdropFilter: 'blur(20px)', border: '1px solid rgba(16,185,129,0.2)' }}>
+          <div 
+            className="form-card clickable-metric-card" 
+            onClick={() => setActiveTab('agent_applications')}
+            title="Click to view Disbursed Applications tab"
+            style={{ padding: '24px', textAlign: 'center', backdropFilter: 'blur(20px)', border: '1px solid rgba(16,185,129,0.3)' }}
+          >
             <div style={{ fontSize: '32px', marginBottom: '8px' }}></div>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Total Disbursed Volume
@@ -2081,10 +2213,18 @@ export default function AdminDashboard() {
             <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 800, color: '#10b981', marginTop: '4px' }}>
               ₹{totalDisbursedAmount.toLocaleString('en-IN')}
             </div>
+            <span style={{ fontSize: '11px', color: '#10b981', marginTop: '6px', fontWeight: 600, display: 'block' }}>
+              View Disbursements ➔
+            </span>
           </div>
 
           {/* Card 4: Success Rate */}
-          <div className="form-card" style={{ padding: '24px', textAlign: 'center', backdropFilter: 'blur(20px)' }}>
+          <div 
+            className="form-card clickable-metric-card" 
+            onClick={() => setActiveTab('payouts')}
+            title="Click to view Payout Requests tab"
+            style={{ padding: '24px', textAlign: 'center', backdropFilter: 'blur(20px)' }}
+          >
             <div style={{ fontSize: '32px', marginBottom: '8px' }}></div>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Disbursement Rate
@@ -2092,6 +2232,9 @@ export default function AdminDashboard() {
             <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--color-primary)', marginTop: '4px' }}>
               {disbursementRate}%
             </div>
+            <span style={{ fontSize: '11px', color: 'var(--color-primary)', marginTop: '6px', fontWeight: 600, display: 'block' }}>
+              View Payouts ➔
+            </span>
           </div>
         </div>
 
@@ -2284,23 +2427,55 @@ export default function AdminDashboard() {
                   gap: '20px',
                   marginBottom: '32px'
                 }}>
-                  <div className="form-card" style={{ padding: '20px 24px', backdropFilter: 'blur(20px)' }}>
+                  <div 
+                    className="form-card clickable-metric-card" 
+                    onClick={() => setActiveTab('customer_leads')}
+                    title="Click to view Customer Inquiries tab"
+                    style={{ padding: '20px 24px', backdropFilter: 'blur(20px)' }}
+                  >
                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Inquiries</div>
                     <div style={{ fontSize: 'var(--text-3xl)', fontWeight: 700, color: 'var(--color-accent-indigo)', marginTop: '8px' }}>{totalLeads}</div>
+                    <span style={{ fontSize: '11px', color: 'var(--color-accent-indigo)', marginTop: '6px', fontWeight: 600, display: 'block' }}>
+                      View Inquiries ➔
+                    </span>
                   </div>
-                  <div className="form-card" style={{ padding: '20px 24px', backdropFilter: 'blur(20px)' }}>
+                  <div 
+                    className="form-card clickable-metric-card" 
+                    onClick={() => setActiveTab('active_agents')}
+                    title="Click to view Active Agents tab"
+                    style={{ padding: '20px 24px', backdropFilter: 'blur(20px)' }}
+                  >
                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Active Approved Agents</div>
                     <div style={{ fontSize: 'var(--text-3xl)', fontWeight: 700, color: 'var(--color-accent-purple)', marginTop: '8px' }}>{activeAgents.length}</div>
+                    <span style={{ fontSize: '11px', color: 'var(--color-accent-purple)', marginTop: '6px', fontWeight: 600, display: 'block' }}>
+                      View Active Agents ➔
+                    </span>
                   </div>
-                  <div className="form-card" style={{ padding: '20px 24px', backdropFilter: 'blur(20px)' }}>
+                  <div 
+                    className="form-card clickable-metric-card" 
+                    onClick={() => setActiveTab('pending_agents')}
+                    title="Click to view Pending Agent Approvals tab"
+                    style={{ padding: '20px 24px', backdropFilter: 'blur(20px)' }}
+                  >
                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pending Approvals</div>
                     <div style={{ fontSize: 'var(--text-3xl)', fontWeight: 700, color: 'var(--color-warning)', marginTop: '8px' }}>{actualPendingAgents.length}</div>
+                    <span style={{ fontSize: '11px', color: 'var(--color-warning)', marginTop: '6px', fontWeight: 600, display: 'block' }}>
+                      View Approvals ➔
+                    </span>
                   </div>
-                  <div className="form-card" style={{ padding: '20px 24px', backdropFilter: 'blur(20px)' }}>
+                  <div 
+                    className="form-card clickable-metric-card" 
+                    onClick={() => setActiveTab('payouts')}
+                    title="Click to view Pending Payout Requests tab"
+                    style={{ padding: '20px 24px', backdropFilter: 'blur(20px)' }}
+                  >
                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pending Payouts</div>
                     <div style={{ fontSize: 'var(--text-3xl)', fontWeight: 700, color: 'var(--color-success)', marginTop: '8px' }}>
                       ₹{payoutRequests.filter(req => req.status === 'Pending').reduce((acc, req) => acc + Number(req.amount), 0).toLocaleString('en-IN')}
                     </div>
+                    <span style={{ fontSize: '11px', color: 'var(--color-success)', marginTop: '6px', fontWeight: 600, display: 'block' }}>
+                      View Payouts ➔
+                    </span>
                   </div>
                 </div>
 
@@ -2475,7 +2650,7 @@ export default function AdminDashboard() {
                      <div>
                        <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                          🔔 Agent Activity Feed
-                         <span className="badge badge-warning" style={{ fontSize: '10px', background: '#3b82f6', color: '#fff' }}>{dbNotifications.length}</span>
+                         <span className="badge badge-warning" style={{ fontSize: '10px', background: 'var(--color-primary)', color: '#fff' }}>{dbNotifications.length}</span>
                        </h3>
                        {dbNotifications.length === 0 ? (
                          <div className="form-card text-center" style={{ padding: '24px', backdropFilter: 'blur(20px)' }}>
@@ -4835,6 +5010,11 @@ export default function AdminDashboard() {
                                 </td>
                                 <td style={{ padding: '16px' }}>
                                   <div style={{ fontWeight: 600 }}>{fb.name || <span style={{ color: 'var(--color-text-muted)', fontStyle: 'italic' }}>Anonymous</span>}</div>
+                                  {(fb.phone || fb.mobile) && (
+                                    <div style={{ marginTop: '2px' }}>
+                                      <a href={`tel:${fb.phone || fb.mobile}`} style={{ color: 'var(--color-text-secondary)', textDecoration: 'none', fontSize: 'var(--text-xs)' }}>📞 {fb.phone || fb.mobile}</a>
+                                    </div>
+                                  )}
                                   {fb.email && (
                                     <div style={{ marginTop: '2px' }}>
                                       <a href={`mailto:${fb.email}`} style={{ color: 'var(--color-primary)', textDecoration: 'underline', fontSize: 'var(--text-xs)' }}>{fb.email}</a>
@@ -7093,14 +7273,36 @@ export default function AdminDashboard() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                 <h4 style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-tertiary)', textTransform: 'uppercase' }}>Basics & Contact</h4>
                 {selectedAgent.role !== 'user' && (
-                  <button
-                    onClick={() => handleDemoteAgent(selectedAgent.id)}
-                    disabled={agentActionLoading === selectedAgent.id}
-                    className="btn btn-secondary btn-sm"
-                    style={{ margin: 0, padding: '4px 10px', fontSize: '11px', background: 'rgba(239, 68, 68, 0.05)', color: 'var(--color-error)', border: 'var(--border-error)' }}
-                  >
-                    Demote to Normal User
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleProfileLock(selectedAgent)}
+                      disabled={agentActionLoading === selectedAgent.id}
+                      className="btn btn-sm"
+                      style={{
+                        margin: 0,
+                        padding: '6px 12px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        background: selectedAgent.profile_locked ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                        color: selectedAgent.profile_locked ? 'var(--color-success)' : '#f59e0b',
+                        border: selectedAgent.profile_locked ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(245, 158, 11, 0.3)',
+                        borderRadius: '6px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {selectedAgent.profile_locked ? '🔒 Profile Locked (Sign Enabled)' : '🔓 Lock Profile & Enable Sign Agreement'}
+                    </button>
+
+                    <button
+                      onClick={() => handleDemoteAgent(selectedAgent.id)}
+                      disabled={agentActionLoading === selectedAgent.id}
+                      className="btn btn-secondary btn-sm"
+                      style={{ margin: 0, padding: '4px 10px', fontSize: '11px', background: 'rgba(239, 68, 68, 0.05)', color: 'var(--color-error)', border: 'var(--border-error)' }}
+                    >
+                      Demote to Normal User
+                    </button>
+                  </div>
                 )}
               </div>
               {isEditingAgent ? (
@@ -7340,8 +7542,7 @@ export default function AdminDashboard() {
                   {selectedAgent.selfie && (
                     <div style={{ paddingBottom: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
                       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginBottom: '8px' }}>Agent Live Selfie</div>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={selectedAgent.selfie} alt="Selfie" style={{ maxWidth: '160px', maxHeight: '160px', borderRadius: '8px', border: 'var(--border-light)', objectFit: 'cover' }} />
+                      <AdminSelfieImage selfiePath={selectedAgent.selfie} onViewDocument={viewPrivateDocument} />
                     </div>
                   )}
 
@@ -7364,23 +7565,18 @@ export default function AdminDashboard() {
                         <div>
                           <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Front Image / Combined File:</div>
                           {selectedAgent.id_file ? (
-                            selectedAgent.id_file.startsWith('data:application/pdf') || !selectedAgent.id_file.startsWith('data:image/') ? (
-                              <a
-                                href={selectedAgent.id_file}
-                                download={`aadhar-front-${selectedAgent.full_name || 'agent'}`}
-                                className="btn btn-secondary btn-sm"
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', width: '100%', justifyContent: 'center' }}
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                  <polyline points="14 2 14 8 20 8" />
-                                </svg>
-                                View / Download Front
-                              </a>
-                            ) : (
-                              /* eslint-disable-next-line @next/next/no-img-element */
-                              <img src={selectedAgent.id_file} alt="Aadhaar Front" style={{ maxWidth: '100%', maxHeight: '180px', borderRadius: '8px', border: 'var(--border-light)', objectFit: 'contain' }} />
-                            )
+                            <button
+                              type="button"
+                              onClick={() => viewPrivateDocument(selectedAgent.id_file)}
+                              className="btn btn-secondary btn-sm"
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', width: '100%', justifyContent: 'center' }}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                              </svg>
+                              🔒 View Front Document
+                            </button>
                           ) : (
                             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>No document uploaded</span>
                           )}
@@ -7390,23 +7586,18 @@ export default function AdminDashboard() {
                         <div>
                           <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Back Image (Optional):</div>
                           {selectedAgent.id_file_back ? (
-                            selectedAgent.id_file_back.startsWith('data:application/pdf') || !selectedAgent.id_file_back.startsWith('data:image/') ? (
-                              <a
-                                href={selectedAgent.id_file_back}
-                                download={`aadhar-back-${selectedAgent.full_name || 'agent'}`}
-                                className="btn btn-secondary btn-sm"
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', width: '100%', justifyContent: 'center' }}
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                  <polyline points="14 2 14 8 20 8" />
-                                </svg>
-                                View / Download Back
-                              </a>
-                            ) : (
-                              /* eslint-disable-next-line @next/next/no-img-element */
-                              <img src={selectedAgent.id_file_back} alt="Aadhaar Back" style={{ maxWidth: '100%', maxHeight: '180px', borderRadius: '8px', border: 'var(--border-light)', objectFit: 'contain' }} />
-                            )
+                            <button
+                              type="button"
+                              onClick={() => viewPrivateDocument(selectedAgent.id_file_back)}
+                              className="btn btn-secondary btn-sm"
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', width: '100%', justifyContent: 'center' }}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                              </svg>
+                              🔒 View Back Document
+                            </button>
                           ) : (
                             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>Not uploaded (Back is optional/combined)</span>
                           )}
@@ -7414,23 +7605,18 @@ export default function AdminDashboard() {
                       </div>
                     ) : (
                       selectedAgent.id_file ? (
-                        selectedAgent.id_file.startsWith('data:application/pdf') || !selectedAgent.id_file.startsWith('data:image/') ? (
-                          <a
-                            href={selectedAgent.id_file}
-                            download={`identity-${selectedAgent.id_type || 'verification'}`}
-                            className="btn btn-secondary btn-sm"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                          >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
-                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                              <polyline points="14 2 14 8 20 8" />
-                            </svg>
-                            View / Download Identity Proof PDF
-                          </a>
-                        ) : (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img src={selectedAgent.id_file} alt="ID Verification" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px', border: 'var(--border-light)' }} />
-                        )
+                        <button
+                          type="button"
+                          onClick={() => viewPrivateDocument(selectedAgent.id_file)}
+                          className="btn btn-secondary btn-sm"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                          </svg>
+                          🔒 View Identity Document
+                        </button>
                       ) : (
                         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>No document uploaded</span>
                       )
@@ -7458,23 +7644,18 @@ export default function AdminDashboard() {
                           <div>
                             <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Front Image / Combined File:</div>
                             {selectedAgent.id_file_2 ? (
-                              selectedAgent.id_file_2.startsWith('data:application/pdf') || !selectedAgent.id_file_2.startsWith('data:image/') ? (
-                                <a
-                                  href={selectedAgent.id_file_2}
-                                  download={`aadhar-2-front-${selectedAgent.full_name || 'agent'}`}
-                                  className="btn btn-secondary btn-sm"
-                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', width: '100%', justifyContent: 'center' }}
-                                >
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                    <polyline points="14 2 14 8 20 8" />
-                                  </svg>
-                                  View / Download Front
-                                </a>
-                              ) : (
-                                /* eslint-disable-next-line @next/next/no-img-element */
-                                <img src={selectedAgent.id_file_2} alt="Aadhaar 2 Front" style={{ maxWidth: '100%', maxHeight: '180px', borderRadius: '8px', border: 'var(--border-light)', objectFit: 'contain' }} />
-                              )
+                              <button
+                                type="button"
+                                onClick={() => viewPrivateDocument(selectedAgent.id_file_2)}
+                                className="btn btn-secondary btn-sm"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', width: '100%', justifyContent: 'center' }}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                  <polyline points="14 2 14 8 20 8" />
+                                </svg>
+                                🔒 View Front Document
+                              </button>
                             ) : (
                               <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>No document uploaded</span>
                             )}
@@ -7484,23 +7665,18 @@ export default function AdminDashboard() {
                           <div>
                             <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Back Image (Optional):</div>
                             {selectedAgent.id_file_2_back ? (
-                              selectedAgent.id_file_2_back.startsWith('data:application/pdf') || !selectedAgent.id_file_2_back.startsWith('data:image/') ? (
-                                <a
-                                  href={selectedAgent.id_file_2_back}
-                                  download={`aadhar-2-back-${selectedAgent.full_name || 'agent'}`}
-                                  className="btn btn-secondary btn-sm"
-                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', width: '100%', justifyContent: 'center' }}
-                                >
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                    <polyline points="14 2 14 8 20 8" />
-                                  </svg>
-                                  View / Download Back
-                                </a>
-                              ) : (
-                                /* eslint-disable-next-line @next/next/no-img-element */
-                                <img src={selectedAgent.id_file_2_back} alt="Aadhaar 2 Back" style={{ maxWidth: '100%', maxHeight: '180px', borderRadius: '8px', border: 'var(--border-light)', objectFit: 'contain' }} />
-                              )
+                              <button
+                                type="button"
+                                onClick={() => viewPrivateDocument(selectedAgent.id_file_2_back)}
+                                className="btn btn-secondary btn-sm"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', width: '100%', justifyContent: 'center' }}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                  <polyline points="14 2 14 8 20 8" />
+                                </svg>
+                                🔒 View Back Document
+                              </button>
                             ) : (
                               <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>Not uploaded (Back is optional/combined)</span>
                             )}
@@ -7508,23 +7684,18 @@ export default function AdminDashboard() {
                         </div>
                       ) : (
                         selectedAgent.id_file_2 ? (
-                          selectedAgent.id_file_2.startsWith('data:application/pdf') || !selectedAgent.id_file_2.startsWith('data:image/') ? (
-                            <a
-                              href={selectedAgent.id_file_2}
-                              download={`secondary-identity-${selectedAgent.id_type_2 || 'verification'}`}
-                              className="btn btn-secondary btn-sm"
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                            >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                              </svg>
-                              View / Download Secondary Identity Proof PDF
-                            </a>
-                          ) : (
-                            /* eslint-disable-next-line @next/next/no-img-element */
-                            <img src={selectedAgent.id_file_2} alt="Secondary ID Verification" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px', border: 'var(--border-light)' }} />
-                          )
+                          <button
+                            type="button"
+                            onClick={() => viewPrivateDocument(selectedAgent.id_file_2)}
+                            className="btn btn-secondary btn-sm"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                              <polyline points="14 2 14 8 20 8" />
+                            </svg>
+                            🔒 View Secondary Identity Document
+                          </button>
                         ) : (
                           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>No document uploaded</span>
                         )
@@ -7600,23 +7771,18 @@ export default function AdminDashboard() {
                   <div>
                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginBottom: '8px' }}>Cancelled Cheque File</div>
                     {selectedAgent.cancelled_cheque ? (
-                      selectedAgent.cancelled_cheque.startsWith('data:application/pdf') || !selectedAgent.cancelled_cheque.startsWith('data:image/') ? (
-                        <a
-                          href={selectedAgent.cancelled_cheque}
-                          download={`cancelled-cheque-${selectedAgent.bank_name || 'bank'}`}
-                          className="btn btn-secondary btn-sm"
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                            <polyline points="14 2 14 8 20 8" />
-                          </svg>
-                          View / Download Cancelled Cheque PDF
-                        </a>
-                      ) : (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img src={selectedAgent.cancelled_cheque} alt="Cancelled Cheque" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px', border: 'var(--border-light)' }} />
-                      )
+                      <button
+                        type="button"
+                        onClick={() => viewPrivateDocument(selectedAgent.cancelled_cheque)}
+                        className="btn btn-secondary btn-sm"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px' }}>
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                        🔒 View Cancelled Cheque
+                      </button>
                     ) : (
                       <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>No cheque uploaded</span>
                     )}

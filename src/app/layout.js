@@ -3,6 +3,7 @@ import './globals.css';
 import CookieConsent from '@/components/CookieConsent';
 import ScrollToTop from '@/components/ScrollToTop';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
+import FloatingThemeWidget from '@/components/FloatingThemeWidget';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -47,8 +48,8 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${plusJakartaSans.variable}`} suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="#6366f1" media="(prefers-color-scheme: dark)" />
-        <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0B3C11" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#FAF7EC" media="(prefers-color-scheme: light)" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -58,16 +59,20 @@ export default function RootLayout({ children }) {
         {/* Google Fonts Preconnect and Links */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
-                  // Development Phase: Clear cookies and localStorage on every new visit (browser session)
+                  // Development Phase: Clear cookies and localStorage on every new visit (browser session), preserving theme/font preferences
                   if (!sessionStorage.getItem('h2h_session_active')) {
+                    var curTheme = localStorage.getItem('theme');
+                    var curFont = localStorage.getItem('user-font');
                     localStorage.clear();
+                    if (curTheme) localStorage.setItem('theme', curTheme);
+                    if (curFont) localStorage.setItem('user-font', curFont);
                     var cookies = document.cookie.split(";");
                     for (var i = 0; i < cookies.length; i++) {
                       var cookie = cookies[i];
@@ -114,6 +119,7 @@ export default function RootLayout({ children }) {
           <CookieConsent />
           <ScrollToTop />
           <PWAInstallPrompt />
+          <FloatingThemeWidget />
         </div>
       </body>
     </html>

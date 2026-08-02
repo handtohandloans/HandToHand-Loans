@@ -16,36 +16,40 @@ export default function Footer() {
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [feedbackError, setFeedbackError] = useState('');
 
-  // Fetch live rates on mount for Footer cards
+  // Fetch live rates via our server-side proxy (works on hosted domain too)
   useEffect(() => {
     const fetchRates = async () => {
       try {
         const [xauRes, xagRes] = await Promise.all([
-          fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/xau.json'),
-          fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/xag.json')
+          fetch('/api/commodity-price?ticker=xau', { cache: 'no-store' }),
+          fetch('/api/commodity-price?ticker=xag', { cache: 'no-store' }),
         ]);
-        const xauData = await xauRes.json();
-        const xagData = await xagRes.json();
-        const inrGoldPerOz = xauData?.xau?.inr;
-        const inrSilverPerOz = xagData?.xag?.inr;
-        
-        if (inrGoldPerOz) {
-          const goldPrice = Math.round(inrGoldPerOz / 31.1035);
-          setGoldRate(goldPrice);
-          const goldPct = ((goldPrice - 12450) / 12450) * 100;
-          setGoldChange((goldPct >= 0 ? '+' : '') + goldPct.toFixed(2) + '%');
+
+        if (xauRes.ok) {
+          const xauData = await xauRes.json();
+          const goldPrice = xauData.perGram;
+          if (goldPrice) {
+            setGoldRate(Math.round(goldPrice));
+            const goldPct = ((goldPrice - 12450) / 12450) * 100;
+            setGoldChange((goldPct >= 0 ? '+' : '') + goldPct.toFixed(2) + '%');
+          }
         }
-        if (inrSilverPerOz) {
-          const silverPrice = Math.round(inrSilverPerOz / 31.1035);
-          setSilverRate(silverPrice);
-          const silverPct = ((silverPrice - 175.8) / 175.8) * 100;
-          setSilverChange((silverPct >= 0 ? '+' : '') + silverPct.toFixed(2) + '%');
+
+        if (xagRes.ok) {
+          const xagData = await xagRes.json();
+          const silverPrice = xagData.perGram;
+          if (silverPrice) {
+            setSilverRate(Math.round(silverPrice));
+            const silverPct = ((silverPrice - 152) / 152) * 100;
+            setSilverChange((silverPct >= 0 ? '+' : '') + silverPct.toFixed(2) + '%');
+          }
         }
       } catch (err) {
         console.warn('Footer rates fetch failed, using fallbacks:', err);
@@ -71,6 +75,8 @@ export default function Footer() {
             rating,
             name: name.trim() || null,
             email: email.trim() || null,
+            phone: phone.trim() || null,
+            mobile: phone.trim() || null,
             message: message.trim()
           }
         ]);
@@ -82,6 +88,7 @@ export default function Footer() {
       setSubmitted(true);
       setMessage('');
       setName('');
+      setPhone('');
       setEmail('');
       setRating(5);
     } catch (err) {
@@ -221,14 +228,22 @@ export default function Footer() {
                 </div>
               </div>
 
-              {/* Name & Email Fields */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              {/* Name, Mobile & Email Fields */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
                 <input
                   type="text"
                   placeholder="Your Name (Optional)"
                   className="input-field"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  style={{ fontSize: 'var(--text-xs)', padding: '10px 14px' }}
+                />
+                <input
+                  type="tel"
+                  placeholder="Mobile No. (Optional)"
+                  className="input-field"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                   style={{ fontSize: 'var(--text-xs)', padding: '10px 14px' }}
                 />
                 <input
@@ -339,7 +354,7 @@ export default function Footer() {
               ))}
             </div>
 
-            {/* Verification Badges */}
+            {/* Verification Badges & Quick Action Buttons */}
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '8px' }}>
               <div style={{
                 display: 'flex',
@@ -380,6 +395,53 @@ export default function Footer() {
                 <span>TRUSTED BY MILLIONS</span>
               </div>
             </div>
+
+            {/* Quick Action Navigation Buttons */}
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '4px' }}>
+              <Link href="/verify-agreement" className="btn btn-secondary" style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 18px',
+                borderRadius: '8px',
+                background: 'rgba(16, 185, 129, 0.12)',
+                border: '1px solid rgba(16, 185, 129, 0.35)',
+                color: '#10b981',
+                fontSize: 'var(--text-xs)',
+                fontWeight: 700,
+                textDecoration: 'none',
+                transition: 'all 0.2s ease',
+                boxShadow: 'var(--shadow-sm)'
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <polyline points="9 11 11 13 15 9"/>
+                </svg>
+                <span>Verify Agreement</span>
+              </Link>
+              
+              <Link href="/services" className="btn btn-primary" style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 18px',
+                borderRadius: '8px',
+                background: 'var(--gradient-primary)',
+                border: 'none',
+                color: '#ffffff',
+                fontSize: 'var(--text-xs)',
+                fontWeight: 700,
+                textDecoration: 'none',
+                transition: 'all 0.2s ease',
+                boxShadow: 'var(--shadow-sm)'
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                </svg>
+                <span>Our Services</span>
+              </Link>
+            </div>
           </div>
 
           {/* Column 2: Loan Types */}
@@ -418,6 +480,8 @@ export default function Footer() {
             </h4>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: 'var(--text-xs)' }}>
               {[
+                { name: 'Our Services Overview', href: '/services' },
+                { name: 'Verify DSA Agreement', href: '/verify-agreement' },
                 { name: 'Privacy Policy', href: '/privacy' },
                 { name: 'Terms & Conditions', href: '/terms' },
                 { name: 'H2H Credit Score', href: '/cibil' },
@@ -702,7 +766,9 @@ export default function Footer() {
 
         {/* Divider line & Copyright section */}
         <div style={{ borderTop: '1px solid var(--border-default)', paddingTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', fontSize: 'var(--text-xs)' }}>
-          <div style={{ display: 'flex', gap: '20px' }}>
+          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <Link href="/services" style={{ color: 'var(--color-primary)', fontWeight: 700, textDecoration: 'none', transition: 'color 0.2s' }}>Our Services</Link>
+            <Link href="/verify-agreement" style={{ color: '#10b981', fontWeight: 700, textDecoration: 'none', transition: 'color 0.2s' }}>Verify Agreement</Link>
             <Link href="/privacy" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-primary)'} onMouseOut={(e) => e.currentTarget.style.color = 'inherit'}>Privacy Policy</Link>
             <Link href="/terms" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-primary)'} onMouseOut={(e) => e.currentTarget.style.color = 'inherit'}>Terms of Service</Link>
           </div>
