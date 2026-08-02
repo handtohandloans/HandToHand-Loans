@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { cacheUserPreferences, getCachedUserTheme, getCachedUserFont } from '@/lib/cookieCache';
+import { cacheUserPreferences, getCachedUserTheme, getCachedUserFont, applyThemeCSS } from '@/lib/cookieCache';
 
 const THEMES = [
   { id: 'light', name: 'Warm Cream', desc: 'Ivory & Forest Emerald', accent: '#0B3C11', bg: '#FAF7EC' },
@@ -45,18 +45,18 @@ export default function FloatingThemeWidget() {
     const savedFont = getCachedUserFont();
     setTheme(savedTheme);
     setActiveFont(savedFont);
-    document.documentElement.setAttribute('data-theme', savedTheme);
+    applyThemeCSS(savedTheme);
     applyFont(savedFont);
   }, [pathname]);
 
-  // Global event listener & MutationObserver for real-time synchronization
+  // Global event listener for real-time synchronization
   useEffect(() => {
     const handleSync = () => {
       const savedTheme = getCachedUserTheme();
       const savedFont = getCachedUserFont();
       setTheme(savedTheme);
       setActiveFont(savedFont);
-      document.documentElement.setAttribute('data-theme', savedTheme);
+      applyThemeCSS(savedTheme);
       applyFont(savedFont);
     };
 

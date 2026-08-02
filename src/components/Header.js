@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { clearUserCache, cacheUserProfile, getCachedUserTheme, getCachedUserFont, cacheUserPreferences } from '@/lib/cookieCache';
+import { clearUserCache, cacheUserProfile, getCachedUserTheme, getCachedUserFont, cacheUserPreferences, applyThemeCSS } from '@/lib/cookieCache';
 
 // Security (F11): Strict schema validation for localStorage pending application payload.
 // Prevents poisoned data (via XSS or manual injection) from being committed to DB.
@@ -130,7 +130,7 @@ export default function Header() {
     setMounted(true);
     setUserFont(savedFont);
     setTheme(savedTheme);
-    document.documentElement.setAttribute('data-theme', savedTheme);
+    applyThemeCSS(savedTheme);
     changeFont(savedFont);
   }, [pathname]);
 
@@ -140,7 +140,7 @@ export default function Header() {
       const savedFont = getCachedUserFont();
       setUserFont(savedFont);
       setTheme(savedTheme);
-      document.documentElement.setAttribute('data-theme', savedTheme);
+      applyThemeCSS(savedTheme);
       changeFont(savedFont);
     };
     window.addEventListener('h2h-theme-change', handleSync);
