@@ -19,6 +19,24 @@ export default function FloatingThemeWidget() {
   const [mounted, setMounted] = useState(false);
   const widgetRef = useRef(null);
 
+  useEffect(() => {
+    setMounted(true);
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    const savedFont = localStorage.getItem('user-font') || 'Jakarta';
+    setTheme(savedTheme);
+    setActiveFont(savedFont);
+
+    const handleClickOutside = (event) => {
+      if (widgetRef.current && !widgetRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const applyFont = (fontId) => {
     let fontBody = '';
     let fontHeading = '';

@@ -394,7 +394,7 @@ export default function AdminDashboard() {
     try {
       const { data, error } = await supabase
         .from('bank_policies')
-        .select('id, bank_name, logo_url, apply_url, direct_submit, policy_pdf, created_at')
+        .select('*')
         .order('bank_name', { ascending: true });
       if (error) console.error('Error fetching policies:', error.message);
       else setPolicies(data || []);
@@ -1156,7 +1156,7 @@ export default function AdminDashboard() {
 
       const { data, error } = await supabase
         .from('agent_updates')
-        .select('id, title, description, image_url, is_active, created_at')
+        .select('id, title, description, image_url, category, is_active, created_at')
         .order('created_at', { ascending: false });
       if (!error) setAgentUpdates(data || []);
     } catch (err) { console.error(err); }
@@ -4631,18 +4631,27 @@ export default function AdminDashboard() {
 
                 {/* PANEL 6: BANK POLICIES */}
                 {activeTab === 'policies' && (() => {
-                  const salaryCount = policies.filter(p => (p.policy_category || 'salary') === 'salary').length;
-                  const instantCount = policies.filter(p => p.policy_category === 'instant').length;
-                  const businessCount = policies.filter(p => p.policy_category === 'business').length;
+                  const getCategory = (p) => {
+                    if (p.policy_category && ['salary', 'instant', 'business'].includes(p.policy_category)) {
+                      return p.policy_category;
+                    }
+                    if (p.loan_type === 'BL') return 'business';
+                    if (p.employment_type === 'self_employed') return 'instant';
+                    return 'salary';
+                  };
+
+                  const salaryCount = policies.filter(p => getCategory(p) === 'salary').length;
+                  const instantCount = policies.filter(p => getCategory(p) === 'instant').length;
+                  const businessCount = policies.filter(p => getCategory(p) === 'business').length;
                   
                   const displayPolicies = policies.filter(policy => 
-                    (policy.policy_category || 'salary') === activePolicyCategory
+                    getCategory(policy) === activePolicyCategory
                   );
                   
                   const subTabs = [
-                    { id: 'salary', label: 'Salary PL', count: salaryCount, emoji: '' },
-                    { id: 'instant', label: 'Instant PL', count: instantCount, emoji: '' },
-                    { id: 'business', label: 'Business Loans', count: businessCount, emoji: '' }
+                    { id: 'salary', label: 'Salary PL', count: salaryCount, emoji: '💼' },
+                    { id: 'instant', label: 'Instant PL', count: instantCount, emoji: '⚡' },
+                    { id: 'business', label: 'Business Loans', count: businessCount, emoji: '🏢' }
                   ];
 
                   return (
@@ -5178,7 +5187,8 @@ export default function AdminDashboard() {
                                training:    { bg: 'rgba(59,130,246,0.1)', color: '#3b82f6' },
                                general:     { bg: 'rgba(100,116,139,0.1)', color: 'var(--color-text-secondary)' },
                              };
-                             const c = catColors[update.category] || catColors.general;
+                             const categoryKey = update.category || 'general';
+                             const c = catColors[categoryKey] || catColors.general;
                              return (
                                <div key={update.id} className="form-card" style={{ padding: 0, overflow: 'hidden', opacity: update.is_active ? 1 : 0.55, backdropFilter: 'blur(20px)' }}>
                                  <div style={{ position: 'relative' }}>
@@ -5205,7 +5215,7 @@ export default function AdminDashboard() {
                                      {getExpirationCountdown(update.created_at)}
                                    </span>
                                    <span style={{ position: 'absolute', top: '10px', left: '10px', background: c.bg, color: c.color, border: `1px solid ${c.color}40`, fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '99px', backdropFilter: 'blur(8px)', textTransform: 'capitalize' }}>
-                                     {update.category.replace('_', ' ')}
+                                     {categoryKey.replace('_', ' ')}
                                    </span>
                                  </div>
                                  <div style={{ padding: '16px' }}>

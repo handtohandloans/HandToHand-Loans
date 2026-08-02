@@ -416,7 +416,7 @@ export default function UserDashboard() {
       const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
       const { data } = await supabase
         .from('agent_updates')
-        .select('id, title, description, image_url, is_active, created_at')
+        .select('id, title, description, image_url, category, is_active, created_at')
         .eq('is_active', true)
         .gte('created_at', fourteenDaysAgo)
         .order('created_at', { ascending: false });
@@ -3315,7 +3315,8 @@ export default function UserDashboard() {
                                   training:   { bg: 'rgba(59,130,246,0.15)', color: '#3b82f6' },
                                   general:    { bg: 'rgba(100,116,139,0.12)', color: 'var(--color-text-secondary)' },
                                 };
-                                const c = catColors[update.category] || catColors.general;
+                                const categoryKey = update.category || 'general';
+                                const c = catColors[categoryKey] || catColors.general;
 
                                 return (
                                   <div key={update.id} className="form-card" style={{ padding: 0, overflow: 'hidden', transition: 'transform 0.2s ease, box-shadow 0.2s ease', backdropFilter: 'blur(20px)', cursor: 'pointer' }}
@@ -3345,7 +3346,7 @@ export default function UserDashboard() {
                                       )}
                                       {/* Category badge */}
                                       <span style={{ position: 'absolute', top: '10px', left: '10px', background: c.bg, color: c.color, border: `1px solid ${c.color}50`, fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '99px', backdropFilter: 'blur(8px)', textTransform: 'capitalize' }}>
-                                        {update.category.replace('_', ' ')}
+                                        {categoryKey.replace('_', ' ')}
                                       </span>
                                       {/* Expiration Countdown Badge */}
                                       <span style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(239, 68, 68, 0.85)', color: '#ffffff', border: '1px solid rgba(239, 68, 68, 0.2)', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '99px', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', gap: '4px' }}>
