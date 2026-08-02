@@ -4,6 +4,7 @@ import CookieConsent from '@/components/CookieConsent';
 import ScrollToTop from '@/components/ScrollToTop';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import FloatingThemeWidget from '@/components/FloatingThemeWidget';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -121,6 +122,7 @@ export default function RootLayout({ children }) {
           <PWAInstallPrompt />
           <FloatingThemeWidget />
         </div>
+        <SpeedInsights />
       </body>
     </html>
   );
