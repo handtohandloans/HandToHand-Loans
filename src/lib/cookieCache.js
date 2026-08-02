@@ -240,11 +240,20 @@ export const THEME_PALETTES = {
 
 export function applyThemeCSS(themeId) {
   if (typeof document === 'undefined') return;
-  const palette = THEME_PALETTES[themeId] || THEME_PALETTES.light;
-  document.documentElement.setAttribute('data-theme', themeId);
-  Object.keys(palette).forEach((prop) => {
-    document.documentElement.style.setProperty(prop, palette[prop]);
-  });
+  const validThemes = ['light', 'dark', 'navy', 'cyber', 'rose', 'slate', 'emerald-gold', 'sunset'];
+  const safeTheme = validThemes.includes(themeId) ? themeId : 'light';
+  
+  // Clear any inline style property overrides so globals.css data-theme rules take 100% effect cleanly
+  const style = document.documentElement.style;
+  const keysToRemove = [
+    '--bg-base', '--bg-surface', '--bg-subtle', '--color-primary', '--color-primary-hover',
+    '--color-primary-light', '--color-btn-primary-bg', '--color-btn-primary-text', '--text-primary',
+    '--text-secondary', '--text-muted', '--border-default', '--color-bg-primary', '--color-bg-secondary',
+    '--color-bg-tertiary', '--color-bg-card', '--color-text-primary', '--color-text-secondary'
+  ];
+  keysToRemove.forEach((key) => style.removeProperty(key));
+
+  document.documentElement.setAttribute('data-theme', safeTheme);
 }
 
 // User Theme & Font Preference Caching Helpers
