@@ -132,6 +132,19 @@ export default function Header() {
     setTheme(savedTheme);
     document.documentElement.setAttribute('data-theme', savedTheme);
     changeFont(savedFont);
+  }, [pathname]);
+
+  useEffect(() => {
+    const handleSync = () => {
+      const savedTheme = getCachedUserTheme();
+      const savedFont = getCachedUserFont();
+      setUserFont(savedFont);
+      setTheme(savedTheme);
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      changeFont(savedFont);
+    };
+    window.addEventListener('h2h-theme-change', handleSync);
+    return () => window.removeEventListener('h2h-theme-change', handleSync);
   }, []);
 
   const changeFont = (newFont) => {
@@ -165,6 +178,7 @@ export default function Header() {
     const nextIndex = (currentIndex + 1) % fontOrder.length;
     const nextFont = fontOrder[nextIndex];
     changeFont(nextFont);
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event('h2h-theme-change'));
   };
 
   const toggleTheme = () => {
@@ -175,6 +189,7 @@ export default function Header() {
     setTheme(nextTheme);
     cacheUserPreferences(nextTheme, userFont);
     document.documentElement.setAttribute('data-theme', nextTheme);
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event('h2h-theme-change'));
   };
 
   const toggleMenu = () => setMenuOpen((prev) => !prev);

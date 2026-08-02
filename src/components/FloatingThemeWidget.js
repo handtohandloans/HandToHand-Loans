@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { cacheUserPreferences, getCachedUserTheme, getCachedUserFont } from '@/lib/cookieCache';
 
 const THEMES = [
@@ -30,12 +31,14 @@ const FONTS = [
 ];
 
 export default function FloatingThemeWidget() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [theme, setTheme] = useState('light');
   const [activeFont, setActiveFont] = useState('Jakarta');
   const [mounted, setMounted] = useState(false);
   const widgetRef = useRef(null);
 
+  // Sync theme and font on route changes and component mount
   useEffect(() => {
     setMounted(true);
     const savedTheme = getCachedUserTheme();
@@ -44,6 +47,37 @@ export default function FloatingThemeWidget() {
     setActiveFont(savedFont);
     document.documentElement.setAttribute('data-theme', savedTheme);
     applyFont(savedFont);
+  }, [pathname]);
+
+  // Global event listener & MutationObserver for real-time synchronization
+  useEffect(() => {
+    const handleSync = () => {
+      const savedTheme = getCachedUserTheme();
+      const savedFont = getCachedUserFont();
+      setTheme(savedTheme);
+      setActiveFont(savedFont);
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      applyFont(savedFont);
+    };
+
+    window.addEventListener('h2h-theme-change', handleSync);
+
+    // MutationObserver to protect data-theme from being reset by external scripts or hydration
+    let observer;
+    try {
+      observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.attributeName === 'data-theme') {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const targetTheme = getCachedUserTheme();
+            if (currentTheme !== targetTheme) {
+              document.documentElement.setAttribute('data-theme', targetTheme);
+            }
+          }
+        });
+      });
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    } catch (e) {}
 
     const handleClickOutside = (event) => {
       if (widgetRef.current && !widgetRef.current.contains(event.target)) {
@@ -51,7 +85,10 @@ export default function FloatingThemeWidget() {
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
+
     return () => {
+      window.removeEventListener('h2h-theme-change', handleSync);
+      if (observer) observer.disconnect();
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
@@ -105,12 +142,14 @@ export default function FloatingThemeWidget() {
     setTheme(newTheme);
     cacheUserPreferences(newTheme, activeFont);
     document.documentElement.setAttribute('data-theme', newTheme);
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event('h2h-theme-change'));
   };
 
   const handleFontChange = (fontId) => {
     setActiveFont(fontId);
     cacheUserPreferences(theme, fontId);
     applyFont(fontId);
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event('h2h-theme-change'));
   };
 
   if (!mounted) return null;
