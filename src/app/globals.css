@@ -2900,6 +2900,216 @@ textarea.input-field {
   --color-circle-track: rgba(15, 23, 42, 0.04);
 }
 
+/* ---------- 3. Royal Navy & Gold Theme ---------- */
+:root[data-theme='navy'],
+[data-theme='navy'] {
+  --bg-base: #070f1e;
+  --bg-surface: #0e1c36;
+  --bg-subtle: #172a4d;
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-light: rgba(37, 99, 235, 0.15);
+  --color-btn-primary-bg: #2563eb;
+  --color-btn-primary-bg-hover: #1d4ed8;
+  --color-btn-primary-text: #ffffff;
+  --color-accent: #f59e0b;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border-default: #1e3a8a;
+  --gradient-brand: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #f59e0b 100%);
+  --color-bg-primary: var(--bg-base);
+  --color-bg-secondary: var(--bg-surface);
+  --color-bg-tertiary: var(--bg-subtle);
+  --color-bg-card: var(--bg-surface);
+  --color-bg-card-hover: var(--bg-subtle);
+  --color-bg-glass: rgba(14, 28, 54, 0.8);
+  --color-bg-glass-heavy: rgba(14, 28, 54, 0.95);
+  --color-bg-input: var(--bg-base);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-muted);
+  --color-text-muted: var(--text-muted);
+  --color-text-accent: #f59e0b;
+  --gradient-primary: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
+  --gradient-text: var(--gradient-brand);
+}
+
+/* ---------- 4. Cyberpunk Neon Cyan Theme ---------- */
+:root[data-theme='cyber'],
+[data-theme='cyber'] {
+  --bg-base: #080c14;
+  --bg-surface: #0e1626;
+  --bg-subtle: #162238;
+  --color-primary: #06b6d4;
+  --color-primary-hover: #0891b2;
+  --color-primary-light: rgba(6, 182, 212, 0.15);
+  --color-btn-primary-bg: #06b6d4;
+  --color-btn-primary-bg-hover: #0891b2;
+  --color-btn-primary-text: #080c14;
+  --color-accent: #10b981;
+  --text-primary: #ecfeff;
+  --text-secondary: #a5f3fc;
+  --text-muted: #67e8f9;
+  --border-default: #164e63;
+  --gradient-brand: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #10b981 100%);
+  --color-bg-primary: var(--bg-base);
+  --color-bg-secondary: var(--bg-surface);
+  --color-bg-tertiary: var(--bg-subtle);
+  --color-bg-card: var(--bg-surface);
+  --color-bg-card-hover: var(--bg-subtle);
+  --color-bg-glass: rgba(14, 22, 38, 0.85);
+  --color-bg-glass-heavy: rgba(14, 22, 38, 0.95);
+  --color-bg-input: var(--bg-base);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-muted);
+  --color-text-muted: var(--text-muted);
+  --color-text-accent: #06b6d4;
+  --gradient-primary: linear-gradient(135deg, #06b6d4 0%, #0e7490 100%);
+  --gradient-text: var(--gradient-brand);
+}
+
+/* ---------- 5. Rose Gold Luxury Velvet Theme ---------- */
+:root[data-theme='rose'],
+[data-theme='rose'] {
+  --bg-base: #18091e;
+  --bg-surface: #261130;
+  --bg-subtle: #381a45;
+  --color-primary: #fb7185;
+  --color-primary-hover: #f43f5e;
+  --color-primary-light: rgba(251, 113, 133, 0.15);
+  --color-btn-primary-bg: #e11d48;
+  --color-btn-primary-bg-hover: #be123c;
+  --color-btn-primary-text: #ffffff;
+  --color-accent: #f43f5e;
+  --text-primary: #fff1f2;
+  --text-secondary: #fecdd3;
+  --text-muted: #fda4af;
+  --border-default: #881337;
+  --gradient-brand: linear-gradient(135deg, #fb7185 0%, #e11d48 50%, #f43f5e 100%);
+  --color-bg-primary: var(--bg-base);
+  --color-bg-secondary: var(--bg-surface);
+  --color-bg-tertiary: var(--bg-subtle);
+  --color-bg-card: var(--bg-surface);
+  --color-bg-card-hover: var(--bg-subtle);
+  --color-bg-glass: rgba(38, 17, 48, 0.85);
+  --color-bg-glass-heavy: rgba(38, 17, 48, 0.95);
+  --color-bg-input: var(--bg-base);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-muted);
+  --color-text-muted: var(--text-muted);
+  --color-text-accent: #fb7185;
+  --gradient-primary: linear-gradient(135deg, #e11d48 0%, #881337 100%);
+  --gradient-text: var(--gradient-brand);
+}
+
+/* ---------- 6. Nordic Slate & Sapphire Theme ---------- */
+:root[data-theme='slate'],
+[data-theme='slate'] {
+  --bg-base: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-subtle: #334155;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-primary-light: rgba(59, 130, 246, 0.15);
+  --color-btn-primary-bg: #3b82f6;
+  --color-btn-primary-bg-hover: #2563eb;
+  --color-btn-primary-text: #ffffff;
+  --color-accent: #60a5fa;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-default: #334155;
+  --gradient-brand: linear-gradient(135deg, #3b82f6 0%, #60a5fa 50%, #cbd5e1 100%);
+  --color-bg-primary: var(--bg-base);
+  --color-bg-secondary: var(--bg-surface);
+  --color-bg-tertiary: var(--bg-subtle);
+  --color-bg-card: var(--bg-surface);
+  --color-bg-card-hover: var(--bg-subtle);
+  --color-bg-glass: rgba(30, 41, 59, 0.85);
+  --color-bg-glass-heavy: rgba(30, 41, 59, 0.95);
+  --color-bg-input: var(--bg-base);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-muted);
+  --color-text-muted: var(--text-muted);
+  --color-text-accent: #3b82f6;
+  --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  --gradient-text: var(--gradient-brand);
+}
+
+/* ---------- 7. Royal Gold & Emerald Theme ---------- */
+:root[data-theme='emerald-gold'],
+[data-theme='emerald-gold'] {
+  --bg-base: #022c22;
+  --bg-surface: #064e3b;
+  --bg-subtle: #047857;
+  --color-primary: #eab308;
+  --color-primary-hover: #ca8a04;
+  --color-primary-light: rgba(234, 179, 8, 0.15);
+  --color-btn-primary-bg: #eab308;
+  --color-btn-primary-bg-hover: #ca8a04;
+  --color-btn-primary-text: #022c22;
+  --color-accent: #facc15;
+  --text-primary: #fefce8;
+  --text-secondary: #fef08a;
+  --text-muted: #fde047;
+  --border-default: #115e59;
+  --gradient-brand: linear-gradient(135deg, #eab308 0%, #facc15 50%, #34d399 100%);
+  --color-bg-primary: var(--bg-base);
+  --color-bg-secondary: var(--bg-surface);
+  --color-bg-tertiary: var(--bg-subtle);
+  --color-bg-card: var(--bg-surface);
+  --color-bg-card-hover: var(--bg-subtle);
+  --color-bg-glass: rgba(6, 78, 59, 0.85);
+  --color-bg-glass-heavy: rgba(6, 78, 59, 0.95);
+  --color-bg-input: var(--bg-base);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-muted);
+  --color-text-muted: var(--text-muted);
+  --color-text-accent: #eab308;
+  --gradient-primary: linear-gradient(135deg, #eab308 0%, #854d0e 100%);
+  --gradient-text: var(--gradient-brand);
+}
+
+/* ---------- 8. Warm Terracotta & Sand Theme ---------- */
+:root[data-theme='sunset'],
+[data-theme='sunset'] {
+  --bg-base: #1c100b;
+  --bg-surface: #2e1a12;
+  --bg-subtle: #45271b;
+  --color-primary: #ea580c;
+  --color-primary-hover: #c2410c;
+  --color-primary-light: rgba(234, 88, 12, 0.15);
+  --color-btn-primary-bg: #ea580c;
+  --color-btn-primary-bg-hover: #c2410c;
+  --color-btn-primary-text: #ffffff;
+  --color-accent: #fb923c;
+  --text-primary: #fff7ed;
+  --text-secondary: #ffedd5;
+  --text-muted: #fed7aa;
+  --border-default: #7c2d12;
+  --gradient-brand: linear-gradient(135deg, #ea580c 0%, #fb923c 50%, #fde047 100%);
+  --color-bg-primary: var(--bg-base);
+  --color-bg-secondary: var(--bg-surface);
+  --color-bg-tertiary: var(--bg-subtle);
+  --color-bg-card: var(--bg-surface);
+  --color-bg-card-hover: var(--bg-subtle);
+  --color-bg-glass: rgba(46, 26, 18, 0.85);
+  --color-bg-glass-heavy: rgba(46, 26, 18, 0.95);
+  --color-bg-input: var(--bg-base);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-muted);
+  --color-text-muted: var(--text-muted);
+  --color-text-accent: #ea580c;
+  --gradient-primary: linear-gradient(135deg, #ea580c 0%, #9a3412 100%);
+  --gradient-text: var(--gradient-brand);
+}
+
 /* ---------- Theme Toggle Button ---------- */
 .theme-toggle-btn {
   background: var(--color-bg-glass);
@@ -5458,6 +5668,20 @@ input[type="button"] {
     border-radius: 6px !important;
   }
 }
+
+/* ---------- Font Family Preview Helper Classes ---------- */
+.font-jakarta { font-family: var(--font-plus-jakarta), 'Plus Jakarta Sans', sans-serif; }
+.font-inter { font-family: 'Inter', sans-serif; }
+.font-poppins { font-family: 'Poppins', sans-serif; }
+.font-outfit { font-family: 'Outfit', sans-serif; }
+.font-roboto { font-family: 'Roboto', sans-serif; }
+.font-raleway { font-family: 'Raleway', sans-serif; }
+.font-montserrat { font-family: 'Montserrat', sans-serif; }
+.font-lora { font-family: 'Lora', serif; }
+.font-playfair { font-family: 'Playfair Display', serif; }
+.font-merriweather { font-family: 'Merriweather', serif; }
+.font-jetbrains { font-family: 'JetBrains Mono', monospace; }
+.font-spacemono { font-family: 'Space Mono', monospace; }
 
 
 

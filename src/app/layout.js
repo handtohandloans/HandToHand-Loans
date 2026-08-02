@@ -59,7 +59,7 @@ export default function RootLayout({ children }) {
         {/* Google Fonts Preconnect and Links */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Roboto:wght@400;500;700&family=Raleway:wght@400;600;700&family=Montserrat:wght@400;600;700;800&family=Merriweather:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
 
         <script
           dangerouslySetInnerHTML={{
@@ -67,10 +67,11 @@ export default function RootLayout({ children }) {
               (function() {
                 try {
                   var savedTheme = localStorage.getItem('theme') || 'light';
-                  if (savedTheme !== 'dark' && savedTheme !== 'light') savedTheme = 'light';
+                  var validThemes = ['light', 'dark', 'navy', 'cyber', 'rose', 'slate', 'emerald-gold', 'sunset'];
+                  if (validThemes.indexOf(savedTheme) === -1) savedTheme = 'light';
                   document.documentElement.setAttribute('data-theme', savedTheme);
 
-                  // Set global typography from localStorage / cookie
+                  // Set global typography from localStorage
                   var savedFont = localStorage.getItem('user-font') || 'Jakarta';
                   var fontBody = '';
                   var fontHeading = '';
@@ -80,6 +81,11 @@ export default function RootLayout({ children }) {
                   else if (savedFont === 'Lora') { fontBody = 'Lora, serif'; fontHeading = 'Lora, serif'; }
                   else if (savedFont === 'Playfair') { fontBody = '"Playfair Display", serif'; fontHeading = '"Playfair Display", serif'; }
                   else if (savedFont === 'JetBrains') { fontBody = '"JetBrains Mono", monospace'; fontHeading = '"JetBrains Mono", monospace'; }
+                  else if (savedFont === 'Roboto') { fontBody = 'Roboto, sans-serif'; fontHeading = 'Roboto, sans-serif'; }
+                  else if (savedFont === 'Raleway') { fontBody = 'Raleway, sans-serif'; fontHeading = 'Raleway, sans-serif'; }
+                  else if (savedFont === 'Montserrat') { fontBody = 'Montserrat, sans-serif'; fontHeading = 'Montserrat, sans-serif'; }
+                  else if (savedFont === 'Merriweather') { fontBody = 'Merriweather, serif'; fontHeading = 'Merriweather, serif'; }
+                  else if (savedFont === 'SpaceMono') { fontBody = '"Space Mono", monospace'; fontHeading = '"Space Mono", monospace'; }
                   
                   if (fontBody) {
                     document.documentElement.style.setProperty('--font-body', fontBody);

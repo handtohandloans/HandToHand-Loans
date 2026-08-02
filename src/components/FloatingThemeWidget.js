@@ -2,14 +2,30 @@
 
 import { useState, useEffect, useRef } from 'react';
 
+const THEMES = [
+  { id: 'light', name: 'Warm Cream', desc: 'Ivory & Forest Emerald', accent: '#0B3C11', bg: '#FAF7EC' },
+  { id: 'dark', name: 'Deep Forest', desc: 'Dark Night Emerald', accent: '#1cb239', bg: '#061508' },
+  { id: 'navy', name: 'Royal Navy', desc: 'Corporate Blue & Gold', accent: '#f59e0b', bg: '#0a192f' },
+  { id: 'cyber', name: 'Cyberpunk', desc: 'Midnight & Neon Cyan', accent: '#06b6d4', bg: '#080c14' },
+  { id: 'rose', name: 'Rose Luxury', desc: 'Deep Velvet & Blush', accent: '#fb7185', bg: '#18091e' },
+  { id: 'slate', name: 'Nordic Slate', desc: 'Steel Slate & Sapphire', accent: '#3b82f6', bg: '#0f172a' },
+  { id: 'emerald-gold', name: 'Royal Gold', desc: 'Emerald & Metallic Gold', accent: '#eab308', bg: '#022c22' },
+  { id: 'sunset', name: 'Terracotta', desc: 'Warm Earth & Sand', accent: '#ea580c', bg: '#1c100b' },
+];
+
 const FONTS = [
   { id: 'Jakarta', name: 'Plus Jakarta Sans', fontClass: 'font-jakarta', preview: 'Modern & Clean' },
   { id: 'Inter', name: 'Inter', fontClass: 'font-inter', preview: 'Minimalist & Crisp' },
   { id: 'Poppins', name: 'Poppins', fontClass: 'font-poppins', preview: 'Friendly & Rounded' },
   { id: 'Outfit', name: 'Outfit', fontClass: 'font-outfit', preview: 'Bold & Geometric' },
+  { id: 'Roboto', name: 'Roboto', fontClass: 'font-roboto', preview: 'Corporate & Universal' },
+  { id: 'Raleway', name: 'Raleway', fontClass: 'font-raleway', preview: 'Elegant & Ultra-Modern' },
+  { id: 'Montserrat', name: 'Montserrat', fontClass: 'font-montserrat', preview: 'Premium Geometric' },
   { id: 'Lora', name: 'Lora', fontClass: 'font-lora', preview: 'Classic Serif' },
   { id: 'Playfair', name: 'Playfair Display', fontClass: 'font-playfair', preview: 'Luxury Serif' },
+  { id: 'Merriweather', name: 'Merriweather', fontClass: 'font-merriweather', preview: 'Editorial Serif' },
   { id: 'JetBrains', name: 'JetBrains Mono', fontClass: 'font-jetbrains', preview: 'Technical Code' },
+  { id: 'SpaceMono', name: 'Space Mono', fontClass: 'font-spacemono', preview: 'Futuristic Tech' },
 ];
 
 export default function FloatingThemeWidget() {
@@ -58,6 +74,21 @@ export default function FloatingThemeWidget() {
     } else if (fontId === 'JetBrains') {
       fontBody = '"JetBrains Mono", monospace';
       fontHeading = '"JetBrains Mono", monospace';
+    } else if (fontId === 'Roboto') {
+      fontBody = 'Roboto, sans-serif';
+      fontHeading = 'Roboto, sans-serif';
+    } else if (fontId === 'Raleway') {
+      fontBody = 'Raleway, sans-serif';
+      fontHeading = 'Raleway, sans-serif';
+    } else if (fontId === 'Montserrat') {
+      fontBody = 'Montserrat, sans-serif';
+      fontHeading = 'Montserrat, sans-serif';
+    } else if (fontId === 'Merriweather') {
+      fontBody = 'Merriweather, serif';
+      fontHeading = 'Merriweather, serif';
+    } else if (fontId === 'SpaceMono') {
+      fontBody = '"Space Mono", monospace';
+      fontHeading = '"Space Mono", monospace';
     } else {
       fontBody = 'var(--font-inter), "Plus Jakarta Sans", sans-serif';
       fontHeading = 'var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif';
@@ -109,53 +140,37 @@ export default function FloatingThemeWidget() {
           <div className="floating-panel-body">
             {/* Section 1: Theme Switcher */}
             <div className="floating-section">
-              <label className="floating-section-label">Website Theme</label>
-              <div className="theme-options-grid">
-                <button
-                  type="button"
-                  onClick={() => handleThemeChange('light')}
-                  className={`theme-option-card ${theme === 'light' ? 'active' : ''}`}
-                >
-                  <div className="theme-preview-swatch light-swatch">
-                    <span className="swatch-accent"></span>
-                    <span className="swatch-bg"></span>
-                  </div>
-                  <div className="theme-option-info">
-                    <span className="theme-option-title">Warm Cream</span>
-                    <span className="theme-option-desc">Ivory & Forest Green</span>
-                  </div>
-                  {theme === 'light' && (
-                    <svg className="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleThemeChange('dark')}
-                  className={`theme-option-card ${theme === 'dark' ? 'active' : ''}`}
-                >
-                  <div className="theme-preview-swatch dark-swatch">
-                    <span className="swatch-accent"></span>
-                    <span className="swatch-bg"></span>
-                  </div>
-                  <div className="theme-option-info">
-                    <span className="theme-option-title">Deep Forest</span>
-                    <span className="theme-option-desc">Dark Night Emerald</span>
-                  </div>
-                  {theme === 'dark' && (
-                    <svg className="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  )}
-                </button>
+              <label className="floating-section-label">Website Theme (8 Palettes)</label>
+              <div className="theme-options-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                {THEMES.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => handleThemeChange(t.id)}
+                    className={`theme-option-card ${theme === t.id ? 'active' : ''}`}
+                    style={{ position: 'relative', overflow: 'hidden' }}
+                  >
+                    <div className="theme-preview-swatch" style={{ background: t.bg, border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <span className="swatch-accent" style={{ background: t.accent }}></span>
+                      <span className="swatch-bg" style={{ background: t.bg }}></span>
+                    </div>
+                    <div className="theme-option-info">
+                      <span className="theme-option-title">{t.name}</span>
+                      <span className="theme-option-desc">{t.desc}</span>
+                    </div>
+                    {theme === t.id && (
+                      <svg className="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    )}
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* Section 2: Font Switcher */}
             <div className="floating-section">
-              <label className="floating-section-label">Font Family</label>
+              <label className="floating-section-label">Typography Style (12 Fonts)</label>
               <div className="font-options-list">
                 {FONTS.map((font) => (
                   <button
@@ -181,7 +196,7 @@ export default function FloatingThemeWidget() {
         </div>
       )}
 
-      {/* Floating Bottom-Left Trigger Button (Small Round) */}
+      {/* Floating Bottom-Left Trigger Button */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
