@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BankLogo from '@/components/BankLogo';
+import { cacheUserProfile, getCachedUserProfile } from '@/lib/cookieCache';
 import { 
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, 
   CartesianGrid, Tooltip, BarChart, Bar, Cell, Legend, PieChart, Pie 
@@ -1422,13 +1423,14 @@ export default function AdminDashboard() {
       // Fetch profile to verify admin role
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('id, full_name, email, role, phone, agent_code, avatar')
         .eq('id', session.user.id)
         .single();
 
       if (!profile || profile.role !== 'admin') {
         router.push('/admin/login');
       } else {
+        cacheUserProfile(profile);
         await fetchAllData();
       }
     }

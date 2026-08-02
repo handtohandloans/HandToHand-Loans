@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BankLogo from '@/components/BankLogo';
+import { cacheUserProfile, getCachedUserProfile } from '@/lib/cookieCache';
 
 const compressImage = (file) => {
   return new Promise((resolve, reject) => {
@@ -743,6 +744,12 @@ export default function UserDashboard() {
   useEffect(() => {
     async function checkAuthAndFetch() {
       try {
+        // Read cached profile for instant 0ms initial render
+        const cachedProf = getCachedUserProfile();
+        if (cachedProf && !profile) {
+          setProfile(cachedProf);
+        }
+
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           router.push('/login?redirect=/dashboard');
@@ -776,6 +783,7 @@ export default function UserDashboard() {
           await fetchInquiries(session.user.id);
         } else {
           setProfile(prof);
+          cacheUserProfile(prof);
 
           // Security (F8): Enforce approval gate at route level, not just in Header.
           // Unapproved agents should not be able to access dashboard data at all.

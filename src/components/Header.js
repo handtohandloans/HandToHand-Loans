@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-
-
+import { clearUserCache, cacheUserProfile } from '@/lib/cookieCache';
 
 // Security (F11): Strict schema validation for localStorage pending application payload.
 // Prevents poisoned data (via XSS or manual injection) from being committed to DB.
@@ -215,18 +214,20 @@ export default function Header() {
       if (session?.user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role, approved, full_name, email, phone, avatar')
+          .select('id, role, approved, full_name, email, phone, agent_code, avatar')
           .eq('id', session.user.id)
           .single();
 
         if (profile && profile.role === 'agent' && !profile.approved) {
           await supabase.auth.signOut();
+          clearUserCache();
           setUser(null);
           setUserRole(null);
           setUserProfile(null);
           router.push('/login?error=pending');
           return;
         }
+        if (profile) cacheUserProfile(profile);
         setUserRole(profile?.role || null);
         setUserProfile(profile || {
           full_name: session.user.user_metadata?.full_name || 'User',
@@ -236,6 +237,7 @@ export default function Header() {
           role: profile?.role || 'user'
         });
       } else {
+        clearUserCache();
         setUser(null);
         setUserRole(null);
         setUserProfile(null);
@@ -429,6 +431,7 @@ export default function Header() {
     } catch (err) {
       console.warn('Logout network request failed, proceeding to clear session locally:', err);
     }
+    clearUserCache();
     closeMenu();
     router.push('/');
     router.refresh();

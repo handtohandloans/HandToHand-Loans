@@ -66,27 +66,11 @@ export default function RootLayout({ children }) {
             __html: `
               (function() {
                 try {
-                  // Development Phase: Clear cookies and localStorage on every new visit (browser session), preserving theme/font preferences
-                  if (!sessionStorage.getItem('h2h_session_active')) {
-                    var curTheme = localStorage.getItem('theme');
-                    var curFont = localStorage.getItem('user-font');
-                    localStorage.clear();
-                    if (curTheme) localStorage.setItem('theme', curTheme);
-                    if (curFont) localStorage.setItem('user-font', curFont);
-                    var cookies = document.cookie.split(";");
-                    for (var i = 0; i < cookies.length; i++) {
-                      var cookie = cookies[i];
-                      var eqPos = cookie.indexOf("=");
-                      var name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-                      document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-                    }
-                    sessionStorage.setItem('h2h_session_active', '1');
-                  }
                   var savedTheme = localStorage.getItem('theme') || 'light';
                   if (savedTheme !== 'dark' && savedTheme !== 'light') savedTheme = 'light';
                   document.documentElement.setAttribute('data-theme', savedTheme);
 
-                  // Set global typography from localStorage
+                  // Set global typography from localStorage / cookie
                   var savedFont = localStorage.getItem('user-font') || 'Jakarta';
                   var fontBody = '';
                   var fontHeading = '';
