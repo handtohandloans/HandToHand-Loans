@@ -404,22 +404,20 @@ p {
   order: 2 !important;
 }
 
-/* Make hamburger align to the left on mobile screens */
+/* Responsive header items in relative flex flow (prevents overlapping) */
 @media (max-width: 1024px) {
   .hamburger {
     display: flex !important;
-    position: absolute !important;
-    left: clamp(12px, 2vw, 24px) !important;
-    top: 17px !important;
-    order: -1 !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
   }
 
-  /* Make notification bell align to the left next to hamburger on mobile screens */
   #notif-dropdown-container {
     display: flex !important;
-    position: absolute !important;
-    left: calc(clamp(12px, 2vw, 24px) + 40px) !important;
-    top: 17px !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
   }
 }
 
