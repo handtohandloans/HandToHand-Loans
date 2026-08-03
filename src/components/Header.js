@@ -570,9 +570,9 @@ export default function Header() {
           )}
         </div>
 
-        {/* Center: Logo with HandToHand Loans & FINTECH badge */}
+        {/* Center: Logo with HandToHand Loans & tagline */}
         <div className="header-center">
-          <Link href="/" className="logo" onClick={closeMenu} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+          <Link href="/" className="logo" onClick={closeMenu} style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"
@@ -580,12 +580,8 @@ export default function Header() {
               style={{ display: 'block', height: '34px', width: 'auto', flexShrink: 0, objectFit: 'contain' }}
             />
             <div className="logo-text-group">
-              <span className="logo-text">
-                HandToHand Loans
-              </span>
-              <span className="logo-badge-fintech">
-                FINTECH
-              </span>
+              <span className="logo-text">HandToHand Loans</span>
+              <span className="logo-tagline">Smart Lending, Fast Approval</span>
             </div>
           </Link>
         </div>

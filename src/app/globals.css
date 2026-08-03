@@ -414,8 +414,9 @@ p {
 
 .logo-text-group {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
   flex-shrink: 0;
 }
 
@@ -448,6 +449,17 @@ p {
   flex-shrink: 0 !important;
   -webkit-text-fill-color: #ffffff !important;
   align-self: center !important;
+}
+
+.logo-tagline {
+  font-size: 9px;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  line-height: 1;
+  opacity: 0.8;
 }
 
 .logo-badge {
