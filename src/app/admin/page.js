@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import BankLogo from '@/components/BankLogo';
 import { cacheUserProfile, getCachedUserProfile } from '@/lib/cookieCache';
 import { compressFile } from '@/lib/compressFile';
 import { 
