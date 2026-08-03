@@ -572,7 +572,7 @@ export default function Header() {
 
         {/* Center: Logo with HandToHand Loans & tagline */}
         <div className="header-center">
-          <Link href="/" className="logo" onClick={closeMenu} style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+          <Link href="/" className="logo" onClick={closeMenu} style={{ textDecoration: 'none' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"

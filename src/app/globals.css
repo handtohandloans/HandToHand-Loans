@@ -408,15 +408,17 @@ p {
 .logo {
   position: relative !important;
   display: flex !important;
+  flex-direction: row !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 8px !important;
+  text-decoration: none !important;
 }
 
 .logo-text-group {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1px;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 2px;
   flex-shrink: 0;
 }
 
@@ -452,14 +454,15 @@ p {
 }
 
 .logo-tagline {
+  display: block !important;
   font-size: 9px;
   font-style: italic;
   font-weight: 500;
   color: var(--color-text-muted);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   white-space: nowrap;
   line-height: 1;
-  opacity: 0.8;
+  opacity: 0.75;
 }
 
 .logo-badge {
