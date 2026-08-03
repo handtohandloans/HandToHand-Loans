@@ -447,8 +447,7 @@ p {
   box-shadow: 0 2px 8px rgba(11, 60, 17, 0.25) !important;
   flex-shrink: 0 !important;
   -webkit-text-fill-color: #ffffff !important;
-}
-  align-self: center;
+  align-self: center !important;
 }
 
 .logo-badge {
