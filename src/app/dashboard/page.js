@@ -8,55 +8,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BankLogo from '@/components/BankLogo';
 import { cacheUserProfile, getCachedUserProfile } from '@/lib/cookieCache';
-
-const compressImage = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-        const MAX_WIDTH = 1200;
-        const MAX_HEIGHT = 1200;
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-          }
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        let quality = 0.9;
-        let base64 = canvas.toDataURL('image/jpeg', quality);
-        
-        while (base64.length * 0.75 > 500 * 1024 && quality > 0.1) {
-          quality -= 0.1;
-          base64 = canvas.toDataURL('image/jpeg', quality);
-        }
-
-        if (base64.length * 0.75 > 500 * 1024) {
-          reject(new Error('Unable to compress image under 500kb. Please upload a smaller image.'));
-        } else {
-          resolve(base64);
-        }
-      };
-      img.onerror = () => reject(new Error('Invalid image file'));
-      img.src = event.target.result;
-    };
-    reader.onerror = () => reject(new Error('File reading failed'));
-    reader.readAsDataURL(file);
-  });
-};
+import { compressFile, compressToBase64 } from '@/lib/compressFile';
 
 const calculateAge = (dobString) => {
   if (!dobString) return null;
@@ -1070,7 +1022,7 @@ export default function UserDashboard() {
     try {
       setProfileSuccess('');
       setProfileError('');
-      const base64 = await compressImage(file);
+      const base64 = await compressToBase64(file);
       setProfileFormData(prev => ({ ...prev, avatar: base64 }));
       
       const { error } = await supabase
@@ -1092,12 +1044,13 @@ export default function UserDashboard() {
 
   const uploadPrivateDocToStorage = async (file, fieldName) => {
     if (!file || !user) return null;
-    const ext = file.name.split('.').pop() || (file.type === 'application/pdf' ? 'pdf' : 'jpg');
+    const compressedFile = await compressFile(file);
+    const ext = compressedFile.name.split('.').pop() || (compressedFile.type === 'application/pdf' ? 'pdf' : 'jpg');
     const filePath = `${user.id}/${fieldName}_${Date.now()}.${ext}`;
 
     const { error: uploadErr } = await supabase.storage
       .from('agent-documents')
-      .upload(filePath, file, { cacheControl: '3600', upsert: true });
+      .upload(filePath, compressedFile, { cacheControl: '3600', upsert: true });
 
     if (uploadErr) {
       console.error(`Storage upload error [${fieldName}]:`, uploadErr);
@@ -4129,19 +4082,19 @@ export default function UserDashboard() {
                                       type="file"
                                       accept="image/jpeg, image/png"
                                       className="input-field"
-                                      onChange={(e) => {
+                                      onChange={async (e) => {
                                         const file = e.target.files[0];
                                         if (!file) return;
-                                        if (file.size > 1024 * 1024) {
-                                          alert("Signature image must be under 1MB.");
-                                          e.target.value = '';
-                                          return;
+                                        try {
+                                          const compressed = await compressFile(file);
+                                          const reader = new FileReader();
+                                          reader.onload = () => {
+                                            setSignatureFile(reader.result);
+                                          };
+                                          reader.readAsDataURL(compressed);
+                                        } catch (err) {
+                                          alert("Error processing signature image: " + err.message);
                                         }
-                                        const reader = new FileReader();
-                                        reader.onload = () => {
-                                          setSignatureFile(reader.result);
-                                        };
-                                        reader.readAsDataURL(file);
                                       }}
                                       required={!signatureFile}
                                     />

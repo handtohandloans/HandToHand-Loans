@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { compressFile } from '@/lib/compressFile';
 
 export default function AgentSetupProfilePage() {
   const router = useRouter();
@@ -123,12 +124,13 @@ export default function AgentSetupProfilePage() {
     setErrorMsg('');
 
     try {
-      const ext = file.name.split('.').pop() || (file.type === 'application/pdf' ? 'pdf' : 'jpg');
+      const compressedFile = await compressFile(file);
+      const ext = compressedFile.name.split('.').pop() || (compressedFile.type === 'application/pdf' ? 'pdf' : 'jpg');
       const filePath = `${user.id}/${fieldName}_${Date.now()}.${ext}`;
 
       const { error: uploadErr } = await supabase.storage
         .from('agent-documents')
-        .upload(filePath, file, { cacheControl: '3600', upsert: true });
+        .upload(filePath, compressedFile, { cacheControl: '3600', upsert: true });
 
       if (uploadErr) {
         throw new Error(`Failed to upload ${fieldName}: ${uploadErr.message}`);

@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import BankLogo from '@/components/BankLogo';
 import { cacheUserProfile, getCachedUserProfile } from '@/lib/cookieCache';
+import { compressFile } from '@/lib/compressFile';
 import { 
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, 
   CartesianGrid, Tooltip, BarChart, Bar, Cell, Legend, PieChart, Pie 
@@ -5125,16 +5125,21 @@ export default function AdminDashboard() {
                               <input
                                 type="file"
                                 accept="image/*,application/pdf"
-                                onChange={e => {
+                                onChange={async (e) => {
                                   const f = e.target.files?.[0];
                                   if (f) {
-                                    setUploadFile(f);
-                                    if (f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')) {
-                                      setUploadPreview('PDF_FILE');
-                                    } else {
-                                      const reader = new FileReader();
-                                      reader.onload = ev => setUploadPreview(ev.target.result);
-                                      reader.readAsDataURL(f);
+                                    try {
+                                      const compressed = await compressFile(f);
+                                      setUploadFile(compressed);
+                                      if (compressed.type === 'application/pdf' || compressed.name.toLowerCase().endsWith('.pdf')) {
+                                        setUploadPreview('PDF_FILE');
+                                      } else {
+                                        const reader = new FileReader();
+                                        reader.onload = ev => setUploadPreview(ev.target.result);
+                                        reader.readAsDataURL(compressed);
+                                      }
+                                    } catch (err) {
+                                      alert('Error compressing file: ' + err.message);
                                     }
                                   }
                                 }}
@@ -6494,19 +6499,19 @@ export default function AdminDashboard() {
                       <input 
                         type="file"
                         accept="application/pdf"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files[0];
                           if (!file) return;
-                          if (file.size > 2 * 1024 * 1024) {
-                            alert('PDF file size must be under 2MB.');
-                            e.target.value = '';
-                            return;
+                          try {
+                            const compressed = await compressFile(file);
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setPolicyForm(prev => ({ ...prev, policy_pdf: reader.result }));
+                            };
+                            reader.readAsDataURL(compressed);
+                          } catch (err) {
+                            alert('Error processing PDF file: ' + err.message);
                           }
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setPolicyForm(prev => ({ ...prev, policy_pdf: reader.result }));
-                          };
-                          reader.readAsDataURL(file);
                         }}
                         style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}
                       />
@@ -8455,13 +8460,18 @@ export default function AdminDashboard() {
                                     type="file"
                                     accept="image/*"
                                     className="input-field"
-                                    onChange={(e) => {
+                                    onChange={async (e) => {
                                       const file = e.target.files[0];
                                       if (file) {
-                                        setBlogImageFile(file);
-                                        const reader = new FileReader();
-                                        reader.onload = (ev) => setBlogImagePreview(ev.target.result);
-                                        reader.readAsDataURL(file);
+                                        try {
+                                          const compressed = await compressFile(file);
+                                          setBlogImageFile(compressed);
+                                          const reader = new FileReader();
+                                          reader.onload = (ev) => setBlogImagePreview(ev.target.result);
+                                          reader.readAsDataURL(compressed);
+                                        } catch (err) {
+                                          alert('Error compressing cover image: ' + err.message);
+                                        }
                                       }
                                     }}
                                     style={{ padding: '8px 12px' }}
