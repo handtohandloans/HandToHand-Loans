@@ -465,22 +465,126 @@ export default function Header() {
   return (
     <header className="header">
       <div className="header-inner">
-        <Link href="/" className="logo" onClick={closeMenu} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo.png"
-            alt="HandToHand Loans Logo"
-            style={{ display: 'block', height: '36px', width: 'auto', flexShrink: 0, objectFit: 'contain' }}
-          />
-          <div className="logo-text-group">
-            <span className="logo-text">
-              HandToHand Loans
-            </span>
-            <span className="logo-badge-fintech">
-              FINTECH
-            </span>
-          </div>
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+          <Link href="/" className="logo" onClick={closeMenu} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="HandToHand Loans Logo"
+              style={{ display: 'block', height: '36px', width: 'auto', flexShrink: 0, objectFit: 'contain' }}
+            />
+            <div className="logo-text-group">
+              <span className="logo-text">
+                HandToHand Loans
+              </span>
+              <span className="logo-badge-fintech">
+                FINTECH
+              </span>
+            </div>
+          </Link>
+
+          {mounted && user && (
+            <div id="profile-dropdown-container" style={{ position: 'relative' }}>
+              <button
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                className="header-profile-badge-btn"
+                title={userProfile?.full_name || 'User Profile'}
+                aria-label="Toggle profile menu"
+              >
+                <div className="header-profile-avatar-circle">
+                  {userProfile?.avatar ? (
+                    <img src={userProfile.avatar} alt="Avatar" />
+                  ) : (
+                    getInitials(userProfile, user)
+                  )}
+                </div>
+                <span className="header-profile-name-span">
+                  {userProfile?.full_name || 'User'}
+                </span>
+                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7, transition: 'transform 0.2s', transform: profileDropdownOpen ? 'rotate(180deg)' : 'none' }}>
+                  <path d="M1 1l4 4 4-4" />
+                </svg>
+              </button>
+
+              {profileDropdownOpen && (
+                <div className="header-profile-dropdown" style={{ left: 0, right: 'auto' }}>
+                  <div 
+                    className="profile-dropdown-header" 
+                    onClick={() => {
+                      setProfileDropdownOpen(false);
+                      router.push('/dashboard?tab=profile');
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className="profile-dropdown-avatar">
+                      {userProfile?.avatar ? (
+                        <img src={userProfile.avatar} alt="Avatar" />
+                      ) : (
+                        getInitials(userProfile, user)
+                      )}
+                    </div>
+                    <div className="profile-dropdown-info">
+                      <div className="profile-dropdown-name">{userProfile?.full_name || 'User'}</div>
+                      <div className="profile-dropdown-phone">{userProfile?.phone || user.user_metadata?.phone || 'No Mobile'}</div>
+                      <div className="profile-dropdown-role-badge">
+                        {userRole === 'agent' ? 'Agent' : userRole === 'admin' ? 'Admin' : 'Client'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="profile-dropdown-divider" />
+                  
+                  <div className="profile-dropdown-links">
+                    <Link 
+                      href="/dashboard" 
+                      className="profile-dropdown-item-link"
+                      onClick={() => setProfileDropdownOpen(false)}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="7" height="9" />
+                        <rect x="14" y="3" width="7" height="5" />
+                        <rect x="14" y="12" width="7" height="9" />
+                        <rect x="3" y="16" width="7" height="5" />
+                      </svg>
+                      Dashboard
+                    </Link>
+                    
+                    {userRole === 'admin' && (
+                      <Link 
+                        href="/admin" 
+                        className="profile-dropdown-item-link admin-link"
+                        onClick={() => setProfileDropdownOpen(false)}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        Admin Panel
+                      </Link>
+                    )}
+                  </div>
+                  
+                  <div className="profile-dropdown-divider" />
+                  
+                  <button 
+                    onClick={() => {
+                      setProfileDropdownOpen(false);
+                      handleLogout();
+                    }} 
+                    className="profile-dropdown-logout-btn"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Desktop Navigation */}
         <nav className="desktop-nav">
@@ -793,109 +897,8 @@ export default function Header() {
           </ul>
         </nav>
 
-        {/* Right Header Actions (Theme Toggle & Hamburger) */}
+        {/* Right Header Actions (Notifications & Hamburger) */}
         <div className="header-actions">
-          {mounted && user && (
-            <div id="profile-dropdown-container" style={{ position: 'relative' }}>
-              <button
-                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="header-profile-badge-btn"
-                title={userProfile?.full_name || 'User Profile'}
-                aria-label="Toggle profile menu"
-              >
-                <div className="header-profile-avatar-circle">
-                  {userProfile?.avatar ? (
-                    <img src={userProfile.avatar} alt="Avatar" />
-                  ) : (
-                    getInitials(userProfile, user)
-                  )}
-                </div>
-                <span className="header-profile-name-span">
-                  {userProfile?.full_name || 'User'}
-                </span>
-                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7, transition: 'transform 0.2s', transform: profileDropdownOpen ? 'rotate(180deg)' : 'none' }}>
-                  <path d="M1 1l4 4 4-4" />
-                </svg>
-              </button>
-
-              {profileDropdownOpen && (
-                <div className="header-profile-dropdown">
-                  <div 
-                    className="profile-dropdown-header" 
-                    onClick={() => {
-                      setProfileDropdownOpen(false);
-                      router.push('/dashboard?tab=profile');
-                    }}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <div className="profile-dropdown-avatar">
-                      {userProfile?.avatar ? (
-                        <img src={userProfile.avatar} alt="Avatar" />
-                      ) : (
-                        getInitials(userProfile, user)
-                      )}
-                    </div>
-                    <div className="profile-dropdown-info">
-                      <div className="profile-dropdown-name">{userProfile?.full_name || 'User'}</div>
-                      <div className="profile-dropdown-phone">{userProfile?.phone || user.user_metadata?.phone || 'No Mobile'}</div>
-                      <div className="profile-dropdown-role-badge">
-                        {userRole === 'agent' ? 'Agent' : userRole === 'admin' ? 'Admin' : 'Client'}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="profile-dropdown-divider" />
-                  
-                  <div className="profile-dropdown-links">
-                    <Link 
-                      href="/dashboard" 
-                      className="profile-dropdown-item-link"
-                      onClick={() => setProfileDropdownOpen(false)}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="3" width="7" height="9" />
-                        <rect x="14" y="3" width="7" height="5" />
-                        <rect x="14" y="12" width="7" height="9" />
-                        <rect x="3" y="16" width="7" height="5" />
-                      </svg>
-                      Dashboard
-                    </Link>
-                    
-                    {userRole === 'admin' && (
-                      <Link 
-                        href="/admin" 
-                        className="profile-dropdown-item-link admin-link"
-                        onClick={() => setProfileDropdownOpen(false)}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                        </svg>
-                        Admin Panel
-                      </Link>
-                    )}
-                  </div>
-                  
-                  <div className="profile-dropdown-divider" />
-                  
-                  <button 
-                    onClick={() => {
-                      setProfileDropdownOpen(false);
-                      handleLogout();
-                    }} 
-                    className="profile-dropdown-logout-btn"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                      <polyline points="16 17 21 12 16 7" />
-                      <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
 
           {mounted && user && (
             <div id="notif-dropdown-container" style={{ position: 'relative' }}>
