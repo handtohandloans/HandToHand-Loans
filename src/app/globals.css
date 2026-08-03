@@ -3062,6 +3062,95 @@ textarea.input-field {
   --color-circle-track: rgba(0, 0, 0, 0.04);
 }
 
+/* ---- Indian Flag Theme: Structural Overrides for Text Visibility ---- */
+/* Ensure dark readable text over India theme's light backgrounds */
+[data-theme='india'] body,
+[data-theme='india'] {
+  background-color: #FFFDF5;
+  color: #1a1a1a;
+}
+
+/* Fix hardcoded dark section backgrounds */
+[data-theme='india'] section,
+[data-theme='india'] main,
+[data-theme='india'] .page-section {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+/* Fix any element that may render with a dark bg from the default :root */
+[data-theme='india'] .hero-section,
+[data-theme='india'] .hero-content,
+[data-theme='india'] [class*='hero'] {
+  background: linear-gradient(135deg, #FEF5E7 0%, #FFFDF5 100%) !important;
+  color: #1a1a1a !important;
+}
+
+/* Cards */
+[data-theme='india'] .card,
+[data-theme='india'] [class*='card'] {
+  background: #FFFFFF;
+  color: #1a1a1a;
+  border-color: #e4d9b8;
+}
+
+/* Force readable text on glass/overlay backgrounds */
+[data-theme='india'] .glass,
+[data-theme='india'] [class*='glass'] {
+  background: rgba(255, 255, 255, 0.82) !important;
+  color: #1a1a1a !important;
+}
+
+/* Header text fix */
+[data-theme='india'] .nav-link,
+[data-theme='india'] .header-nav a {
+  color: #1a1a1a !important;
+}
+
+/* Heading & paragraph text */
+[data-theme='india'] h1,
+[data-theme='india'] h2,
+[data-theme='india'] h3,
+[data-theme='india'] h4,
+[data-theme='india'] h5,
+[data-theme='india'] h6 {
+  color: #0d2e0f;
+}
+
+[data-theme='india'] p,
+[data-theme='india'] span:not([class*='badge']):not([class*='tag']):not([class*='pill']),
+[data-theme='india'] li,
+[data-theme='india'] label {
+  color: #3d3d3d;
+}
+
+/* Gradient text from brand gradient - replace with readable dark green */
+[data-theme='india'] [class*='gradient-text'],
+[data-theme='india'] .gradient-text {
+  background: linear-gradient(135deg, #FF9933 0%, #138808 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Input fields */
+[data-theme='india'] input,
+[data-theme='india'] select,
+[data-theme='india'] textarea {
+  background: #FFFFFF;
+  color: #1a1a1a;
+  border-color: #c8d8c0;
+}
+[data-theme='india'] input::placeholder,
+[data-theme='india'] textarea::placeholder {
+  color: #888;
+}
+
+/* Saffron-accented top strip / ticker */
+[data-theme='india'] .running-ticker-container {
+  background: linear-gradient(90deg, #FF9933 0%, #138808 100%);
+}
+
 /* ---------- 3. Royal Navy & Gold Theme ---------- */
 :root[data-theme='navy'],
 [data-theme='navy'] {

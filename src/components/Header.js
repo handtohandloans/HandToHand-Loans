@@ -149,7 +149,8 @@ export default function Header() {
 
   const changeFont = (newFont) => {
     setUserFont(newFont);
-    cacheUserPreferences(theme, newFont);
+    const currentTheme = getCachedUserTheme();
+    cacheUserPreferences(currentTheme, newFont);
 
     let fontBody = '';
     let fontHeading = '';
@@ -182,7 +183,7 @@ export default function Header() {
   };
 
   const toggleTheme = () => {
-    const themeOrder = ['light', 'dark', 'navy', 'cyber', 'rose', 'slate', 'emerald-gold', 'sunset'];
+    const themeOrder = ['light', 'india'];
     const currentIndex = themeOrder.indexOf(theme);
     const nextIndex = (currentIndex + 1) % themeOrder.length;
     const nextTheme = themeOrder[nextIndex];
