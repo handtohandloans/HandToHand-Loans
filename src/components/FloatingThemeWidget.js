@@ -3,14 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 
 const THEMES = [
-  { id: 'light',        name: 'Warm Cream',    desc: 'Ivory & Forest Emerald', accent: '#0B3C11', bg: '#FAF7EC' },
-  { id: 'dark',         name: 'Deep Forest',   desc: 'Dark Night Emerald',     accent: '#1cb239', bg: '#061508' },
-  { id: 'navy',         name: 'Royal Navy',    desc: 'Corporate Blue & Gold',  accent: '#f59e0b', bg: '#070f1e' },
-  { id: 'cyber',        name: 'Cyberpunk',     desc: 'Midnight & Neon Cyan',   accent: '#06b6d4', bg: '#080c14' },
-  { id: 'rose',         name: 'Rose Luxury',   desc: 'Deep Velvet & Blush',    accent: '#fb7185', bg: '#18091e' },
-  { id: 'slate',        name: 'Nordic Slate',  desc: 'Steel Slate & Sapphire', accent: '#3b82f6', bg: '#0f172a' },
-  { id: 'emerald-gold', name: 'Royal Gold',    desc: 'Emerald & Metallic Gold',accent: '#eab308', bg: '#022c22' },
-  { id: 'sunset',       name: 'Terracotta',    desc: 'Warm Earth & Sand',      accent: '#ea580c', bg: '#1c100b' },
+  { id: 'light', name: 'Warm Cream', desc: 'Ivory & Forest Emerald (Official Website Theme)', accent: '#0B3C11', bg: '#FAF7EC' },
 ];
 
 const FONTS = [
@@ -42,25 +35,17 @@ const FONT_MAP = {
   SpaceMono:   '"Space Mono", monospace',
 };
 
-const VALID_THEMES = ['light','dark','navy','cyber','rose','slate','emerald-gold','sunset'];
-
-function getSavedTheme() {
-  try { return localStorage.getItem('h2h-theme') || 'light'; } catch { return 'light'; }
-}
-
 function getSavedFont() {
   try { return localStorage.getItem('h2h-font') || 'Jakarta'; } catch { return 'Jakarta'; }
 }
 
-function applyTheme(themeId) {
-  const t = VALID_THEMES.includes(themeId) ? themeId : 'light';
-  document.documentElement.setAttribute('data-theme', t);
-  try { localStorage.setItem('h2h-theme', t); } catch {}
-  // Also set cookie for SSR
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', 'light');
+  try { localStorage.setItem('h2h-theme', 'light'); } catch {}
   try {
     const d = new Date();
     d.setFullYear(d.getFullYear() + 1);
-    document.cookie = `h2h_theme=${encodeURIComponent(t)}; expires=${d.toUTCString()}; path=/; SameSite=Lax`;
+    document.cookie = `h2h_theme=light; expires=${d.toUTCString()}; path=/; SameSite=Lax`;
   } catch {}
 }
 
@@ -73,18 +58,15 @@ function applyFont(fontId) {
 
 export default function FloatingThemeWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const [theme, setTheme] = useState('light');
   const [font, setFont] = useState('Jakarta');
   const [mounted, setMounted] = useState(false);
   const widgetRef = useRef(null);
 
-  // On mount, read saved preferences and apply them
+  // On mount, enforce Warm Cream theme and restore font preference
   useEffect(() => {
-    const savedTheme = getSavedTheme();
     const savedFont = getSavedFont();
-    setTheme(savedTheme);
     setFont(savedFont);
-    applyTheme(savedTheme);
+    applyTheme();
     applyFont(savedFont);
     setMounted(true);
   }, []);
@@ -100,11 +82,6 @@ export default function FloatingThemeWidget() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  function handleThemeClick(themeId) {
-    setTheme(themeId);
-    applyTheme(themeId);
-  }
-
   function handleFontClick(fontId) {
     setFont(fontId);
     applyFont(fontId);
@@ -114,7 +91,7 @@ export default function FloatingThemeWidget() {
 
   return (
     <div ref={widgetRef} style={{ position: 'fixed', bottom: '24px', left: '24px', zIndex: 99999 }}>
-      {/* Theme Panel */}
+      {/* Customization Panel */}
       {isOpen && (
         <div style={{
           position: 'absolute',
@@ -145,7 +122,7 @@ export default function FloatingThemeWidget() {
                 <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
                 <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.7-.72 1.7-1.61 0-.43-.17-.83-.44-1.13-.27-.3-.43-.7-.43-1.13 0-.89.72-1.61 1.61-1.61h1.9c3.09 0 5.66-2.57 5.66-5.66 0-4.97-4.26-8.87-9.5-8.87z"/>
               </svg>
-              Appearance &amp; Typography
+              Typography Customization
             </div>
             <button
               onClick={() => setIsOpen(false)}
@@ -153,47 +130,30 @@ export default function FloatingThemeWidget() {
             >&times;</button>
           </div>
 
-          {/* Themes Section */}
+          {/* Theme Badge Section (Fixed Warm Cream Theme) */}
           <div>
-            <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-tertiary, #94a3b8)', marginBottom: '10px' }}>
-              Website Theme (8 Palettes)
+            <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-tertiary, #94a3b8)', marginBottom: '8px' }}>
+              Official Website Theme
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              {THEMES.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => handleThemeClick(t.id)}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '6px',
-                    padding: '10px',
-                    borderRadius: '10px',
-                    background: theme === t.id ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)',
-                    border: theme === t.id ? '2px solid #10b981' : '1px solid rgba(255,255,255,0.08)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    position: 'relative',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  {/* Color swatch preview */}
-                  <div style={{ height: '24px', borderRadius: '6px', overflow: 'hidden', display: 'flex', border: '1px solid rgba(0,0,0,0.1)' }}>
-                    <span style={{ width: '35%', background: t.accent, display: 'block' }} />
-                    <span style={{ width: '65%', background: t.bg, display: 'block' }} />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-primary, #fff)' }}>{t.name}</span>
-                    <span style={{ fontSize: '10px', color: 'var(--color-text-tertiary, #94a3b8)' }}>{t.desc}</span>
-                  </div>
-                  {theme === t.id && (
-                    <svg style={{ position: 'absolute', top: '8px', right: '8px', color: '#10b981' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                  )}
-                </button>
-              ))}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 12px',
+                borderRadius: '10px',
+                background: 'rgba(11,60,17,0.08)',
+                border: '1.5 solid #0B3C11',
+              }}
+            >
+              <div style={{ width: '28px', height: '24px', borderRadius: '6px', overflow: 'hidden', display: 'flex', border: '1px solid rgba(0,0,0,0.15)', flexShrink: 0 }}>
+                <span style={{ width: '35%', background: '#0B3C11', display: 'block' }} />
+                <span style={{ width: '65%', background: '#FAF7EC', display: 'block' }} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-primary, #ffffff)' }}>Warm Cream Theme</span>
+                <span style={{ fontSize: '10px', color: 'var(--color-text-tertiary, #94a3b8)' }}>Ivory & Forest Emerald</span>
+              </div>
             </div>
           </div>
 
@@ -202,7 +162,7 @@ export default function FloatingThemeWidget() {
             <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-tertiary, #94a3b8)', marginBottom: '10px' }}>
               Typography Style (12 Fonts)
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', maxHeight: '180px', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', maxHeight: '200px', overflowY: 'auto' }}>
               {FONTS.map((f) => (
                 <button
                   key={f.id}
@@ -241,7 +201,8 @@ export default function FloatingThemeWidget() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="Customize Theme & Font"
+        aria-label="Customize Font Style"
+        title="Customize Font Style"
         style={{
           width: '48px',
           height: '48px',

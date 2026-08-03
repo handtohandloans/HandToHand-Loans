@@ -240,10 +240,6 @@ export const THEME_PALETTES = {
 
 export function applyThemeCSS(themeId) {
   if (typeof document === 'undefined') return;
-  const validThemes = ['light', 'dark', 'navy', 'cyber', 'rose', 'slate', 'emerald-gold', 'sunset'];
-  const safeTheme = validThemes.includes(themeId) ? themeId : 'light';
-  
-  // Clear any inline style property overrides so globals.css data-theme rules take 100% effect cleanly
   const style = document.documentElement.style;
   const keysToRemove = [
     '--bg-base', '--bg-surface', '--bg-subtle', '--color-primary', '--color-primary-hover',
@@ -253,17 +249,16 @@ export function applyThemeCSS(themeId) {
   ];
   keysToRemove.forEach((key) => style.removeProperty(key));
 
-  document.documentElement.setAttribute('data-theme', safeTheme);
+  document.documentElement.setAttribute('data-theme', 'light');
 }
 
 // User Theme & Font Preference Caching Helpers
 export function cacheUserPreferences(theme, font) {
   if (typeof document === 'undefined') return;
-  if (theme) {
-    applyThemeCSS(theme);
-    setCookie('h2h_theme', theme, 365);
-    if (typeof localStorage !== 'undefined') localStorage.setItem('theme', theme);
-  }
+  applyThemeCSS('light');
+  setCookie('h2h_theme', 'light', 365);
+  if (typeof localStorage !== 'undefined') localStorage.setItem('theme', 'light');
+
   if (font) {
     setCookie('h2h_user_font', font, 365);
     if (typeof localStorage !== 'undefined') localStorage.setItem('user-font', font);
@@ -271,8 +266,7 @@ export function cacheUserPreferences(theme, font) {
 }
 
 export function getCachedUserTheme() {
-  if (typeof window === 'undefined') return 'light';
-  return (typeof localStorage !== 'undefined' ? (localStorage.getItem('h2h-theme') || localStorage.getItem('theme')) : null) || getCookie('h2h_theme') || 'light';
+  return 'light';
 }
 
 export function getCachedUserFont() {
