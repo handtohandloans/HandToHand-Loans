@@ -71,7 +71,7 @@ export default function RootLayout({ children }) {
                     return m ? decodeURIComponent(m[1]) : null;
                   }
                   var savedTheme = localStorage.getItem('h2h-theme') || localStorage.getItem('theme') || getCookieVal('h2h_theme') || 'light';
-                  var validThemes = ['light', 'india'];
+                  var validThemes = ['light', 'dark', 'navy', 'cyber', 'rose', 'slate', 'emerald-gold', 'sunset'];
                   if (validThemes.indexOf(savedTheme) === -1) savedTheme = 'light';
                   document.documentElement.setAttribute('data-theme', savedTheme);
 

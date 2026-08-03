@@ -240,7 +240,7 @@ export const THEME_PALETTES = {
 
 export function applyThemeCSS(themeId) {
   if (typeof document === 'undefined') return;
-  const validThemes = ['light', 'india'];
+  const validThemes = ['light', 'dark', 'navy', 'cyber', 'rose', 'slate', 'emerald-gold', 'sunset'];
   const safeTheme = validThemes.includes(themeId) ? themeId : 'light';
   const style = document.documentElement.style;
   const keysToRemove = [
@@ -257,7 +257,7 @@ export function applyThemeCSS(themeId) {
 // User Theme & Font Preference Caching Helpers
 export function cacheUserPreferences(theme, font) {
   if (typeof document === 'undefined') return;
-  const validThemes = ['light', 'india'];
+  const validThemes = ['light', 'dark', 'navy', 'cyber', 'rose', 'slate', 'emerald-gold', 'sunset'];
   const safeTheme = validThemes.includes(theme) ? theme : 'light';
   applyThemeCSS(safeTheme);
   setCookie('h2h_theme', safeTheme, 365);
@@ -271,7 +271,7 @@ export function cacheUserPreferences(theme, font) {
 
 export function getCachedUserTheme() {
   if (typeof window === 'undefined') return 'light';
-  const validThemes = ['light', 'india'];
+  const validThemes = ['light', 'dark', 'navy', 'cyber', 'rose', 'slate', 'emerald-gold', 'sunset'];
   const saved = (typeof localStorage !== 'undefined' ? (localStorage.getItem('h2h-theme') || localStorage.getItem('theme')) : null) || getCookie('h2h_theme') || 'light';
   return validThemes.includes(saved) ? saved : 'light';
 }

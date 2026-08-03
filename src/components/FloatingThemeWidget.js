@@ -3,8 +3,14 @@
 import { useState, useEffect, useRef } from 'react';
 
 const THEMES = [
-  { id: 'light', name: 'Warm Cream',   desc: 'Ivory & Forest Emerald (Official)', accent: '#0B3C11', bg: '#FAF7EC' },
-  { id: 'india', name: '🇮🇳 Indian Flag', desc: 'Saffron, White & India Green',      accent: '#FF9933', bg: '#FFFDF5', accent2: '#138808' },
+  { id: 'light',        name: 'Warm Cream',    desc: 'Ivory & Forest Emerald', accent: '#0B3C11', bg: '#FAF7EC' },
+  { id: 'dark',         name: 'Deep Forest',   desc: 'Dark Night Emerald',     accent: '#1cb239', bg: '#061508' },
+  { id: 'navy',         name: 'Royal Navy',    desc: 'Corporate Blue & Gold',  accent: '#f59e0b', bg: '#070f1e' },
+  { id: 'cyber',        name: 'Cyberpunk',     desc: 'Midnight & Neon Cyan',   accent: '#06b6d4', bg: '#080c14' },
+  { id: 'rose',         name: 'Rose Luxury',   desc: 'Deep Velvet & Blush',    accent: '#fb7185', bg: '#18091e' },
+  { id: 'slate',        name: 'Nordic Slate',  desc: 'Steel Slate & Sapphire', accent: '#3b82f6', bg: '#0f172a' },
+  { id: 'emerald-gold', name: 'Royal Gold',    desc: 'Emerald & Metallic Gold',accent: '#eab308', bg: '#022c22' },
+  { id: 'sunset',       name: 'Terracotta',    desc: 'Warm Earth & Sand',      accent: '#ea580c', bg: '#1c100b' },
 ];
 
 const FONTS = [
@@ -36,7 +42,7 @@ const FONT_MAP = {
   SpaceMono:    '"Space Mono", monospace',
 };
 
-const VALID_THEMES = ['light', 'india'];
+const VALID_THEMES = ['light', 'dark', 'navy', 'cyber', 'rose', 'slate', 'emerald-gold', 'sunset'];
 
 function getSavedTheme() {
   try {
@@ -116,10 +122,10 @@ export default function FloatingThemeWidget() {
           left: 0,
           width: '320px',
           maxWidth: 'calc(100vw - 48px)',
-          background: 'var(--color-bg-card, #ffffff)',
-          border: '1px solid rgba(0,0,0,0.10)',
+          background: 'var(--color-bg-card, #1e293b)',
+          border: '1px solid rgba(255,255,255,0.12)',
           borderRadius: '16px',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
           padding: '18px',
           display: 'flex',
           flexDirection: 'column',
@@ -127,10 +133,11 @@ export default function FloatingThemeWidget() {
           zIndex: 99999,
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
+          animation: 'floatPanelSlideIn 0.25s cubic-bezier(0.16,1,0.3,1)',
         }}>
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-default, #e4d9b8)', paddingBottom: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 700, color: 'var(--color-text-primary, #1a1a1a)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 700, color: 'var(--color-text-primary, #f8fafc)' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
                 <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
@@ -142,16 +149,16 @@ export default function FloatingThemeWidget() {
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              style={{ background: 'none', border: 'none', color: 'var(--color-text-muted, #6b6b6b)', fontSize: '20px', cursor: 'pointer', padding: '4px', lineHeight: 1 }}
+              style={{ background: 'none', border: 'none', color: 'var(--color-text-tertiary, #94a3b8)', fontSize: '20px', cursor: 'pointer', padding: '4px', lineHeight: 1 }}
             >&times;</button>
           </div>
 
           {/* Themes Section */}
           <div>
-            <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted, #6b6b6b)', marginBottom: '10px' }}>
-              Website Theme
+            <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-tertiary, #94a3b8)', marginBottom: '10px' }}>
+              Website Theme (8 Palettes)
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               {THEMES.map((t) => (
                 <button
                   key={t.id}
@@ -159,40 +166,29 @@ export default function FloatingThemeWidget() {
                   onClick={() => handleThemeClick(t.id)}
                   style={{
                     display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '10px 12px',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    padding: '10px',
                     borderRadius: '10px',
-                    background: theme === t.id ? 'rgba(19,136,8,0.07)' : 'rgba(0,0,0,0.02)',
-                    border: theme === t.id ? '2px solid #138808' : '1px solid var(--border-default, #e4d9b8)',
+                    background: theme === t.id ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)',
+                    border: theme === t.id ? '2px solid #10b981' : '1px solid rgba(255,255,255,0.08)',
                     cursor: 'pointer',
                     textAlign: 'left',
                     position: 'relative',
                     transition: 'all 0.2s ease',
-                    width: '100%',
                   }}
                 >
                   {/* Swatch */}
-                  <div style={{ width: '42px', height: '28px', borderRadius: '6px', overflow: 'hidden', display: 'flex', border: '1px solid rgba(0,0,0,0.12)', flexShrink: 0 }}>
-                    {t.id === 'india' ? (
-                      <>
-                        <span style={{ width: '33.3%', background: '#FF9933', display: 'block' }} />
-                        <span style={{ width: '33.3%', background: '#FFFFFF', display: 'block' }} />
-                        <span style={{ width: '33.4%', background: '#138808', display: 'block' }} />
-                      </>
-                    ) : (
-                      <>
-                        <span style={{ width: '35%', background: t.accent, display: 'block' }} />
-                        <span style={{ width: '65%', background: t.bg, display: 'block' }} />
-                      </>
-                    )}
+                  <div style={{ height: '24px', borderRadius: '6px', overflow: 'hidden', display: 'flex', border: '1px solid rgba(0,0,0,0.1)' }}>
+                    <span style={{ width: '35%', background: t.accent, display: 'block' }} />
+                    <span style={{ width: '65%', background: t.bg, display: 'block' }} />
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-primary, #1a1a1a)' }}>{t.name}</span>
-                    <span style={{ fontSize: '10px', color: 'var(--color-text-muted, #6b6b6b)' }}>{t.desc}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-primary, #fff)' }}>{t.name}</span>
+                    <span style={{ fontSize: '10px', color: 'var(--color-text-tertiary, #94a3b8)' }}>{t.desc}</span>
                   </div>
                   {theme === t.id && (
-                    <svg style={{ color: '#138808', flexShrink: 0 }} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <svg style={{ position: 'absolute', top: '8px', right: '8px', color: '#10b981' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                       <polyline points="20 6 9 17 4 12"/>
                     </svg>
                   )}
@@ -203,10 +199,10 @@ export default function FloatingThemeWidget() {
 
           {/* Fonts Section */}
           <div>
-            <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted, #6b6b6b)', marginBottom: '10px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-tertiary, #94a3b8)', marginBottom: '10px' }}>
               Typography Style (12 Fonts)
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', maxHeight: '200px', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', maxHeight: '180px', overflowY: 'auto' }}>
               {FONTS.map((f) => (
                 <button
                   key={f.id}
@@ -218,19 +214,19 @@ export default function FloatingThemeWidget() {
                     justifyContent: 'space-between',
                     padding: '8px 10px',
                     borderRadius: '8px',
-                    background: font === f.id ? 'rgba(19,136,8,0.07)' : 'transparent',
-                    border: font === f.id ? '1px solid #138808' : '1px solid transparent',
+                    background: font === f.id ? 'rgba(16,185,129,0.12)' : 'transparent',
+                    border: font === f.id ? '1px solid #10b981' : '1px solid transparent',
                     cursor: 'pointer',
                     textAlign: 'left',
                     transition: 'all 0.15s ease',
                   }}
                 >
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-primary, #1a1a1a)' }}>{f.name}</span>
-                    <span style={{ fontSize: '10px', color: 'var(--color-text-muted, #6b6b6b)' }}>{f.preview}</span>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-primary, #fff)' }}>{f.name}</span>
+                    <span style={{ fontSize: '10px', color: 'var(--color-text-tertiary, #94a3b8)' }}>{f.preview}</span>
                   </div>
                   {font === f.id && (
-                    <svg style={{ color: '#138808', flexShrink: 0 }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <svg style={{ color: '#10b981', flexShrink: 0 }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                       <polyline points="20 6 9 17 4 12"/>
                     </svg>
                   )}
@@ -251,30 +247,25 @@ export default function FloatingThemeWidget() {
           width: '48px',
           height: '48px',
           borderRadius: '12px',
-          background: theme === 'india'
-            ? 'linear-gradient(180deg, #FF9933 0%, #FFFFFF 50%, #138808 100%)'
-            : 'var(--gradient-primary, linear-gradient(135deg, #0B3C11 0%, #10b981 100%))',
-          color: theme === 'india' ? '#000080' : '#ffffff',
-          border: '1px solid rgba(255,255,255,0.3)',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+          background: 'var(--gradient-primary, linear-gradient(135deg, #0B3C11 0%, #10b981 100%))',
+          color: '#ffffff',
+          border: '1px solid rgba(255,255,255,0.2)',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           transition: 'all 0.3s ease',
           transform: isOpen ? 'scale(1.05) rotate(45deg)' : 'scale(1)',
-          fontSize: theme === 'india' ? '22px' : undefined,
         }}
       >
-        {theme === 'india' ? '🇮🇳' : (
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
-            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
-            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
-            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
-            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.7-.72 1.7-1.61 0-.43-.17-.83-.44-1.13-.27-.3-.43-.7-.43-1.13 0-.89.72-1.61 1.61-1.61h1.9c3.09 0 5.66-2.57 5.66-5.66 0-4.97-4.26-8.87-9.5-8.87z"/>
-          </svg>
-        )}
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+          <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+          <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+          <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.7-.72 1.7-1.61 0-.43-.17-.83-.44-1.13-.27-.3-.43-.7-.43-1.13 0-.89.72-1.61 1.61-1.61h1.9c3.09 0 5.66-2.57 5.66-5.66 0-4.97-4.26-8.87-9.5-8.87z"/>
+        </svg>
       </button>
     </div>
   );

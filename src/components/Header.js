@@ -183,7 +183,7 @@ export default function Header() {
   };
 
   const toggleTheme = () => {
-    const themeOrder = ['light', 'india'];
+    const themeOrder = ['light', 'dark', 'navy', 'cyber', 'rose', 'slate', 'emerald-gold', 'sunset'];
     const currentIndex = themeOrder.indexOf(theme);
     const nextIndex = (currentIndex + 1) % themeOrder.length;
     const nextTheme = themeOrder[nextIndex];
