@@ -374,50 +374,25 @@ p {
   transform: scale(1.02) !important;
 }
 
-/* On mobile/laptop views where nav-links are hidden under hamburger, center the logo absolutely */
-@media (max-width: 1380px) {
-  .logo {
-    position: absolute !important;
-    left: 50% !important;
-    top: 50% !important;
-    transform: translate(-50%, -50%) !important;
+/* On all screen sizes, keep logo on left and actions on right in clean flexbox layout */
+.logo {
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+}
+
+.logo:hover {
+  transform: scale(1.02) !important;
+}
+
+/* Compact logo text on small screens so header never overflows */
+@media (max-width: 640px) {
+  .logo-badge-fintech {
+    display: none !important;
   }
-  .logo:hover {
-    transform: translate(-50%, -50%) scale(1.02) !important;
-  }
-}
-
-/* Header actions flexbox ordering for standard layouts */
-#profile-dropdown-container {
-  order: 4 !important;
-}
-
-#notif-dropdown-container {
-  order: 1 !important; /* Shifted to the left side of actions */
-}
-
-.nav-theme-toggle {
-  order: 3 !important;
-}
-
-.nav-font-cycler {
-  order: 2 !important;
-}
-
-/* Responsive header items in relative flex flow (prevents overlapping) */
-@media (max-width: 1024px) {
-  .hamburger {
-    display: flex !important;
-    position: relative !important;
-    left: auto !important;
-    top: auto !important;
-  }
-
-  #notif-dropdown-container {
-    display: flex !important;
-    position: relative !important;
-    left: auto !important;
-    top: auto !important;
+  .logo-text {
+    font-size: 14px !important;
   }
 }
 
@@ -4757,10 +4732,9 @@ main, article, aside {
   min-width: 0;
 }
 
-/* Hamburger must NEVER shrink or be pushed off screen */
+/* Hamburger sits cleanly at the far right of header actions */
 .hamburger {
   flex-shrink: 0 !important;
-  order: -1 !important; /* First in row */
 }
 
 /* On screens ≤ 480px, make all icon buttons more compact to fit in nav bar.
