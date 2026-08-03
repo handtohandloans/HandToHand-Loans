@@ -374,33 +374,48 @@ p {
   transform: scale(1.02) !important;
 }
 
-/* On all screen sizes, keep logo on left and actions on right in clean flexbox layout */
-.logo {
-  position: relative !important;
-  left: auto !important;
-  top: auto !important;
-  transform: none !important;
+/* Header layout: Extreme Left Profile, Center Logo with FINTECH badge, Extreme Right Actions */
+.header-left {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-shrink: 0;
+  z-index: 10;
+  min-width: 36px;
 }
 
-.logo:hover {
-  transform: scale(1.02) !important;
+.header-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 5;
 }
 
-/* Compact logo text on small screens so header never overflows */
-@media (max-width: 640px) {
-  .logo-badge-fintech {
-    display: none !important;
+@media (max-width: 1024px) {
+  .header-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: auto;
   }
   .logo-text {
     font-size: 14px !important;
   }
 }
 
+.logo {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
 
 .logo-text-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -416,23 +431,23 @@ p {
 }
 
 .logo-badge-fintech {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3px 9px;
-  background: var(--gradient-brand);
-  border-radius: 20px;
-  color: #ffffff;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  box-shadow: 0 2px 8px rgba(11, 60, 17, 0.25);
-  line-height: 1;
-  text-transform: uppercase;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  flex-shrink: 0;
-  -webkit-text-fill-color: #ffffff;
-  transform: none;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 3px 8px !important;
+  background: var(--gradient-brand) !important;
+  border-radius: 20px !important;
+  color: #ffffff !important;
+  font-size: 9.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 2px 8px rgba(11, 60, 17, 0.25) !important;
+  flex-shrink: 0 !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
   align-self: center;
 }
 

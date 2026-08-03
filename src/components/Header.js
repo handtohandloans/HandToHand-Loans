@@ -465,24 +465,8 @@ export default function Header() {
   return (
     <header className="header">
       <div className="header-inner">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-          <Link href="/" className="logo" onClick={closeMenu} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logo.png"
-              alt="HandToHand Loans Logo"
-              style={{ display: 'block', height: '36px', width: 'auto', flexShrink: 0, objectFit: 'contain' }}
-            />
-            <div className="logo-text-group">
-              <span className="logo-text">
-                HandToHand Loans
-              </span>
-              <span className="logo-badge-fintech">
-                FINTECH
-              </span>
-            </div>
-          </Link>
-
+        {/* Extreme Left: Profile Tab Button */}
+        <div className="header-left">
           {mounted && user && (
             <div id="profile-dropdown-container" style={{ position: 'relative' }}>
               <button
@@ -584,6 +568,26 @@ export default function Header() {
               )}
             </div>
           )}
+        </div>
+
+        {/* Center: Logo with HandToHand Loans & FINTECH badge */}
+        <div className="header-center">
+          <Link href="/" className="logo" onClick={closeMenu} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="HandToHand Loans Logo"
+              style={{ display: 'block', height: '34px', width: 'auto', flexShrink: 0, objectFit: 'contain' }}
+            />
+            <div className="logo-text-group">
+              <span className="logo-text">
+                HandToHand Loans
+              </span>
+              <span className="logo-badge-fintech">
+                FINTECH
+              </span>
+            </div>
+          </Link>
         </div>
 
         {/* Desktop Navigation */}
