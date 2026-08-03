@@ -70,7 +70,10 @@ export default function RootLayout({ children }) {
                     var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
                     return m ? decodeURIComponent(m[1]) : null;
                   }
-                  document.documentElement.setAttribute('data-theme', 'light');
+                  var savedTheme = localStorage.getItem('h2h-theme') || localStorage.getItem('theme') || getCookieVal('h2h_theme') || 'light';
+                  var validThemes = ['light', 'india'];
+                  if (validThemes.indexOf(savedTheme) === -1) savedTheme = 'light';
+                  document.documentElement.setAttribute('data-theme', savedTheme);
 
                   // Set global typography from localStorage / cookie
                   var savedFont = localStorage.getItem('h2h-font') || localStorage.getItem('user-font') || getCookieVal('h2h_user_font') || 'Jakarta';

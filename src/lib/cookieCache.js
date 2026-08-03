@@ -240,6 +240,8 @@ export const THEME_PALETTES = {
 
 export function applyThemeCSS(themeId) {
   if (typeof document === 'undefined') return;
+  const validThemes = ['light', 'india'];
+  const safeTheme = validThemes.includes(themeId) ? themeId : 'light';
   const style = document.documentElement.style;
   const keysToRemove = [
     '--bg-base', '--bg-surface', '--bg-subtle', '--color-primary', '--color-primary-hover',
@@ -249,15 +251,17 @@ export function applyThemeCSS(themeId) {
   ];
   keysToRemove.forEach((key) => style.removeProperty(key));
 
-  document.documentElement.setAttribute('data-theme', 'light');
+  document.documentElement.setAttribute('data-theme', safeTheme);
 }
 
 // User Theme & Font Preference Caching Helpers
 export function cacheUserPreferences(theme, font) {
   if (typeof document === 'undefined') return;
-  applyThemeCSS('light');
-  setCookie('h2h_theme', 'light', 365);
-  if (typeof localStorage !== 'undefined') localStorage.setItem('theme', 'light');
+  const validThemes = ['light', 'india'];
+  const safeTheme = validThemes.includes(theme) ? theme : 'light';
+  applyThemeCSS(safeTheme);
+  setCookie('h2h_theme', safeTheme, 365);
+  if (typeof localStorage !== 'undefined') localStorage.setItem('theme', safeTheme);
 
   if (font) {
     setCookie('h2h_user_font', font, 365);
@@ -266,7 +270,10 @@ export function cacheUserPreferences(theme, font) {
 }
 
 export function getCachedUserTheme() {
-  return 'light';
+  if (typeof window === 'undefined') return 'light';
+  const validThemes = ['light', 'india'];
+  const saved = (typeof localStorage !== 'undefined' ? (localStorage.getItem('h2h-theme') || localStorage.getItem('theme')) : null) || getCookie('h2h_theme') || 'light';
+  return validThemes.includes(saved) ? saved : 'light';
 }
 
 export function getCachedUserFont() {

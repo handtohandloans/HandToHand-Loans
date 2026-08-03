@@ -2960,6 +2960,108 @@ textarea.input-field {
   --color-circle-track: rgba(15, 23, 42, 0.04);
 }
 
+/* ---------- Indian Flag Theme – Saffron, White & Green ---------- */
+:root[data-theme='india'],
+[data-theme='india'] {
+  /* --- Indian Tricolour Design Tokens --- */
+  --bg-base: #FFFDF5;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #FEF5E7;
+
+  --color-primary: #138808;
+  --color-primary-hover: #0d6006;
+  --color-primary-light: rgba(19, 136, 8, 0.09);
+
+  /* --- Button Theme Variables --- */
+  --color-btn-primary-bg: #138808;
+  --color-btn-primary-bg-hover: #0d6006;
+  --color-btn-primary-text: #FFFFFF;
+  --color-btn-secondary-border: #FF9933;
+  --color-btn-secondary-text: #B55A00;
+  --color-btn-secondary-bg-hover: #FF9933;
+  --color-btn-secondary-text-hover: #FFFFFF;
+
+  --color-accent: #FF9933;
+  --color-accent-hover: #e07d1a;
+  --color-accent-light: rgba(255, 153, 51, 0.1);
+
+  --color-secondary: #f0faf0;
+
+  --color-success: #138808;
+  --color-warning: #FF9933;
+  --color-error: #dc2626;
+
+  --text-primary: #1a1a1a;
+  --text-secondary: #3d3d3d;
+  --text-muted: #6b6b6b;
+
+  --border-default: #e4d9b8;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 10px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 20px -3px rgba(0, 0, 0, 0.10), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+  --gradient-brand: linear-gradient(135deg, #FF9933 0%, #FFFFFF 50%, #138808 100%);
+
+  /* --- Map values to existing variables --- */
+  --color-bg-primary: var(--bg-base);
+  --color-bg-secondary: var(--bg-surface);
+  --color-bg-tertiary: var(--bg-subtle);
+  --color-bg-card: var(--bg-surface);
+  --color-bg-card-hover: var(--bg-subtle);
+  --color-bg-glass: rgba(255, 255, 255, 0.78);
+  --color-bg-glass-heavy: rgba(255, 255, 255, 0.92);
+  --color-bg-input: var(--bg-base);
+  --color-bg-input-focus: var(--bg-surface);
+  --color-bg-section-subtle: var(--bg-subtle);
+
+  /* Accent Colors */
+  --color-accent-indigo: #138808;
+  --color-accent-violet: #FF9933;
+  --color-accent-purple: #138808;
+  --color-accent-blue: #000080;
+  --color-accent-cyan: #138808;
+
+  /* Semantic Colors */
+  --color-success-bg: rgba(19, 136, 8, 0.08);
+  --color-warning-bg: rgba(255, 153, 51, 0.08);
+  --color-error-bg: rgba(220, 38, 38, 0.08);
+  --color-info: #138808;
+  --color-info-bg: rgba(19, 136, 8, 0.08);
+
+  /* Text Colors */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-muted);
+  --color-text-muted: var(--text-muted);
+  --color-text-accent: #138808;
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #FF9933 0%, #138808 100%);
+  --gradient-primary-hover: linear-gradient(135deg, #e07d1a 0%, #0d6006 100%);
+  --gradient-accent: linear-gradient(135deg, #138808 0%, #FF9933 100%);
+  --gradient-success: linear-gradient(135deg, #138808 0%, #22c55e 100%);
+  --gradient-warning: linear-gradient(135deg, #FF9933 0%, #e07d1a 100%);
+  --gradient-bg-mesh: none;
+  --gradient-card-border: linear-gradient(135deg, rgba(255,153,51,0.08) 0%, rgba(19,136,8,0.06) 100%);
+  --gradient-text: var(--gradient-brand);
+  --gradient-hero-mesh: radial-gradient(circle at 50% 50%, rgba(255,153,51,0.05) 0%, rgba(19,136,8,0.04) 60%, transparent 100%);
+
+  /* Borders */
+  --border-subtle: 1px solid var(--border-default);
+  --border-light: 1px solid rgba(0, 0, 0, 0.04);
+  --border-accent: 1px solid #FF9933;
+  --border-success: 1px solid #138808;
+  --border-error: 1px solid var(--color-error);
+
+  /* Shadows */
+  --shadow-xl: var(--shadow-lg);
+  --shadow-glow-indigo: 0 2px 8px rgba(19, 136, 8, 0.10);
+  --shadow-glow-purple: 0 2px 8px rgba(255, 153, 51, 0.10);
+  --shadow-input-focus: 0 0 0 2px rgba(19, 136, 8, 0.18);
+  --color-circle-track: rgba(0, 0, 0, 0.04);
+}
+
 /* ---------- 3. Royal Navy & Gold Theme ---------- */
 :root[data-theme='navy'],
 [data-theme='navy'] {
