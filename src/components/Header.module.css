@@ -1,0 +1,1538 @@
+.header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+  z-index: 1000;
+  box-shadow:
+    0 4px 20px rgba(11, 22, 104, 0.04),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.85);
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.container {
+  width: 100%;
+  max-width: 1650px;
+  margin: 0 auto;
+  padding: 8px 18px;
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+/* Brand Logo */
+.logoWrapper {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.brandLogoImg {
+  height: 50px;
+  width: auto;
+  max-width: 175px;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.logoLink:hover .brandLogoImg {
+  transform: scale(1.02);
+}
+
+/* Desktop Nav Menu: Exactly items 1 to 10 */
+.navMenu {
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 0.75vw, 10px);
+  flex-wrap: nowrap;
+  flex-shrink: 1;
+}
+
+.navLink {
+  font-size: clamp(11.5px, 0.8vw, 12.5px);
+  font-weight: 600;
+  color: #1f2937;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 3px;
+  transition: color 0.18s ease;
+  white-space: nowrap;
+  position: relative;
+}
+
+.navLink:hover,
+.navLinkHovered {
+  color: #0068fb;
+}
+
+.navLinkActive {
+  color: #0068fb;
+  font-weight: 700;
+}
+
+.navLinkActive::after {
+  content: '';
+  position: absolute;
+  bottom: 0px;
+  left: 0;
+  width: 100%;
+  height: 2.5px;
+  background-color: #0068fb;
+  border-radius: 2px;
+}
+
+.dropdownWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.chevron {
+  transition: transform 0.2s ease;
+}
+
+.chevronRotated {
+  transform: rotate(180deg);
+}
+
+/* Loans, Our Services, Resources & EMI Calculator Rich Translucent Dropdown Menu (PC version only - Vertical layout) */
+.loansDropdownMenu,
+.servicesDropdownMenu,
+.resourcesDropdownMenu,
+.emiDropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: rgba(255, 255, 255, 0.52);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border-radius: 14px;
+  box-shadow:
+    0 20px 48px -10px rgba(11, 22, 104, 0.16),
+    0 6px 20px rgba(0, 0, 0, 0.05),
+    inset 0 1px 1px rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  width: 330px;
+  padding: 12px;
+  z-index: 1000;
+  animation: fadeInDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.resourcesDropdownMenu,
+.emiDropdownMenu {
+  left: 50%;
+  transform: translateX(-50%);
+  animation: fadeInDownCentered 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInDownCentered {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdownHeader {
+  display: flex;
+  flex-direction: column;
+  padding: 0 4px 8px 4px;
+  border-bottom: 1px solid rgba(11, 22, 104, 0.08);
+  margin-bottom: 8px;
+}
+
+.dropdownHeaderTitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0b1668;
+  letter-spacing: -0.2px;
+}
+
+.dropdownHeaderSubtitle {
+  font-size: 10.5px;
+  color: #475569;
+  font-weight: 500;
+}
+
+/* Vertical Stacked Layout */
+.loanItemsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.loanDropdownCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.38);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 2px 8px rgba(11, 22, 104, 0.03);
+  transition: all 0.2s ease;
+}
+
+.loanDropdownCard:hover {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(0, 104, 251, 0.3);
+  box-shadow: 0 6px 18px rgba(11, 22, 104, 0.08);
+  transform: translateY(-1px);
+}
+
+.loanCardIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+.loanDropdownCard:hover .loanCardIcon {
+  transform: scale(1.08);
+}
+
+.loanCardDetails {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.loanCardNameRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.loanCardName {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0b1668;
+  white-space: nowrap;
+}
+
+.loanCardTag {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: -0.1px;
+  white-space: nowrap;
+}
+
+.loanCardDesc {
+  font-size: 10.5px;
+  color: #475569;
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arrowIcon {
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: all 0.18s ease;
+}
+
+.loanDropdownCard:hover .arrowIcon {
+  color: #0068fb;
+  transform: translateX(2px);
+}
+
+/* Parent Dropdown Card with Nested Submenu */
+.parentDropdownCardWrap {
+  position: relative;
+  width: 100%;
+}
+
+.hasSubmenuCard {
+  cursor: pointer;
+}
+
+.submenuActiveCard {
+  background: rgba(255, 255, 255, 0.78) !important;
+  border-color: rgba(0, 104, 251, 0.35) !important;
+  box-shadow: 0 4px 14px rgba(11, 22, 104, 0.08) !important;
+}
+
+.nestedChevron {
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, color 0.2s ease;
+  margin-left: auto;
+}
+
+.loanDropdownCard:hover .nestedChevron,
+.nestedChevronActive {
+  color: #0068fb;
+  transform: translateX(3px);
+}
+
+/* Secondary Translucent Vertical Flyout Menu */
+.nestedLoansFlyout {
+  position: absolute;
+  top: -6px;
+  left: calc(100% + 8px);
+  width: 335px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border-radius: 14px;
+  box-shadow:
+    0 20px 48px -10px rgba(11, 22, 104, 0.18),
+    0 6px 20px rgba(0, 0, 0, 0.05),
+    inset 0 1px 1px rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  padding: 12px;
+  z-index: 1020;
+  animation: flyoutIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nestedLoansFlyout::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -14px;
+  width: 16px;
+}
+
+@keyframes flyoutIn {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.dropdownFooter {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(11, 22, 104, 0.08);
+  text-align: right;
+  padding-right: 6px;
+}
+
+.viewAllLoansLink {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0068fb;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.viewAllLoansLink:hover {
+  color: #0056d6;
+  text-decoration: underline;
+}
+
+/* Right Actions: Exactly items 11 to 14 */
+/* Right Actions: Exactly items 11 to 14 */
+.rightActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* 11. Support (WhatsApp Only) */
+.supportBox {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  text-decoration: none;
+  border-radius: 9999px;
+  background: rgba(37, 211, 102, 0.12);
+  border: 1px solid rgba(37, 211, 102, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 6px rgba(37, 211, 102, 0.12);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: auto;
+  height: auto;
+}
+
+.supportBox:hover {
+  background-color: rgba(37, 211, 102, 0.22);
+  border-color: #25D366;
+  transform: translateY(-1px);
+}
+
+.supportText {
+  display: flex;
+  flex-direction: column;
+}
+
+.supportLabel {
+  display: none;
+  font-size: 8.5px;
+  color: #57657e;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.supportNumber {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #0b1668;
+  letter-spacing: -0.2px;
+  line-height: 1.15;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.whatsappIcon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* 12. Login Link */
+.loginLink {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0b1668;
+  padding: 5px 8px;
+  border-radius: 7px;
+  transition: background-color 0.18s ease, color 0.18s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.loginLink:hover {
+  background-color: #f1f5f9;
+  color: #0068fb;
+}
+
+/* 13. Check Eligibility */
+.btnBlue {
+  background-color: #0068fb;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 13px;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 104, 251, 0.28);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.btnBlue:hover {
+  background-color: #0056d6;
+  box-shadow: 0 4px 12px rgba(0, 104, 251, 0.38);
+  transform: translateY(-1px);
+}
+
+/* 14. Become a Partner */
+.btnGreen {
+  background-color: #076b25;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 13px;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(7, 107, 37, 0.28);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.btnGreen:hover {
+  background-color: #065a1d;
+  box-shadow: 0 4px 10px rgba(7, 107, 37, 0.35);
+  transform: translateY(-1px);
+}
+
+.btnTextFull {
+  display: inline;
+}
+
+.btnTextCompact {
+  display: none;
+}
+
+.btnTextMini {
+  display: none;
+}
+
+.desktopOnlyBtn {
+  display: block;
+}
+
+/* Hamburger Button */
+.hamburgerBtn {
+  display: none;
+  background: transparent;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 28px;
+  height: 26px;
+  padding: 3px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  z-index: 1010;
+}
+
+.bar {
+  width: 100%;
+  height: 2px;
+  background-color: #0b1668;
+  border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  transform-origin: 1px 1px;
+}
+
+/* Animated Hamburger to X */
+.hamburgerActive .bar:nth-child(1) {
+  transform: rotate(45deg) translate(2px, 2px);
+}
+
+.hamburgerActive .bar:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.hamburgerActive .bar:nth-child(3) {
+  transform: rotate(-45deg) translate(2px, -2px);
+}
+
+/* Mobile Drawer Overlay */
+.mobileDrawer {
+  display: none;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border-top: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 16px 36px rgba(11, 22, 104, 0.1);
+  padding: 16px 20px 24px 20px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.mobileDrawerOpen {
+  display: block;
+  max-height: 800px;
+  opacity: 1;
+  overflow-y: auto;
+}
+
+.mobileNavLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: 1px solid rgba(11, 22, 104, 0.08);
+  padding-bottom: 14px;
+}
+
+.mobileNavLink {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1e293b;
+  padding: 7px 10px;
+  border-radius: 6px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mobileNavLink:hover,
+.mobileNavActive {
+  background-color: rgba(0, 104, 251, 0.08);
+  color: #0068fb;
+}
+
+/* Mobile Accordion for Loans */
+.mobileAccordionWrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobileAccordionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.15s ease;
+}
+
+.mobileAccordionHeader:hover {
+  background-color: rgba(0, 104, 251, 0.08);
+}
+
+.mobileNavLinkInner {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0b1668;
+}
+
+.mobileChevron {
+  color: #64748b;
+  transition: transform 0.2s ease;
+}
+
+.mobileChevronOpen {
+  transform: rotate(180deg);
+  color: #0068fb;
+}
+
+.mobileSubList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 8px 12px 14px;
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  margin: 4px 0 6px 0;
+}
+
+.mobileSubItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 2px 6px rgba(11, 22, 104, 0.03);
+  transition: all 0.2s ease;
+}
+
+.mobileSubItem:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 104, 251, 0.3);
+}
+
+.mobileSubIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mobileSubItemInfo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.mobileSubItemName {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0b1668;
+}
+
+.mobileSubItemDesc {
+  font-size: 9.5px;
+  color: #64748b;
+}
+
+.mobileSubItemTag {
+  font-size: 8.5px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+/* Mobile Nested Sub-accordion for Loans under Our Services */
+.mobileNestedAccordionWrap {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.mobileDeepSubList {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 5px 0 6px 12px;
+  padding-left: 10px;
+  border-left: 2px solid #0068fb;
+  animation: fadeInDown 0.2s ease;
+}
+
+.mobileDeepSubItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  transition: background-color 0.15s ease;
+}
+
+.mobileDeepSubItem:hover {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.mobileSeeAllLink {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #0068fb;
+  text-align: center;
+  padding: 8px 0 4px 0;
+  text-decoration: none;
+  margin-top: 2px;
+}
+
+.mobileSeeAllLink:hover {
+  text-decoration: underline;
+}
+
+.mobileFooterActions {
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobileSupportBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 2px 8px rgba(11, 22, 104, 0.03);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.mobileSupportBox:hover {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.mobileSupportText {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobileSupportLabel {
+  font-size: 10px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.mobileSupportPhone {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0b1668;
+}
+
+.mobileButtonsRow {
+  display: flex;
+  gap: 10px;
+}
+
+.mobileBtnBlue {
+  flex: 1;
+  background-color: #0068fb;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 10px 14px;
+  border-radius: 9999px;
+  text-align: center;
+}
+
+.mobileBtnGreen {
+  flex: 1;
+  background-color: #076b25;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 10px 14px;
+  border-radius: 9999px;
+  text-align: center;
+}
+
+.mobileLoginRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #0b1668;
+  text-decoration: none;
+}
+
+/* Breakpoint 1: Extra-Wide Monitors (>= 1680px) */
+@media (min-width: 1680px) {
+  .supportLabel {
+    display: block;
+  }
+}
+
+/* Breakpoint 2: Standard Desktop & 1080p Scaled Laptops (1261px - 1580px) */
+@media (max-width: 1580px) {
+  .supportLabel {
+    display: none !important;
+  }
+
+  .navMenu {
+    gap: clamp(5px, 0.65vw, 8px);
+  }
+
+  .navLink {
+    font-size: clamp(11.2px, 0.72vw, 12px);
+    padding: 5px clamp(2px, 0.25vw, 4px);
+  }
+
+  .btnBlue,
+  .btnGreen {
+    padding: 6.5px 11px;
+    font-size: 11.5px;
+  }
+
+  .container {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+}
+
+/* Breakpoint 3: Compact Laptops (<= 1440px) */
+@media (max-width: 1440px) {
+  .supportBox {
+    padding: 3.5px 7px;
+    gap: 4px;
+    width: auto !important;
+    height: auto !important;
+    border-radius: 9999px !important;
+  }
+
+  .supportText {
+    display: flex !important;
+  }
+
+  .supportLabel {
+    display: none !important;
+  }
+
+  .supportNumber {
+    font-size: 11px;
+    gap: 3.5px;
+  }
+
+  .navMenu {
+    gap: clamp(4px, 0.5vw, 6px);
+  }
+
+  .navLink {
+    font-size: 11.2px;
+    padding: 4px 2px;
+  }
+
+  .btnBlue,
+  .btnGreen {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .brandLogoImg {
+    height: 44px;
+    max-width: 155px;
+  }
+
+  .container {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .loansDropdownMenu,
+  .servicesDropdownMenu,
+  .resourcesDropdownMenu {
+    width: 310px;
+  }
+}
+
+/* Breakpoint 4: Compact Laptop & Tablet (<= 1260px) - Switch to Hamburger Menu */
+@media (max-width: 1260px) {
+  .navMenu {
+    display: none !important;
+  }
+
+  .hamburgerBtn {
+    display: flex !important;
+  }
+
+  .supportBox {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 9px;
+    background: rgba(37, 211, 102, 0.12);
+    border: 1px solid rgba(37, 211, 102, 0.35);
+    border-radius: 9999px !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 2px 6px rgba(37, 211, 102, 0.12);
+    width: auto !important;
+    height: auto !important;
+  }
+
+  .supportBox:hover {
+    background: rgba(37, 211, 102, 0.22);
+    border-color: #25D366;
+    transform: translateY(-1px);
+  }
+
+  .supportText {
+    display: flex !important;
+  }
+
+  .supportLabel {
+    display: none !important;
+  }
+
+  .supportNumber {
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #0b1668;
+    font-weight: 700;
+  }
+
+  .whatsappIcon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .brandLogoImg {
+    height: 44px;
+    max-width: 155px;
+  }
+
+  .rightActions {
+    gap: 8px;
+  }
+
+  .btnBlue,
+  .btnGreen {
+    display: inline-flex !important;
+    padding: 6.5px 12px;
+    font-size: 11.5px;
+    border-radius: 9999px;
+  }
+}
+
+/* Breakpoint 5: Tablet Portrait (<= 992px) */
+@media (max-width: 992px) {
+  .supportBox {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    padding: 4.5px 8px;
+    background: rgba(37, 211, 102, 0.12);
+    border: 1px solid rgba(37, 211, 102, 0.35);
+    border-radius: 9999px !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 2px 6px rgba(37, 211, 102, 0.12);
+    width: auto !important;
+    height: auto !important;
+  }
+
+  .supportBox:hover {
+    background: rgba(37, 211, 102, 0.22);
+    border-color: #25D366;
+    transform: translateY(-1px);
+  }
+
+  .supportText {
+    display: flex !important;
+  }
+
+  .supportLabel {
+    display: none !important;
+  }
+
+  .supportNumber {
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #0b1668;
+    font-weight: 700;
+  }
+
+  .whatsappIcon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .brandLogoImg {
+    height: 42px;
+    max-width: 145px;
+  }
+
+  .rightActions {
+    gap: 7px;
+  }
+
+  .btnBlue,
+  .btnGreen {
+    display: inline-flex !important;
+    padding: 6px 10px;
+    font-size: 11px;
+    border-radius: 9999px;
+  }
+}
+
+/* Breakpoint 6: Small Tablet / Large Mobile (<= 768px) */
+@media (max-width: 768px) {
+  .container {
+    padding: 7px 10px;
+    min-height: 56px;
+    gap: 6px;
+  }
+
+  .brandLogoImg {
+    height: 36px;
+    max-width: 125px;
+  }
+
+  .supportBox {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 7px;
+    background: rgba(37, 211, 102, 0.12);
+    border: 1px solid rgba(37, 211, 102, 0.35);
+    border-radius: 9999px !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    width: auto !important;
+    height: auto !important;
+  }
+
+  .supportText {
+    display: flex !important;
+  }
+
+  .supportLabel {
+    display: none !important;
+  }
+
+  .supportNumber {
+    font-size: 10.5px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 3.5px;
+  }
+
+  .whatsappIcon {
+    width: 13px;
+    height: 13px;
+  }
+
+  .loginLink {
+    display: none !important;
+  }
+
+  .rightActions {
+    gap: 5px;
+  }
+
+  .btnBlue,
+  .btnGreen {
+    display: inline-flex !important;
+    padding: 5px 8px;
+    font-size: 10.5px;
+    border-radius: 9999px;
+  }
+
+  .btnTextFull {
+    display: none !important;
+  }
+
+  .btnTextCompact {
+    display: inline !important;
+  }
+
+  .btnTextMini {
+    display: none !important;
+  }
+
+  .hamburgerBtn {
+    width: 28px;
+    height: 25px;
+    padding: 3px;
+  }
+}
+
+/* Breakpoint 7: Standard Mobile & Compact Devices (<= 560px) */
+@media (max-width: 560px) {
+  .container {
+    padding: 6px 6px;
+    min-height: 50px;
+    gap: 4px;
+  }
+
+  .brandLogoImg {
+    height: 30px;
+    max-width: 95px;
+  }
+
+  .supportBox {
+    display: inline-flex !important;
+    padding: 3.5px 6px;
+    gap: 3px;
+    background: rgba(37, 211, 102, 0.12);
+    border: 1px solid rgba(37, 211, 102, 0.35);
+    border-radius: 9999px !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    width: auto !important;
+    height: auto !important;
+  }
+
+  .supportText {
+    display: flex !important;
+  }
+
+  .supportLabel {
+    display: none !important;
+  }
+
+  .supportNumber {
+    font-size: 9.5px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    color: #0b1668;
+  }
+
+  .whatsappIcon {
+    width: 12px;
+    height: 12px;
+  }
+
+  .rightActions {
+    gap: 4px;
+  }
+
+  .btnBlue,
+  .btnGreen {
+    display: inline-flex !important;
+    padding: 4px 6.5px;
+    font-size: 9.5px;
+    font-weight: 700;
+    border-radius: 9999px;
+  }
+
+  .btnTextFull {
+    display: none !important;
+  }
+
+  .btnTextCompact {
+    display: inline !important;
+  }
+
+  .btnTextMini {
+    display: none !important;
+  }
+
+  .hamburgerBtn {
+    width: 25px;
+    height: 23px;
+    padding: 2.5px;
+  }
+}
+
+/* Breakpoint 8: Small Mobile (<= 380px) */
+@media (max-width: 380px) {
+  .container {
+    padding: 5px 4px;
+    min-height: 46px;
+    gap: 3px;
+  }
+
+  .brandLogoImg {
+    height: 26px;
+    max-width: 80px;
+  }
+
+  .rightActions {
+    gap: 3px;
+  }
+
+  .supportBox {
+    display: inline-flex !important;
+    padding: 3px 5px;
+    gap: 2.5px;
+    background: rgba(37, 211, 102, 0.12);
+    border: 1px solid rgba(37, 211, 102, 0.35);
+    border-radius: 9999px !important;
+    width: auto !important;
+    height: auto !important;
+  }
+
+  .supportText {
+    display: flex !important;
+  }
+
+  .supportLabel {
+    display: none !important;
+  }
+
+  .supportNumber {
+    font-size: 8.5px;
+    letter-spacing: -0.2px;
+    display: inline-flex;
+    align-items: center;
+    gap: 2.5px;
+  }
+
+  .whatsappIcon {
+    width: 11px;
+    height: 11px;
+  }
+
+  .btnBlue,
+  .btnGreen {
+    display: inline-flex !important;
+    padding: 3.5px 5px;
+    font-size: 8.5px;
+    font-weight: 700;
+    border-radius: 9999px;
+  }
+
+  .btnTextFull {
+    display: none !important;
+  }
+
+  .btnTextCompact {
+    display: none !important;
+  }
+
+  .btnTextMini {
+    display: inline !important;
+  }
+
+  .hamburgerBtn {
+    width: 22px;
+    height: 20px;
+    padding: 2px;
+  }
+}
+
+/* Breakpoint 9: Ultra-Narrow Mobile (<= 330px) */
+@media (max-width: 330px) {
+  .container {
+    padding: 4px 3px;
+    min-height: 42px;
+    gap: 2px;
+  }
+
+  .brandLogoImg {
+    height: 22px;
+    max-width: 68px;
+  }
+
+  .rightActions {
+    gap: 2px;
+  }
+
+  .supportBox {
+    display: inline-flex !important;
+    padding: 2px 3.5px;
+    gap: 2px;
+    background: rgba(37, 211, 102, 0.12);
+    border: 1px solid rgba(37, 211, 102, 0.35);
+    border-radius: 9999px !important;
+    width: auto !important;
+    height: auto !important;
+  }
+
+  .supportNumber {
+    font-size: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  .whatsappIcon {
+    width: 10px;
+    height: 10px;
+  }
+
+  .btnBlue,
+  .btnGreen {
+    display: inline-flex !important;
+    padding: 2.5px 4px;
+    font-size: 7.5px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    border-radius: 9999px;
+  }
+
+  .btnTextFull {
+    display: none !important;
+  }
+
+  .btnTextCompact {
+    display: none !important;
+  }
+
+  .btnTextMini {
+    display: inline !important;
+  }
+
+  .hamburgerBtn {
+    width: 20px;
+    height: 18px;
+    padding: 1.5px;
+  }
+}
+
+/* Authenticated User Profile & Notifications */
+.authContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.notifBtn {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0b1668;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.notifBtn:hover {
+  background-color: #f1f5f9;
+}
+
+.notifBadge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profileWrap {
+  position: relative;
+}
+
+.profileAvatarBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  padding: 3px 10px 3px 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.profileAvatarBtn:hover {
+  border-color: #0068fb;
+  background: #eef2ff;
+}
+
+.avatarCircle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #0068fb;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.avatarCircle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profileName {
+  font-size: 11px;
+  font-weight: 600;
+  color: #0b1668;
+  max-width: 90px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profileDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border-radius: 14px;
+  box-shadow:
+    0 20px 48px -10px rgba(11, 22, 104, 0.16),
+    0 6px 20px rgba(0, 0, 0, 0.05),
+    inset 0 1px 1px rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  padding: 8px 0;
+  z-index: 1050;
+}
+
+.profileDropdownHeader {
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.profileDropdownName {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0b1668;
+}
+
+.profileDropdownRole {
+  font-size: 11px;
+  color: #10b981;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.profileDropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  text-decoration: none;
+  transition: background-color 0.15s;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.profileDropdownItem:hover {
+  background-color: #f8fafc;
+  color: #0068fb;
+}
+
+.logoutBtn {
+  color: #ef4444;
+  border-top: 1px solid #f1f5f9;
+  margin-top: 4px;
+  padding-top: 10px;
+}
+
+.logoutBtn:hover {
+  color: #dc2626;
+  background-color: #fef2f2;
+}

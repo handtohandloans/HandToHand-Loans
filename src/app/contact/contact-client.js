@@ -11,7 +11,7 @@ export default function ContactClient() {
   const [mobile, setMobile] = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
-  
+
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
@@ -105,7 +105,7 @@ export default function ContactClient() {
   return (
     <>
       <Header />
-      
+
       {/* Hero Section */}
       <section className="section bg-light" style={{ paddingTop: '120px', paddingBottom: '40px', background: 'radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.05) 0%, transparent 50%)' }}>
         <div className="container" style={{ maxWidth: '1200px', textAlign: 'center' }}>
@@ -136,17 +136,17 @@ export default function ContactClient() {
       <section className="section" style={{ padding: '40px 0 80px' }}>
         <div className="container" style={{ maxWidth: '1000px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '40px', alignItems: 'start' }}>
-            
+
             {/* Contact Details Card */}
             <div style={{ display: 'grid', gap: '20px' }}>
-              
+
               <div style={{ background: 'var(--color-bg-glass)', border: 'var(--border-light)', borderRadius: '20px', padding: '30px', backdropFilter: 'blur(20px)' }}>
                 <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text-primary)', marginBottom: '20px', fontFamily: 'var(--font-heading)' }}>
                   Support Information
                 </h3>
-                
+
                 <div style={{ display: 'grid', gap: '24px' }}>
-                  
+
                   {/* Phone */}
                   <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
                     <div style={{
@@ -156,7 +156,7 @@ export default function ContactClient() {
                     </div>
                     <div>
                       <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Phone Number</div>
-                      <a href="tel:+919389119399" style={{ fontSize: '15px', color: 'var(--color-text-primary)', fontWeight: 700, textDecoration: 'none' }}>
+                      <a href="https://api.whatsapp.com/send/?phone=%2B919389119399&text&type=phone_number&app_absent=0" style={{ fontSize: '15px', color: 'var(--color-text-primary)', fontWeight: 700, textDecoration: 'none' }}>
                         +91 93891 19399
                       </a>
                     </div>
@@ -212,7 +212,7 @@ export default function ContactClient() {
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)'
             }}>
-              
+
               {submitted ? (
                 <div style={{ textAlign: 'center', padding: '40px 10px', display: 'grid', gap: '16px', justifyItems: 'center' }}>
                   <div style={{
@@ -238,11 +238,11 @@ export default function ContactClient() {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
-                  
+
                   <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text-primary)', margin: 0, fontFamily: 'var(--font-heading)' }}>
                     Send a Message
                   </h3>
-                  
+
                   {error && (
                     <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '8px', fontSize: '13px', color: 'var(--color-error)' }}>
                       {error}

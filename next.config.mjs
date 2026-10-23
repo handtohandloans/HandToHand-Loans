@@ -61,7 +61,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  allowedDevOrigins: ['10.22.117.170:3000', '10.22.117.170', '10.113.237.170:3000', '10.113.237.170', 'localhost:3000'],
+  allowedDevOrigins: ['10.76.197.242:3000', '10.76.197.242:3001', '10.76.197.242', '10.31.233.242:3000', '10.31.233.242', 'localhost:3000', 'localhost:3001'],
   async headers() {
     if (process.env.NODE_ENV === 'development') {
       return [];

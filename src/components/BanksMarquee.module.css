@@ -1,0 +1,426 @@
+.bankBar {
+  width: 100%;
+  padding: 2px 16px 4px 16px;
+  position: relative;
+  z-index: 5;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.carouselContainer {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  gap: 12px;
+}
+
+/* Sliding track container taking all available space before the fixed button */
+.scrollArea {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  mask-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 1) 8px,
+    rgba(0, 0, 0, 1) calc(100% - 8px),
+    rgba(0, 0, 0, 0) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 1) 8px,
+    rgba(0, 0, 0, 1) calc(100% - 8px),
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+.track {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: max-content;
+  animation: moveBanksHorizontal 26s linear infinite;
+  will-change: transform;
+  padding: 4px 0;
+}
+
+.carouselContainer:hover .track,
+.carouselContainer:active .track {
+  animation-play-state: paused;
+}
+
+@keyframes moveBanksHorizontal {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-100% / 3));
+  }
+}
+
+/* Uniform dimensions matching the View All Loans button exactly (116px x 112px on desktop) */
+.tile,
+.fixedTile {
+  width: 116px;
+  min-width: 116px;
+  max-width: 116px;
+  height: 112px;
+  min-height: 112px;
+  max-height: 112px;
+  flex: 0 0 116px;
+  box-sizing: border-box;
+  padding: 12px 6px 10px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  user-select: none;
+  text-decoration: none;
+}
+
+.tile {
+  background: rgba(255, 255, 255, 0.52);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 
+    0 8px 24px -4px rgba(11, 22, 104, 0.08),
+    0 2px 6px rgba(0, 0, 0, 0.03),
+    inset 0 1px 1px rgba(255, 255, 255, 0.85);
+}
+
+.tile:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 
+    0 12px 30px rgba(0, 30, 80, 0.14),
+    0 3px 8px rgba(0, 0, 0, 0.06),
+    inset 0 1px 1px rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(0, 104, 251, 0.35);
+}
+
+/* Permanently Fixed Extreme-Right Action Button */
+.fixedActionWrapper {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+  padding-left: 2px;
+}
+
+.fixedActionWrapper::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 15%;
+  height: 70%;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    rgba(11, 22, 104, 0.02),
+    rgba(11, 22, 104, 0.14),
+    rgba(11, 22, 104, 0.02)
+  );
+}
+
+.fixedTile {
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1.5px solid rgba(0, 104, 251, 0.4);
+  box-shadow: 
+    0 8px 26px rgba(0, 104, 251, 0.16),
+    0 2px 6px rgba(0, 0, 0, 0.04),
+    inset 0 1px 1px rgba(255, 255, 255, 0.9);
+}
+
+.fixedTile:hover {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: #0068fb;
+  box-shadow: 
+    0 12px 32px rgba(0, 104, 251, 0.25),
+    0 3px 10px rgba(0, 0, 0, 0.06),
+    inset 0 1px 1px rgba(255, 255, 255, 0.95);
+  transform: translateY(-3px) scale(1.03);
+}
+
+/* Exact horizontal and vertical dead-center alignment for bank logo cards */
+.bankTile {
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.logoBox {
+  width: 100%;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 4px;
+  box-sizing: border-box;
+  transition: transform 0.22s ease;
+}
+
+.tile:hover .logoBox {
+  transform: scale(1.06);
+}
+
+.bankLogoImg {
+  max-height: 38px;
+  max-width: 96px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: contrast(1.05);
+  display: block;
+  margin: auto;
+  pointer-events: none;
+}
+
+/* Fixed icon container matching 40px iconBox height */
+.fixedIconBox {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 10px;
+  background: #e8f0fe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.fixedTile:hover .fixedIconBox {
+  transform: scale(1.06);
+}
+
+/* Identical label zone height, padding, and typography */
+.tileLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0b1668;
+  text-align: center;
+  line-height: 1.22;
+  height: 32px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: -0.15px;
+  white-space: normal;
+  overflow: hidden;
+  padding: 0 2px;
+  box-sizing: border-box;
+}
+
+.fixedTileLabel {
+  color: #0068fb;
+  font-weight: 800;
+}
+
+/* Tablet & Laptop (<= 768px) */
+@media (max-width: 768px) {
+  .bankBar {
+    padding: 2px 12px 4px 12px;
+  }
+
+  .carouselContainer {
+    gap: 10px;
+  }
+
+  .track {
+    gap: 12px;
+    animation-duration: 24s;
+  }
+
+  .tile,
+  .fixedTile {
+    width: 104px;
+    min-width: 104px;
+    max-width: 104px;
+    height: 102px;
+    min-height: 102px;
+    max-height: 102px;
+    flex: 0 0 104px;
+    padding: 10px 4px 8px 4px;
+  }
+
+  .bankTile {
+    padding: 8px 10px;
+  }
+
+  .logoBox {
+    width: 100%;
+    height: 48px;
+    max-width: 86px;
+    padding: 2px 4px;
+    box-sizing: border-box;
+  }
+
+  .bankLogoImg {
+    max-height: 34px;
+    max-width: 86px;
+  }
+
+  .fixedIconBox {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    margin-bottom: 5px;
+  }
+
+  .fixedIconBox svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .tileLabel {
+    font-size: 10px;
+    height: 28px;
+    line-height: 1.2;
+  }
+}
+
+/* Mobile Devices (<= 640px) */
+@media (max-width: 640px) {
+  .bankBar {
+    padding: 2px 8px 4px 8px;
+  }
+
+  .carouselContainer {
+    gap: 8px;
+  }
+
+  .track {
+    gap: 10px;
+    animation-duration: 22s;
+  }
+
+  .tile,
+  .fixedTile {
+    width: 90px;
+    min-width: 90px;
+    max-width: 90px;
+    height: 92px;
+    min-height: 92px;
+    max-height: 92px;
+    flex: 0 0 90px;
+    padding: 8px 4px 6px 4px;
+    border-radius: 10px;
+  }
+
+  .bankTile {
+    padding: 6px 8px;
+  }
+
+  .logoBox {
+    width: 100%;
+    height: 42px;
+    max-width: 76px;
+    padding: 2px 3px;
+    box-sizing: border-box;
+  }
+
+  .bankLogoImg {
+    max-height: 30px;
+    max-width: 76px;
+  }
+
+  .fixedIconBox {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    margin-bottom: 4px;
+  }
+
+  .fixedIconBox svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .tileLabel {
+    font-size: 9px;
+    line-height: 1.15;
+    height: 26px;
+    letter-spacing: -0.2px;
+  }
+}
+
+/* Ultra Small Mobile (<= 380px) */
+@media (max-width: 380px) {
+  .bankBar {
+    padding: 2px 6px 3px 6px;
+  }
+
+  .carouselContainer {
+    gap: 6px;
+  }
+
+  .track {
+    gap: 8px;
+  }
+
+  .tile,
+  .fixedTile {
+    width: 80px;
+    min-width: 80px;
+    max-width: 80px;
+    height: 84px;
+    min-height: 84px;
+    max-height: 84px;
+    flex: 0 0 80px;
+    padding: 6px 2px 4px 2px;
+  }
+
+  .bankTile {
+    padding: 4px 6px;
+  }
+
+  .logoBox {
+    width: 100%;
+    height: 36px;
+    max-width: 68px;
+    padding: 2px;
+    box-sizing: border-box;
+  }
+
+  .bankLogoImg {
+    max-height: 26px;
+    max-width: 68px;
+  }
+
+  .fixedIconBox {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    margin-bottom: 3px;
+  }
+
+  .fixedIconBox svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .tileLabel {
+    font-size: 8px;
+    line-height: 1.12;
+    height: 22px;
+  }
+}

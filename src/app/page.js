@@ -7,6 +7,11 @@ import Footer from '@/components/Footer';
 import EmiCalculator from '@/components/EmiCalculator';
 import CalculatorsSection from '@/components/CalculatorsSection';
 import BankLogo from '@/components/BankLogo';
+import HeroHeadline from '@/components/HeroHeadline';
+import ChoiceCards from '@/components/ChoiceCards';
+import LoansMarquee from '@/components/LoansMarquee';
+import BanksMarquee from '@/components/BanksMarquee';
+import heroStyles from './hero.module.css';
 import { supabase } from '@/lib/supabase';
 
 function AnimatedCounter({ target, duration = 1500, suffix = '', decimals = 0 }) {
@@ -391,85 +396,21 @@ export default function Home() {
       <Header />
 
 
-      {/* Hero Section */}
-      <section className="hero">
-        <div className="hero-bg">
-          <div className="hero-orb hero-orb-1"></div>
-          <div className="hero-orb hero-orb-2"></div>
-          <div className="hero-orb hero-orb-3"></div>
-          <div className="hero-grid"></div>
-        </div>
+      {/* Main Hero Container with Exact Color Grading & Skyline Background from Index */}
+      <section className={heroStyles.heroSection}>
+        <div className={heroStyles.heroOverlay}></div>
 
-        <div className="hero-content visible">
-          <div className="hero-badge">
-            <span className="hero-badge-dot"></span>
-            Trusted by 10,000+ borrowers
-          </div>
+        <div className={heroStyles.heroContent}>
+          {/* Main Title & Subtitle */}
+          <HeroHeadline />
 
-          <h1 className="hero-title">
-            Start Your Journey as a
-            <span className="hero-title-gradient"> Loan DSA Agent &amp; Empowering Borrowers</span>
-          </h1>
+          {/* Dual Split Cards (I Need a Loan OR I Want to Build My Business) */}
+          <ChoiceCards />
 
-          <p className="hero-subtitle" style={{ maxWidth: '750px' }}>
-            Join India&apos;s fastest-growing fintech distribution ecosystem. Sign up as a DSA Partner to check eligibility, submit files, and earn high commissions, or customer check your eligibility instantly.
-          </p>
-
-          <div className="hero-cta-wrapper" style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '48px' }}>
-            <Link href="/signup?role=agent" className="btn btn-primary hero-cta" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--gradient-primary)', boxShadow: 'var(--shadow-glow-purple)', color: '#ffffff', border: 'none' }}>
-              Become a DSA Partner
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-              </svg>
-            </Link>
-            <Link href="/check" className="btn btn-secondary hero-cta" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              Check Eligibility
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-
-          {/* Floating Stats */}
-          <div className="hero-stats" style={{ flexWrap: 'wrap', justifyContent: 'center' }}>
-            <div className="hero-stat-card">
-              <span className="hero-stat-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-accent)' }}>
-                  <path d="M3 21h18" />
-                  <path d="M3 10h18" />
-                  <path d="M5 6h14" />
-                  <path d="M4 10v11" />
-                  <path d="M20 10v11" />
-                  <path d="M8 14v3" />
-                  <path d="M12 14v3" />
-                  <path d="M16 14v3" />
-                  <path d="M12 2L2 7h20L12 2z" />
-                </svg>
-              </span>
-              <span className="hero-stat-value">100+</span>
-              <span className="hero-stat-label">Banks & NBFCs</span>
-            </div>
-            <div className="hero-stat-card">
-              <span className="hero-stat-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-accent)' }}>
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                </svg>
-              </span>
-              <span className="hero-stat-value">60s</span>
-              <span className="hero-stat-label">Instant Results</span>
-            </div>
-            <div className="hero-stat-card">
-              <span className="hero-stat-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-accent)' }}>
-                  <circle cx="12" cy="12" r="10" />
-                  <circle cx="12" cy="12" r="6" />
-                  <circle cx="12" cy="12" r="2" />
-                </svg>
-              </span>
-              <span className="hero-stat-value">100%</span>
-              <span className="hero-stat-label">Free Forever</span>
-            </div>
+          {/* Compact, Seamlessly Connected Carousels (Loans & Partner Lenders) */}
+          <div className={heroStyles.carouselsContainer}>
+            <LoansMarquee />
+            <BanksMarquee />
           </div>
         </div>
       </section>
@@ -1730,16 +1671,16 @@ export default function Home() {
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
               cursor: 'pointer'
             }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-6px)';
-              e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(16, 185, 129, 0.05)';
-              e.currentTarget.style.borderColor = 'var(--color-primary)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
-              e.currentTarget.style.borderColor = '#e2e8f0';
-            }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-6px)';
+                e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(16, 185, 129, 0.05)';
+                e.currentTarget.style.borderColor = 'var(--color-primary)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
+                e.currentTarget.style.borderColor = '#e2e8f0';
+              }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{
@@ -1796,16 +1737,16 @@ export default function Home() {
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
               cursor: 'pointer'
             }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-6px)';
-              e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(16, 185, 129, 0.05)';
-              e.currentTarget.style.borderColor = 'var(--color-primary)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
-              e.currentTarget.style.borderColor = '#e2e8f0';
-            }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-6px)';
+                e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(16, 185, 129, 0.05)';
+                e.currentTarget.style.borderColor = 'var(--color-primary)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
+                e.currentTarget.style.borderColor = '#e2e8f0';
+              }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{
@@ -1859,16 +1800,16 @@ export default function Home() {
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
               cursor: 'pointer'
             }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-6px)';
-              e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(16, 185, 129, 0.05)';
-              e.currentTarget.style.borderColor = 'var(--color-primary)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
-              e.currentTarget.style.borderColor = '#e2e8f0';
-            }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-6px)';
+                e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(16, 185, 129, 0.05)';
+                e.currentTarget.style.borderColor = 'var(--color-primary)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
+                e.currentTarget.style.borderColor = '#e2e8f0';
+              }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{
@@ -1924,16 +1865,16 @@ export default function Home() {
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
               cursor: 'pointer'
             }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-6px)';
-              e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(16, 185, 129, 0.05)';
-              e.currentTarget.style.borderColor = 'var(--color-primary)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
-              e.currentTarget.style.borderColor = '#e2e8f0';
-            }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-6px)';
+                e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(16, 185, 129, 0.05)';
+                e.currentTarget.style.borderColor = 'var(--color-primary)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
+                e.currentTarget.style.borderColor = '#e2e8f0';
+              }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{
@@ -1985,16 +1926,16 @@ export default function Home() {
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
               cursor: 'pointer'
             }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-6px)';
-              e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(16, 185, 129, 0.05)';
-              e.currentTarget.style.borderColor = 'var(--color-primary)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
-              e.currentTarget.style.borderColor = '#e2e8f0';
-            }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-6px)';
+                e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(16, 185, 129, 0.05)';
+                e.currentTarget.style.borderColor = 'var(--color-primary)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
+                e.currentTarget.style.borderColor = '#e2e8f0';
+              }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{
@@ -2048,16 +1989,16 @@ export default function Home() {
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
               cursor: 'pointer'
             }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-6px)';
-              e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(16, 185, 129, 0.05)';
-              e.currentTarget.style.borderColor = 'var(--color-primary)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
-              e.currentTarget.style.borderColor = '#e2e8f0';
-            }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-6px)';
+                e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(16, 185, 129, 0.05)';
+                e.currentTarget.style.borderColor = 'var(--color-primary)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
+                e.currentTarget.style.borderColor = '#e2e8f0';
+              }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{
@@ -2109,16 +2050,16 @@ export default function Home() {
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
               cursor: 'pointer'
             }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-6px)';
-              e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(16, 185, 129, 0.05)';
-              e.currentTarget.style.borderColor = 'var(--color-primary)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
-              e.currentTarget.style.borderColor = '#e2e8f0';
-            }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-6px)';
+                e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(16, 185, 129, 0.05)';
+                e.currentTarget.style.borderColor = 'var(--color-primary)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
+                e.currentTarget.style.borderColor = '#e2e8f0';
+              }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{
@@ -2170,16 +2111,16 @@ export default function Home() {
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
               cursor: 'pointer'
             }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-6px)';
-              e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(16, 185, 129, 0.05)';
-              e.currentTarget.style.borderColor = 'var(--color-primary)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
-              e.currentTarget.style.borderColor = '#e2e8f0';
-            }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-6px)';
+                e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(16, 185, 129, 0.05)';
+                e.currentTarget.style.borderColor = 'var(--color-primary)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
+                e.currentTarget.style.borderColor = '#e2e8f0';
+              }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{
@@ -2424,16 +2365,16 @@ export default function Home() {
                 transition: 'all 0.3s ease',
                 boxShadow: 'var(--shadow-sm)'
               }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-5px)';
-                e.currentTarget.style.borderColor = '#fbbf24';
-                e.currentTarget.style.boxShadow = '0 12px 32px rgba(251,191,36,0.15)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'none';
-                e.currentTarget.style.borderColor = 'rgba(251,191,36,0.25)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-              }}>
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-5px)';
+                  e.currentTarget.style.borderColor = '#fbbf24';
+                  e.currentTarget.style.boxShadow = '0 12px 32px rgba(251,191,36,0.15)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.borderColor = 'rgba(251,191,36,0.25)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                }}>
                 <span style={{ fontSize: '44px', display: 'block', marginBottom: '14px' }}>👑</span>
                 <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text-primary)', marginBottom: '8px', fontFamily: 'var(--font-heading)' }}>
                   Gold Rates Today
@@ -2469,16 +2410,16 @@ export default function Home() {
                 transition: 'all 0.3s ease',
                 boxShadow: 'var(--shadow-sm)'
               }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-5px)';
-                e.currentTarget.style.borderColor = '#9ca3af';
-                e.currentTarget.style.boxShadow = '0 12px 32px rgba(156,163,175,0.15)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'none';
-                e.currentTarget.style.borderColor = 'rgba(156,163,175,0.25)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-              }}>
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-5px)';
+                  e.currentTarget.style.borderColor = '#9ca3af';
+                  e.currentTarget.style.boxShadow = '0 12px 32px rgba(156,163,175,0.15)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.borderColor = 'rgba(156,163,175,0.25)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                }}>
                 <span style={{ fontSize: '44px', display: 'block', marginBottom: '14px' }}>🥈</span>
                 <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text-primary)', marginBottom: '8px', fontFamily: 'var(--font-heading)' }}>
                   Silver Rates Today

@@ -1,530 +1,1017 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { clearUserCache, cacheUserProfile, getCachedUserTheme, getCachedUserFont, cacheUserPreferences, applyThemeCSS } from '@/lib/cookieCache';
+import { clearUserCache } from '@/lib/cookieCache';
+import styles from './Header.module.css';
 
-// Security (F11): Strict schema validation for localStorage pending application payload.
-// Prevents poisoned data (via XSS or manual injection) from being committed to DB.
-const VALID_LOAN_TYPES = ['PL', 'BL', 'CC', 'HL', 'GL', 'AL', 'EL'];
-function validatePendingApplication(obj) {
-  if (!obj || typeof obj !== 'object') return false;
-  if (typeof obj.clientName !== 'string' || obj.clientName.trim().length === 0 || obj.clientName.length > 120) return false;
-  if (typeof obj.clientMobile !== 'string' || !/^\d{10}$/.test(obj.clientMobile.trim())) return false;
-  if (typeof obj.bankName !== 'string' || obj.bankName.trim().length === 0 || obj.bankName.length > 100) return false;
-  if (typeof obj.loanAmount !== 'number' || obj.loanAmount <= 0 || obj.loanAmount > 100000000) return false;
-  return true;
-}
+/* Sub-sections for Loans Menu */
+const loanSubSections = [
+  {
+    id: 'personal-loans',
+    name: 'Personal Loans',
+    tag: 'Popular',
+    desc: 'Instant collateral-free funds',
+    color: '#1b8744',
+    bg: '#e8f5e9',
+    href: '/services/personal-loan',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1b8744" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="6" width="20" height="12" rx="3" />
+        <circle cx="12" cy="12" r="2.5" />
+        <path d="M6 12h.01M18 12h.01" />
+      </svg>
+    ),
+  },
+  {
+    id: 'business-loans',
+    name: 'Business Loans',
+    tag: 'Collateral Free',
+    desc: 'Working capital & growth finance',
+    color: '#1976d2',
+    bg: '#e3f2fd',
+    href: '/services/business-loan',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1976d2" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h2M9 15h2M13 11h2M13 15h2" />
+      </svg>
+    ),
+  },
+  {
+    id: 'instant-loans',
+    name: 'Instant Loans',
+    tag: '10 Mins',
+    desc: 'Fast digital disbursal in minutes',
+    color: '#ea580c',
+    bg: '#fff7ed',
+    href: '/services/instant-loan',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+      </svg>
+    ),
+  },
+  {
+    id: 'home-loan',
+    name: 'Home Loan',
+    tag: 'From 8.4%',
+    desc: 'Affordable rates for your dream home',
+    color: '#7e57c2',
+    bg: '#ede7f6',
+    href: '/services/home-loan',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7e57c2" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+      </svg>
+    ),
+  },
+  {
+    id: 'loan-against-property',
+    name: 'Loan Against Property',
+    tag: 'High Value',
+    desc: 'Unlock funds against residential/commercial property',
+    color: '#00897b',
+    bg: '#e0f2f1',
+    href: '/services/loan-against-property',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00897b" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+        <polyline points="10 9 9 9 8 9" />
+      </svg>
+    ),
+  },
+  {
+    id: 'gold-loans',
+    name: 'Gold Loans',
+    tag: 'Best Rate',
+    desc: 'Instant loan with highest gold valuation',
+    color: '#b45309',
+    bg: '#fff8e1',
+    href: '/check',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M14.8 9A2 2 0 0 0 13 8h-2a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4h-2a2 2 0 0 1-1.8-1M12 6v2m0 8v2" />
+      </svg>
+    ),
+  },
+];
 
-const OUR_SERVICES_ITEMS = [
-  { name: '🏦 Banks & Partner Lenders', href: '/banks' },
-  { name: '💼 Personal Loan', href: '/services/personal-loan' },
-  { name: '🏢 Business Loan', href: '/services/business-loan' },
-  { name: '⚡ Instant Loan', href: '/services/instant-loan' },
-  { name: '🏠 Home Loan', href: '/services/home-loan' },
-  { name: '🏘️ Loan Against Property (LAP)', href: '/services/loan-against-property' },
-  { name: '🎓 Education Loan', href: '/services/education-loan' },
-  { name: '💳 Credit Cards', href: '/credit-cards' },
+/* Sub-sections for Our Services Menu */
+const servicesSubSections = [
+  {
+    id: 'service-banks',
+    name: 'Banks',
+    tag: '50+ Partners',
+    desc: 'Top nationalized & private banking network',
+    color: '#1565c0',
+    bg: '#e3f2fd',
+    href: '/banks',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1565c0" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 21h18M3 10h18M5 10v11M9 10v11M15 10v11M19 10v11M12 2L2 7h20L12 2z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'service-loans',
+    name: 'Loans',
+    tag: '6 Categories',
+    desc: 'Instant, personal, business, home & vehicle loans',
+    color: '#1b8744',
+    bg: '#e8f5e9',
+    hasDropdown: true,
+    href: '/services',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1b8744" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="6" width="20" height="12" rx="3" />
+        <circle cx="12" cy="12" r="2.5" />
+        <path d="M6 12h.01M18 12h.01" />
+      </svg>
+    ),
+  },
+  {
+    id: 'service-credit-cards',
+    name: 'Credit Cards',
+    tag: 'Pre-Approved',
+    desc: 'Exclusive rewards, cashback & lounge access',
+    color: '#c2185b',
+    bg: '#fce4ec',
+    href: '/credit-cards',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c2185b" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="5" width="20" height="14" rx="3" />
+        <line x1="2" y1="10" x2="22" y2="10" />
+        <line x1="6" y1="15" x2="10" y2="15" />
+      </svg>
+    ),
+  },
+  {
+    id: 'service-insurance',
+    name: 'Insurance',
+    tag: 'Save Tax',
+    desc: 'Comprehensive health, life & term protection',
+    color: '#7b1fa2',
+    bg: '#f3e5f5',
+    href: '/services',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7b1fa2" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'service-investments',
+    name: 'Investments',
+    tag: 'High Yield',
+    desc: 'Mutual funds, fixed deposits & structured bonds',
+    color: '#f57c00',
+    bg: '#fff3e0',
+    href: '/services',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f57c00" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+        <polyline points="17 6 23 6 23 12" />
+      </svg>
+    ),
+  },
+];
+
+/* Nested Loans Sub-sections (Under Our Services -> Loans) */
+const ourServicesLoansSubSections = [
+  {
+    id: 'os-personal-loan-salaried',
+    name: 'Personal Loan (Salaried Customers)',
+    tag: 'Special ROI',
+    desc: 'Exclusive pre-approved rates for corporate & salaried employees',
+    color: '#1b8744',
+    bg: '#e8f5e9',
+    href: '/services/personal-loan',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1b8744" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="6" width="20" height="12" rx="3" />
+        <circle cx="12" cy="12" r="2.5" />
+        <path d="M6 12h.01M18 12h.01" />
+      </svg>
+    ),
+  },
+  {
+    id: 'os-business-loans',
+    name: 'Business Loans',
+    tag: 'Collateral Free',
+    desc: 'Working capital, MSME & business expansion loans',
+    color: '#1976d2',
+    bg: '#e3f2fd',
+    href: '/services/business-loan',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1976d2" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h2M9 15h2M13 11h2M13 15h2" />
+      </svg>
+    ),
+  },
+  {
+    id: 'os-home-loan',
+    name: 'Home Loan',
+    tag: 'From 8.4%',
+    desc: 'Low EMI home purchase, construction & balance transfer',
+    color: '#7e57c2',
+    bg: '#ede7f6',
+    href: '/services/home-loan',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7e57c2" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+      </svg>
+    ),
+  },
+  {
+    id: 'os-lap',
+    name: 'Loan Against Property',
+    tag: 'High Value',
+    desc: 'Mortgage loan against residential or commercial properties',
+    color: '#00897b',
+    bg: '#e0f2f1',
+    href: '/services/loan-against-property',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00897b" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+        <polyline points="10 9 9 9 8 9" />
+      </svg>
+    ),
+  },
+  {
+    id: 'os-vehicle-loans',
+    name: 'All Types of Vehicle Loans',
+    tag: 'New & Used',
+    desc: 'Car, bike, commercial vehicle & electric mobility loans',
+    color: '#e53935',
+    bg: '#ffebee',
+    href: '/check',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e53935" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
+        <circle cx="7" cy="17" r="2" />
+        <path d="M9 17h6" />
+        <circle cx="17" cy="17" r="2" />
+      </svg>
+    ),
+  },
+];
+
+/* Sub-sections for Resources */
+const resourcesSubSections = [
+  {
+    id: 'res-verify-agent',
+    name: 'Verify Agent',
+    tag: 'Official',
+    desc: 'Verify authentic HandToHand loan DSA & partner credentials',
+    color: '#00897b',
+    bg: '#e0f2f1',
+    href: '/verify-agreement',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00897b" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <polyline points="9 12 11 14 15 10" />
+      </svg>
+    ),
+  },
+  {
+    id: 'res-blogs',
+    name: 'Blogs',
+    tag: 'Articles',
+    desc: 'Expert financial advice, credit score tips & borrowing guides',
+    color: '#1565c0',
+    bg: '#e3f2fd',
+    href: '/blog',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1565c0" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        <line x1="8" y1="6" x2="16" y2="6" />
+        <line x1="8" y1="10" x2="14" y2="10" />
+      </svg>
+    ),
+  },
+  {
+    id: 'res-faq',
+    name: 'FAQ',
+    tag: 'Help',
+    desc: 'Answers to frequently asked questions on loan processes & terms',
+    color: '#7b1fa2',
+    bg: '#f3e5f5',
+    href: '/faq',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7b1fa2" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+    ),
+  },
+  {
+    id: 'res-commodity',
+    name: 'Commodity',
+    tag: 'Live Rates',
+    desc: 'Real-time gold, silver & commodity rate tracking',
+    color: '#b45309',
+    bg: '#fff8e1',
+    href: '/commodities',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 3h12l4 6-10 12L2 9l4-6z" />
+        <line x1="2" y1="9" x2="22" y2="9" />
+      </svg>
+    ),
+  },
+  {
+    id: 'res-marketing-materials',
+    name: 'Marketing Materials',
+    tag: 'Downloads',
+    desc: 'Promotional banners, brochures, brand logos & partner kits',
+    color: '#ea580c',
+    bg: '#fff7ed',
+    href: '/dashboard',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+      </svg>
+    ),
+  },
+];
+
+/* Sub-sections for EMI Calculator Menu */
+const emiCalculatorSubSections = [
+  {
+    id: 'calc-all-emi',
+    name: 'All Types EMI Calculator',
+    tag: 'Popular',
+    desc: 'Reducing balance & flat rate loan EMI tool',
+    color: '#0068fb',
+    bg: '#e3f2fd',
+    href: '/emi-calculator',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0068fb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="4" y="2" width="16" height="20" rx="2" />
+        <line x1="8" y1="6" x2="16" y2="6" />
+        <line x1="16" y1="14" x2="16" y2="18" />
+        <path d="M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M8 18h.01M12 18h.01" />
+      </svg>
+    ),
+  },
+  {
+    id: 'calc-personal-loan-emi',
+    name: 'Personal Loan EMI',
+    tag: 'Instant',
+    desc: 'Monthly installments, interest & eligibility',
+    color: '#1b8744',
+    bg: '#e8f5e9',
+    href: '/personal-loan-emi-calculator',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1b8744" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="6" width="20" height="12" rx="3" />
+        <circle cx="12" cy="12" r="2.5" />
+        <path d="M6 12h.01M18 12h.01" />
+      </svg>
+    ),
+  },
+  {
+    id: 'calc-home-loan-emi',
+    name: 'Home Loan EMI',
+    tag: 'From 8.4%',
+    desc: 'Housing loan payments & amortization table',
+    color: '#7e57c2',
+    bg: '#ede7f6',
+    href: '/home-loan-emi-calculator',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7e57c2" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+      </svg>
+    ),
+  },
+  {
+    id: 'calc-business-loan-emi',
+    name: 'Business Loan EMI',
+    tag: 'MSME',
+    desc: 'Working capital & commercial finance EMI',
+    color: '#1976d2',
+    bg: '#e3f2fd',
+    href: '/business-loan-emi-calculator',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1976d2" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h2M9 15h2M13 11h2M13 15h2" />
+      </svg>
+    ),
+  },
+  {
+    id: 'calc-more-calculators',
+    name: 'More Calculators',
+    tag: 'Explore',
+    desc: 'Explore all financial & loan calculation tools',
+    color: '#ea580c',
+    bg: '#fff7ed',
+    href: '/calculators',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="4" y1="21" x2="4" y2="14" />
+        <line x1="4" y1="10" x2="4" y2="3" />
+        <line x1="12" y1="21" x2="12" y2="12" />
+        <line x1="12" y1="8" x2="12" y2="3" />
+        <line x1="20" y1="21" x2="20" y2="16" />
+        <line x1="20" y1="12" x2="20" y2="3" />
+        <line x1="1" y1="14" x2="7" y2="14" />
+        <line x1="9" y1="8" x2="15" y2="8" />
+        <line x1="17" y1="16" x2="23" y2="16" />
+      </svg>
+    ),
+  },
 ];
 
 export default function Header() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
-  const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loansDropdownOpen, setLoansDropdownOpen] = useState(false);
+  const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
+  const [servicesLoansSubmenuOpen, setServicesLoansSubmenuOpen] = useState(false);
   const [mobileLoansOpen, setMobileLoansOpen] = useState(false);
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
+  const [mobileServicesLoansOpen, setMobileServicesLoansOpen] = useState(false);
+  const [resourcesDropdownOpen, setResourcesDropdownOpen] = useState(false);
+  const [mobileResourcesOpen, setMobileResourcesOpen] = useState(false);
   const [emiDropdownOpen, setEmiDropdownOpen] = useState(false);
   const [mobileEmiOpen, setMobileEmiOpen] = useState(false);
+
+  // Authentication & Profile State
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const pathname = usePathname();
-  const router = useRouter();
-
-  // Notifications State
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [showNotifications, setShowNotifications] = useState(false);
 
-  // Client Application Redirect Confirmation Modal (Global return popup)
-  const [pendingApplication, setPendingApplication] = useState(null);
-  const [submittingStatus, setSubmittingStatus] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+  const profileRef = useRef(null);
 
   useEffect(() => {
-    const checkPendingApplication = () => {
-      const stored = localStorage.getItem('pending_bank_application');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          // Security (F11): Validate schema before trusting localStorage data.
-          // Prevents injected/poisoned payloads from creating fraudulent applications.
-          if (!validatePendingApplication(parsed)) {
-            console.warn('Security: Invalid pending_bank_application payload detected — cleared.');
-            localStorage.removeItem('pending_bank_application');
-            return;
+    let isMounted = true;
+
+    async function loadUserSession() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+
+        if (session?.user) {
+          setUser(session.user);
+          // Fetch user profile
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (isMounted && profile) {
+            setUserProfile(profile);
+            setUserRole(profile.role || 'client');
           }
-          setPendingApplication(parsed);
-        } catch (e) {
-          console.error('Error parsing pending bank application:', e);
-          localStorage.removeItem('pending_bank_application');
-        }
-      }
-    };
 
-    checkPendingApplication();
-    window.addEventListener('focus', checkPendingApplication);
-    return () => {
-      window.removeEventListener('focus', checkPendingApplication);
-    };
-  }, []);
+          // Fetch notifications count
+          const { count } = await supabase
+            .from('notifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', session.user.id)
+            .eq('is_read', false);
 
-  const handleConfirmApplied = async () => {
-    if (!pendingApplication || !user) return;
-    setSubmittingStatus(true);
-    try {
-      // Security (F4): Use crypto.randomUUID() — cryptographically secure, collision-resistant.
-      const uniqueAppId = `H2H-APP-${crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
-      const { error } = await supabase.from('applications').insert({
-        agent_id: user.id,
-        client_name: pendingApplication.clientName,
-        client_mobile: pendingApplication.clientMobile,
-        bank_name: pendingApplication.bankName,
-        loan_amount: Number(pendingApplication.loanAmount),
-        loan_type: pendingApplication.loanType,
-        commission_rate: 2.00,
-        commission_amount: Number(pendingApplication.loanAmount) * 0.02,
-        status: 'applied',
-        application_id: uniqueAppId
-      });
-
-      if (error) {
-        alert('Failed to save lead: ' + error.message);
-      } else {
-        alert(`Lead generated successfully for ${pendingApplication.clientName}! Application ID: ${uniqueAppId}`);
-        localStorage.removeItem('pending_bank_application');
-        setPendingApplication(null);
-        router.refresh();
-      }
-    } catch (err) {
-      console.error('Error confirming applied:', err);
-    } finally {
-      setSubmittingStatus(false);
-    }
-  };
-
-  const handleConfirmNotApplied = () => {
-    localStorage.removeItem('pending_bank_application');
-    setPendingApplication(null);
-  };
-  
-  const [theme, setTheme] = useState('light');
-  const [mounted, setMounted] = useState(false);
-  const [userFont, setUserFont] = useState('Jakarta');
-
-  useEffect(() => {
-    const savedTheme = getCachedUserTheme();
-    const savedFont = getCachedUserFont();
-    setMounted(true);
-    setUserFont(savedFont);
-    setTheme(savedTheme);
-    applyThemeCSS(savedTheme);
-    changeFont(savedFont);
-  }, [pathname]);
-
-  useEffect(() => {
-    const handleSync = () => {
-      const savedTheme = getCachedUserTheme();
-      const savedFont = getCachedUserFont();
-      setUserFont(savedFont);
-      setTheme(savedTheme);
-      applyThemeCSS(savedTheme);
-      changeFont(savedFont);
-    };
-    window.addEventListener('h2h-theme-change', handleSync);
-    return () => window.removeEventListener('h2h-theme-change', handleSync);
-  }, []);
-
-  const changeFont = (newFont) => {
-    setUserFont(newFont);
-    const currentTheme = getCachedUserTheme();
-    cacheUserPreferences(currentTheme, newFont);
-
-    let fontBody = '';
-    let fontHeading = '';
-    if (newFont === 'Inter') { fontBody = 'Inter, sans-serif'; fontHeading = 'Inter, sans-serif'; }
-    else if (newFont === 'Poppins') { fontBody = 'Poppins, sans-serif'; fontHeading = 'Poppins, sans-serif'; }
-    else if (newFont === 'Outfit') { fontBody = 'Outfit, sans-serif'; fontHeading = 'Outfit, sans-serif'; }
-    else if (newFont === 'Lora') { fontBody = 'Lora, serif'; fontHeading = 'Lora, serif'; }
-    else if (newFont === 'Playfair') { fontBody = '"Playfair Display", serif'; fontHeading = '"Playfair Display", serif'; }
-    else if (newFont === 'JetBrains') { fontBody = '"JetBrains Mono", monospace'; fontHeading = '"JetBrains Mono", monospace'; }
-    else if (newFont === 'Roboto') { fontBody = 'Roboto, sans-serif'; fontHeading = 'Roboto, sans-serif'; }
-    else if (newFont === 'Raleway') { fontBody = 'Raleway, sans-serif'; fontHeading = 'Raleway, sans-serif'; }
-    else if (newFont === 'Montserrat') { fontBody = 'Montserrat, sans-serif'; fontHeading = 'Montserrat, sans-serif'; }
-    else if (newFont === 'Merriweather') { fontBody = 'Merriweather, serif'; fontHeading = 'Merriweather, serif'; }
-    else if (newFont === 'SpaceMono') { fontBody = '"Space Mono", monospace'; fontHeading = '"Space Mono", monospace'; }
-    else { fontBody = 'var(--font-inter), "Plus Jakarta Sans", sans-serif'; fontHeading = 'var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif'; }
-    
-    if (fontBody) {
-      document.documentElement.style.setProperty('--font-body', fontBody);
-      document.documentElement.style.setProperty('--font-heading', fontHeading);
-    }
-  };
-
-  const cycleFont = () => {
-    const fontOrder = ['Jakarta', 'Inter', 'Poppins', 'Outfit', 'Roboto', 'Raleway', 'Montserrat', 'Lora', 'Playfair', 'Merriweather', 'JetBrains', 'SpaceMono'];
-    const currentIndex = fontOrder.indexOf(userFont);
-    const nextIndex = (currentIndex + 1) % fontOrder.length;
-    const nextFont = fontOrder[nextIndex];
-    changeFont(nextFont);
-    if (typeof window !== 'undefined') window.dispatchEvent(new Event('h2h-theme-change'));
-  };
-
-  const toggleTheme = () => {
-    const themeOrder = ['light', 'dark', 'navy', 'cyber', 'rose', 'slate', 'emerald-gold', 'sunset'];
-    const currentIndex = themeOrder.indexOf(theme);
-    const nextIndex = (currentIndex + 1) % themeOrder.length;
-    const nextTheme = themeOrder[nextIndex];
-    setTheme(nextTheme);
-    cacheUserPreferences(nextTheme, userFont);
-    document.documentElement.setAttribute('data-theme', nextTheme);
-    if (typeof window !== 'undefined') window.dispatchEvent(new Event('h2h-theme-change'));
-  };
-
-  const toggleMenu = () => setMenuOpen((prev) => !prev);
-  const closeMenu = () => setMenuOpen(false);
-
-  const getInitials = (profile, userObj) => {
-    if (profile?.full_name) {
-      const parts = profile.full_name.trim().split(/\s+/);
-      if (parts.length > 1) {
-        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-      }
-      return parts[0][0].toUpperCase();
-    }
-    const email = profile?.email || userObj?.email;
-    if (email) {
-      return email.substring(0, 2).toUpperCase();
-    }
-    return 'U';
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      const notifDropdown = document.getElementById('notif-dropdown-container');
-      const profileDropdown = document.getElementById('profile-dropdown-container');
-      
-      if (notifDropdown && !notifDropdown.contains(event.target)) {
-        setShowNotifications(false);
-      }
-      if (profileDropdown && !profileDropdown.contains(event.target)) {
-        setProfileDropdownOpen(false);
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleSessionCheck = async (session) => {
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id, role, approved, full_name, email, phone, agent_code, avatar')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile && profile.role === 'agent' && !profile.approved) {
-          await supabase.auth.signOut();
-          clearUserCache();
+          if (isMounted && count !== null) {
+            setUnreadCount(count);
+          }
+        } else {
           setUser(null);
-          setUserRole(null);
           setUserProfile(null);
-          router.push('/login?error=pending');
-          return;
+          setUserRole(null);
         }
-        if (profile) cacheUserProfile(profile);
-        setUserRole(profile?.role || null);
-        setUserProfile(profile || {
-          full_name: session.user.user_metadata?.full_name || 'User',
-          email: session.user.email,
-          phone: session.user.user_metadata?.phone || '',
-          avatar: session.user.user_metadata?.avatar || null,
-          role: profile?.role || 'user'
-        });
-      } else {
-        clearUserCache();
-        setUser(null);
-        setUserRole(null);
-        setUserProfile(null);
+      } catch (err) {
+        console.error('Header auth error:', err);
       }
-      setUser(session?.user || null);
-    };
+    }
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      handleSessionCheck(session);
-    });
+    loadUserSession();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        router.push('/reset-password');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        loadUserSession();
       } else {
-        handleSessionCheck(session);
+        setUser(null);
+        setUserProfile(null);
+        setUserRole(null);
       }
     });
 
     return () => {
+      isMounted = false;
       subscription?.unsubscribe();
     };
-  }, [router]);
+  }, []);
 
+  // Close profile dropdown on outside click
   useEffect(() => {
-    if (!user || userRole === null) {
-      if (!user) {
-        setNotifications([]);
-        setUnreadCount(0);
-      }
-      return;
-    }
-
-    const fetchNotifications = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('notifications')
-          .select('id, agent_id, title, message, read, created_at, activity_type, reference_id')
-          .order('created_at', { ascending: false })
-          .limit(20);
-        if (!error && data) {
-          setNotifications(data);
-          setUnreadCount(data.filter(n => !n.read).length);
-        }
-      } catch (e) {
-        console.warn('Notifications table not configured yet:', e.message);
-      }
-    };
-
-    fetchNotifications();
-
-    const isAdmin = userRole === 'admin';
-
-    const channel = supabase
-      .channel('realtime:notifications')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-        ...(isAdmin ? {} : { filter: `agent_id=eq.${user.id}` })
-      }, (payload) => {
-        setNotifications(prev => [payload.new, ...prev].slice(0, 20));
-        setUnreadCount(c => c + 1);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, userRole]);
-
-  const markAllRead = async () => {
-    if (!user || unreadCount === 0) return;
-    try {
-      const isAdmin = userRole === 'admin';
-      const query = supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('read', false);
-      
-      if (!isAdmin) {
-        query.eq('agent_id', user.id);
-      }
-
-      const { error } = await query;
-      if (!error) {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-        setUnreadCount(0);
-      }
-    } catch (e) {
-      console.warn('Failed to mark notifications read:', e);
-    }
-  };
-
-  const clearReadNotifications = async () => {
-    if (!user) return;
-    try {
-      const isAdmin = userRole === 'admin';
-      const query = supabase
-        .from('notifications')
-        .delete()
-        .eq('read', true);
-      
-      if (!isAdmin) {
-        query.eq('agent_id', user.id);
-      }
-
-      const { error } = await query;
-      if (!error) {
-        setNotifications(prev => prev.filter(n => !n.read));
-      }
-    } catch (e) {
-      console.warn('Failed to clear read notifications:', e);
-    }
-  };
-
-  const handleNotificationClick = async (n) => {
-    // 1. Mark as read if not already read
-    if (!n.read) {
-      try {
-        const { error } = await supabase
-          .from('notifications')
-          .update({ read: true })
-          .eq('id', n.id);
-        if (!error) {
-          setNotifications(prev => prev.map(notif => notif.id === n.id ? { ...notif, read: true } : notif));
-          setUnreadCount(c => Math.max(0, c - 1));
-        }
-      } catch (e) {
-        console.warn('Failed to mark notification read on click:', e);
+    function handleClickOutside(event) {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileDropdownOpen(false);
       }
     }
-
-    // 2. Determine redirect URL
-    const isAdmin = userRole === 'admin';
-    let targetUrl = '/dashboard';
-    
-    if (isAdmin) {
-      const type = n.activity_type;
-      const refId = n.reference_id;
-      if (type === 'registration') {
-        targetUrl = `/admin?tab=pending_agents&agentId=${refId}`;
-      } else if (type === 'application') {
-        targetUrl = `/admin?tab=agent_applications&appId=${refId}`;
-      } else if (type === 'payout') {
-        targetUrl = `/admin?tab=payouts`;
-      } else if (type === 'agreement') {
-        targetUrl = `/admin?tab=agreements&agentId=${refId}`;
-      } else if (type === 'resign') {
-        targetUrl = `/admin?tab=pending_agents&agentId=${refId}`;
-      } else if (type === 'profile_complete') {
-        targetUrl = `/admin?tab=active_agents&agentId=${refId}`;
-      } else {
-        targetUrl = `/admin`;
-      }
-    }
-
-    // Close notifications panel
-    setShowNotifications(false);
-
-    // 3. Navigate
-    if (typeof window !== 'undefined') {
-      router.push(targetUrl);
-      if (window.location.pathname === '/admin') {
-        // Dispatch custom event to notify admin page of URL change
-        const event = new CustomEvent('admin-query-change');
-        window.dispatchEvent(event);
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (menuOpen) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'relative';
-    } else {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-    };
-  }, [menuOpen]);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
     try {
+      clearUserCache();
       await supabase.auth.signOut();
+      setUser(null);
+      setUserProfile(null);
+      setUserRole(null);
+      router.push('/');
+      router.refresh();
     } catch (err) {
-      console.warn('Logout network request failed, proceeding to clear session locally:', err);
+      console.error('Logout error:', err);
     }
-    clearUserCache();
-    closeMenu();
-    router.push('/');
-    router.refresh();
   };
 
-  const isLinkActive = (path) => pathname === path;
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
 
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+    setMobileLoansOpen(false);
+    setMobileServicesOpen(false);
+    setMobileServicesLoansOpen(false);
+    setMobileResourcesOpen(false);
+    setMobileEmiOpen(false);
+    setProfileDropdownOpen(false);
+  };
 
+  const isEmiActive =
+    pathname.startsWith('/emi-calculator') ||
+    pathname.startsWith('/personal-loan-emi-calculator') ||
+    pathname.startsWith('/home-loan-emi-calculator') ||
+    pathname.startsWith('/business-loan-emi-calculator') ||
+    pathname.startsWith('/calculators');
 
   return (
-    <header className="header">
-      <div className="header-inner">
-        {/* Extreme Left: Profile Tab Button */}
-        <div className="header-left">
-          {mounted && user && (
-            <div id="profile-dropdown-container" style={{ position: 'relative' }}>
-              <button
-                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="header-profile-badge-btn"
-                title={userProfile?.full_name || 'User Profile'}
-                aria-label="Toggle profile menu"
-              >
-                <div className="header-profile-avatar-circle">
-                  {userProfile?.avatar ? (
-                    <img src={userProfile.avatar} alt="Avatar" />
-                  ) : (
-                    getInitials(userProfile, user)
-                  )}
-                </div>
-                <span className="header-profile-name-span">
-                  {userProfile?.full_name || 'User'}
-                </span>
-                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7, transition: 'transform 0.2s', transform: profileDropdownOpen ? 'rotate(180deg)' : 'none' }}>
-                  <path d="M1 1l4 4 4-4" />
-                </svg>
-              </button>
+    <header className={styles.header}>
+      <div className={styles.container}>
+        {/* Brand Logo */}
+        <div className={styles.logoWrapper}>
+          <Link href="/" className={styles.logoLink} onClick={closeMobileMenu}>
+            <img
+              src="/images/brand_logo.png?v=3"
+              alt="HandToHand Loans"
+              className={styles.brandLogoImg}
+            />
+          </Link>
+        </div>
 
-              {profileDropdownOpen && (
-                <div className="header-profile-dropdown" style={{ left: 0, right: 'auto' }}>
-                  <div 
-                    className="profile-dropdown-header" 
-                    onClick={() => {
-                      setProfileDropdownOpen(false);
-                      router.push('/dashboard?tab=profile');
-                    }}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <div className="profile-dropdown-avatar">
-                      {userProfile?.avatar ? (
-                        <img src={userProfile.avatar} alt="Avatar" />
-                      ) : (
-                        getInitials(userProfile, user)
-                      )}
-                    </div>
-                    <div className="profile-dropdown-info">
-                      <div className="profile-dropdown-name">{userProfile?.full_name || 'User'}</div>
-                      <div className="profile-dropdown-phone">{userProfile?.phone || user.user_metadata?.phone || 'No Mobile'}</div>
-                      <div className="profile-dropdown-role-badge">
-                        {userRole === 'agent' ? 'Agent' : userRole === 'admin' ? 'Admin' : 'Client'}
+        {/* Desktop Navigation Links:
+            1. Home, 2. Banks, 3. Loans, 4. Credit Cards, 5. Our Services, 
+            6. EMI Calculator, 7. CIBIL, 8. Resources, 9. About Us, 10. Contact Us */}
+        <nav className={styles.navMenu}>
+          {/* 1. Home */}
+          <Link href="/" className={`${styles.navLink} ${pathname === '/' ? styles.navLinkActive : ''}`}>
+            Home
+          </Link>
+
+          {/* 2. Banks */}
+          <Link href="/banks" className={`${styles.navLink} ${pathname.startsWith('/banks') ? styles.navLinkActive : ''}`}>
+            Banks
+          </Link>
+
+          {/* 3. Loans with Rich Vertical Translucent Dropdown */}
+          <div
+            className={styles.dropdownWrap}
+            onMouseEnter={() => setLoansDropdownOpen(true)}
+            onMouseLeave={() => setLoansDropdownOpen(false)}
+          >
+            <Link
+              href="/services"
+              className={`${styles.navLink} ${loansDropdownOpen || pathname.startsWith('/loans') ? styles.navLinkHovered : ''}`}
+            >
+              Loans
+              <svg className={`${styles.chevron} ${loansDropdownOpen ? styles.chevronRotated : ''}`} width="9" height="5" viewBox="0 0 10 6" fill="none">
+                <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+
+            {/* Vertical Translucent Loans Dropdown Menu */}
+            {loansDropdownOpen && (
+              <div className={styles.loansDropdownMenu}>
+                <div className={styles.dropdownHeader}>
+                  <span className={styles.dropdownHeaderTitle}>Loan Categories</span>
+                  <span className={styles.dropdownHeaderSubtitle}>Explore all collateral-free and mortgage loan offerings</span>
+                </div>
+                <div className={styles.loanItemsGrid}>
+                  {loanSubSections.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      className={styles.loanDropdownCard}
+                      onClick={() => setLoansDropdownOpen(false)}
+                    >
+                      <div
+                        className={styles.loanCardIcon}
+                        style={{ backgroundColor: item.bg }}
+                      >
+                        {item.icon}
                       </div>
-                    </div>
+                      <div className={styles.loanCardDetails}>
+                        <div className={styles.loanCardNameRow}>
+                          <span className={styles.loanCardName}>{item.name}</span>
+                          <span className={styles.loanCardTag} style={{ color: item.color, backgroundColor: item.bg }}>
+                            {item.tag}
+                          </span>
+                        </div>
+                        <span className={styles.loanCardDesc}>{item.desc}</span>
+                      </div>
+                      <svg className={styles.arrowIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </Link>
+                  ))}
+                </div>
+                <div className={styles.dropdownFooter}>
+                  <Link href="/services" className={styles.viewAllLoansLink} onClick={() => setLoansDropdownOpen(false)}>
+                    View All 6 Loan Products &rarr;
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 4. Credit Cards */}
+          <Link href="/credit-cards" className={`${styles.navLink} ${pathname.startsWith('/credit-cards') ? styles.navLinkActive : ''}`}>
+            Credit Cards
+          </Link>
+
+          {/* 5. Our Services with Rich Vertical Translucent Dropdown */}
+          <div
+            className={styles.dropdownWrap}
+            onMouseEnter={() => setServicesDropdownOpen(true)}
+            onMouseLeave={() => {
+              setServicesDropdownOpen(false);
+              setServicesLoansSubmenuOpen(false);
+            }}
+          >
+            <Link
+              href="/services"
+              className={`${styles.navLink} ${servicesDropdownOpen || pathname.startsWith('/services') ? styles.navLinkHovered : ''}`}
+            >
+              Our Services
+              <svg className={`${styles.chevron} ${servicesDropdownOpen ? styles.chevronRotated : ''}`} width="9" height="5" viewBox="0 0 10 6" fill="none">
+                <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+
+            {/* Vertical Translucent Services Dropdown */}
+            {servicesDropdownOpen && (
+              <div className={styles.servicesDropdownMenu}>
+                <div className={styles.dropdownHeader}>
+                  <span className={styles.dropdownHeaderTitle}>All Services</span>
+                  <span className={styles.dropdownHeaderSubtitle}>Comprehensive suite of financial products and solutions</span>
+                </div>
+                <div className={styles.loanItemsGrid}>
+                  {servicesSubSections.map((item) => {
+                    if (item.hasDropdown) {
+                      return (
+                        <div
+                          key={item.id}
+                          className={styles.nestedDropdownItemWrap}
+                          onMouseEnter={() => setServicesLoansSubmenuOpen(true)}
+                          onMouseLeave={() => setServicesLoansSubmenuOpen(false)}
+                        >
+                          <div
+                            className={`${styles.loanDropdownCard} ${servicesLoansSubmenuOpen ? styles.submenuActiveCard : ''}`}
+                            onClick={() => setServicesLoansSubmenuOpen(!servicesLoansSubmenuOpen)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <div
+                              className={styles.loanCardIcon}
+                              style={{ backgroundColor: item.bg }}
+                            >
+                              {item.icon}
+                            </div>
+                            <div className={styles.loanCardDetails}>
+                              <div className={styles.loanCardNameRow}>
+                                <span className={styles.loanCardName}>{item.name}</span>
+                                <span className={styles.loanCardTag} style={{ color: item.color, backgroundColor: item.bg }}>
+                                  {item.tag}
+                                </span>
+                              </div>
+                              <span className={styles.loanCardDesc}>{item.desc}</span>
+                            </div>
+                            <svg className={`${styles.nestedChevron} ${servicesLoansSubmenuOpen ? styles.nestedChevronActive : ''}`} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M9 18l6-6-6-6" />
+                            </svg>
+                          </div>
+
+                          {/* Secondary Nested Loans Dropdown Menu */}
+                          {servicesLoansSubmenuOpen && (
+                            <div className={styles.nestedLoansFlyout}>
+                              <div className={styles.dropdownHeader}>
+                                <span className={styles.dropdownHeaderTitle}>Loans &amp; Financing</span>
+                                <span className={styles.dropdownHeaderSubtitle}>Available under Our Services</span>
+                              </div>
+                              <div className={styles.loanItemsGrid}>
+                                {ourServicesLoansSubSections.map((loanSub) => (
+                                  <Link
+                                    key={loanSub.id}
+                                    href={loanSub.href}
+                                    className={styles.loanDropdownCard}
+                                    onClick={() => {
+                                      setServicesLoansSubmenuOpen(false);
+                                      setServicesDropdownOpen(false);
+                                    }}
+                                  >
+                                    <div
+                                      className={styles.loanCardIcon}
+                                      style={{ backgroundColor: loanSub.bg }}
+                                    >
+                                      {loanSub.icon}
+                                    </div>
+                                    <div className={styles.loanCardDetails}>
+                                      <div className={styles.loanCardNameRow}>
+                                        <span className={styles.loanCardName}>{loanSub.name}</span>
+                                        <span className={styles.loanCardTag} style={{ color: loanSub.color, backgroundColor: loanSub.bg }}>
+                                          {loanSub.tag}
+                                        </span>
+                                      </div>
+                                      <span className={styles.loanCardDesc}>{loanSub.desc}</span>
+                                    </div>
+                                    <svg className={styles.arrowIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M5 12h14M12 5l7 7-7 7" />
+                                    </svg>
+                                  </Link>
+                                ))}
+                              </div>
+                              <div className={styles.dropdownFooter}>
+                                <Link href="/services" className={styles.viewAllLoansLink} onClick={() => { setServicesLoansSubmenuOpen(false); setServicesDropdownOpen(false); }}>
+                                  View All 6 Loan Products &rarr;
+                                </Link>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <Link
+                        key={item.id}
+                        href={item.href}
+                        className={styles.loanDropdownCard}
+                        onClick={() => setServicesDropdownOpen(false)}
+                      >
+                        <div
+                          className={styles.loanCardIcon}
+                          style={{ backgroundColor: item.bg }}
+                        >
+                          {item.icon}
+                        </div>
+                        <div className={styles.loanCardDetails}>
+                          <div className={styles.loanCardNameRow}>
+                            <span className={styles.loanCardName}>{item.name}</span>
+                            <span className={styles.loanCardTag} style={{ color: item.color, backgroundColor: item.bg }}>
+                              {item.tag}
+                            </span>
+                          </div>
+                          <span className={styles.loanCardDesc}>{item.desc}</span>
+                        </div>
+                        <svg className={styles.arrowIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                      </Link>
+                    );
+                  })}
+                </div>
+                <div className={styles.dropdownFooter}>
+                  <Link href="/services" className={styles.viewAllLoansLink} onClick={() => setServicesDropdownOpen(false)}>
+                    See all 15 services &rarr;
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 6. EMI Calculator with Dropdown */}
+          <div
+            className={styles.dropdownWrap}
+            onMouseEnter={() => setEmiDropdownOpen(true)}
+            onMouseLeave={() => setEmiDropdownOpen(false)}
+          >
+            <Link
+              href="/emi-calculator"
+              className={`${styles.navLink} ${emiDropdownOpen || isEmiActive ? styles.navLinkHovered : ''} ${isEmiActive ? styles.navLinkActive : ''}`}
+            >
+              EMI Calculator
+              <svg className={`${styles.chevron} ${emiDropdownOpen ? styles.chevronRotated : ''}`} width="9" height="5" viewBox="0 0 10 6" fill="none">
+                <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+
+            {/* Vertical Translucent EMI Calculator Dropdown */}
+            {emiDropdownOpen && (
+              <div className={styles.emiDropdownMenu}>
+                <div className={styles.dropdownHeader}>
+                  <span className={styles.dropdownHeaderTitle}>EMI &amp; Loan Calculators</span>
+                  <span className={styles.dropdownHeaderSubtitle}>Estimate EMIs, amortization &amp; eligibility instantly</span>
+                </div>
+                <div className={styles.loanItemsGrid}>
+                  {emiCalculatorSubSections.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      className={styles.loanDropdownCard}
+                      onClick={() => setEmiDropdownOpen(false)}
+                    >
+                      <div
+                        className={styles.loanCardIcon}
+                        style={{ backgroundColor: item.bg }}
+                      >
+                        {item.icon}
+                      </div>
+                      <div className={styles.loanCardDetails}>
+                        <div className={styles.loanCardNameRow}>
+                          <span className={styles.loanCardName}>{item.name}</span>
+                          <span className={styles.loanCardTag} style={{ color: item.color, backgroundColor: item.bg }}>
+                            {item.tag}
+                          </span>
+                        </div>
+                        <span className={styles.loanCardDesc}>{item.desc}</span>
+                      </div>
+                      <svg className={styles.arrowIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </Link>
+                  ))}
+                </div>
+                <div className={styles.dropdownFooter}>
+                  <Link href="/calculators" className={styles.viewAllLoansLink} onClick={() => setEmiDropdownOpen(false)}>
+                    View All Financial Calculators &rarr;
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 7. CIBIL */}
+          <Link href="/cibil" className={`${styles.navLink} ${pathname.startsWith('/cibil') ? styles.navLinkActive : ''}`}>
+            CIBIL
+          </Link>
+
+          {/* 8. Resources with Sub-sections Dropdown */}
+          <div
+            className={styles.dropdownWrap}
+            onMouseEnter={() => setResourcesDropdownOpen(true)}
+            onMouseLeave={() => setResourcesDropdownOpen(false)}
+          >
+            <Link
+              href="/blog"
+              className={`${styles.navLink} ${resourcesDropdownOpen ? styles.navLinkHovered : ''}`}
+            >
+              Resources
+              <svg className={`${styles.chevron} ${resourcesDropdownOpen ? styles.chevronRotated : ''}`} width="9" height="5" viewBox="0 0 10 6" fill="none">
+                <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+
+            {/* Vertical Translucent Resources Dropdown */}
+            {resourcesDropdownOpen && (
+              <div className={styles.resourcesDropdownMenu}>
+                <div className={styles.dropdownHeader}>
+                  <span className={styles.dropdownHeaderTitle}>Resources &amp; Tools</span>
+                  <span className={styles.dropdownHeaderSubtitle}>Official knowledge base &amp; partner materials</span>
+                </div>
+                <div className={styles.loanItemsGrid}>
+                  {resourcesSubSections.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      className={styles.loanDropdownCard}
+                      onClick={() => setResourcesDropdownOpen(false)}
+                    >
+                      <div
+                        className={styles.loanCardIcon}
+                        style={{ backgroundColor: item.bg }}
+                      >
+                        {item.icon}
+                      </div>
+                      <div className={styles.loanCardDetails}>
+                        <div className={styles.loanCardNameRow}>
+                          <span className={styles.loanCardName}>{item.name}</span>
+                          <span className={styles.loanCardTag} style={{ color: item.color, backgroundColor: item.bg }}>
+                            {item.tag}
+                          </span>
+                        </div>
+                        <span className={styles.loanCardDesc}>{item.desc}</span>
+                      </div>
+                      <svg className={styles.arrowIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </Link>
+                  ))}
+                </div>
+                <div className={styles.dropdownFooter}>
+                  <Link href="/blog" className={styles.viewAllLoansLink} onClick={() => setResourcesDropdownOpen(false)}>
+                    Explore All Knowledge Resources &rarr;
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 9. About Us */}
+          <Link href="/about" className={`${styles.navLink} ${pathname === '/about' ? styles.navLinkActive : ''}`}>
+            About Us
+          </Link>
+
+          {/* 10. Contact Us */}
+          <Link href="/contact" className={`${styles.navLink} ${pathname === '/contact' ? styles.navLinkActive : ''}`}>
+            Contact Us
+          </Link>
+        </nav>
+
+        {/* Right Action Items:
+            11. Support, 12. Login/Profile, 13. Check Eligibility, 14. Become a Partner */}
+        <div className={styles.rightActions}>
+          {/* 11. Support */}
+          <a href="tel:+9118001234567" className={styles.supportBox} title="Call Support">
+            <div className={styles.supportIcon}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0b1668" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+                <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+              </svg>
+            </div>
+            <div className={styles.supportText}>
+              <span className={styles.supportLabel}>Support</span>
+              <span className={styles.supportNumber}>+91 9389119399</span>
+            </div>
+          </a>
+
+          {/* 12. Authentication / Profile */}
+          {user ? (
+            <div className={styles.authContainer} ref={profileRef}>
+              {/* Notification Bell */}
+              <Link href="/dashboard" className={styles.notifBtn} title="Notifications">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                {unreadCount > 0 && <span className={styles.notifBadge}>{unreadCount}</span>}
+              </Link>
+
+              {/* Profile Avatar & Dropdown */}
+              <div className={styles.profileWrap}>
+                <button
+                  className={styles.profileAvatarBtn}
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                >
+                  <div className={styles.avatarCircle}>
+                    {userProfile?.avatar ? (
+                      <img src={userProfile.avatar} alt="Avatar" />
+                    ) : (
+                      (userProfile?.full_name || user?.email || 'U').charAt(0).toUpperCase()
+                    )}
                   </div>
-                  
-                  <div className="profile-dropdown-divider" />
-                  
-                  <div className="profile-dropdown-links">
-                    <Link 
-                      href="/dashboard" 
-                      className="profile-dropdown-item-link"
+                  <span className={styles.profileName}>
+                    {userProfile?.full_name || 'My Account'}
+                  </span>
+                  <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+                    <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+
+                {profileDropdownOpen && (
+                  <div className={styles.profileDropdown}>
+                    <div className={styles.profileDropdownHeader}>
+                      <div className={styles.profileDropdownName}>{userProfile?.full_name || user?.email}</div>
+                      <div className={styles.profileDropdownRole}>{userRole || 'Partner'}</div>
+                    </div>
+                    <Link
+                      href="/dashboard"
+                      className={styles.profileDropdownItem}
                       onClick={() => setProfileDropdownOpen(false)}
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <rect x="3" y="3" width="7" height="9" />
                         <rect x="14" y="3" width="7" height="5" />
                         <rect x="14" y="12" width="7" height="9" />
@@ -532,758 +1019,409 @@ export default function Header() {
                       </svg>
                       Dashboard
                     </Link>
-                    
                     {userRole === 'admin' && (
-                      <Link 
-                        href="/admin" 
-                        className="profile-dropdown-item-link admin-link"
+                      <Link
+                        href="/admin"
+                        className={styles.profileDropdownItem}
                         onClick={() => setProfileDropdownOpen(false)}
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                           <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                         </svg>
                         Admin Panel
                       </Link>
                     )}
-                  </div>
-                  
-                  <div className="profile-dropdown-divider" />
-                  
-                  <button 
-                    onClick={() => {
-                      setProfileDropdownOpen(false);
-                      handleLogout();
-                    }} 
-                    className="profile-dropdown-logout-btn"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                      <polyline points="16 17 21 12 16 7" />
-                      <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Center: Logo with HandToHand Loans & tagline */}
-        <div className="header-center">
-          <Link href="/" className="logo" onClick={closeMenu} style={{ textDecoration: 'none' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logo.png"
-              alt="HandToHand Loans Logo"
-              style={{ display: 'block', height: '34px', width: 'auto', flexShrink: 0, objectFit: 'contain' }}
-            />
-            <div className="logo-text-group">
-              <span className="logo-text">HandToHand Loans</span>
-              <span className="logo-tagline">Smart Lending, Fast Approval</span>
-            </div>
-          </Link>
-        </div>
-
-        {/* Desktop Navigation */}
-        <nav className="desktop-nav">
-          <ul className="nav-links">
-            {/* 1. Home */}
-            <li>
-              <Link href="/" className={`btn btn-primary btn-sm header-btn-primary ${isLinkActive('/') ? 'active' : ''}`}>
-                Home
-              </Link>
-            </li>
-            
-            {/* 2. Check Eligibility (Dark Button) */}
-            <li>
-              <Link href="/check" className={`btn btn-sm header-btn-dark ${isLinkActive('/check') ? 'active' : ''}`}>
-                Check Eligibility
-              </Link>
-            </li>
-
-            {/* 3. Loans Dropdown */}
-            <li 
-              className="dropdown-container"
-              onMouseEnter={() => setLoansDropdownOpen(true)}
-              onMouseLeave={() => setLoansDropdownOpen(false)}
-              style={{ position: 'relative', display: 'inline-block' }}
-            >
-              <button 
-                className={`btn btn-primary btn-sm header-btn-primary dropdown-toggle ${loansDropdownOpen ? 'active' : ''}`}
-                style={{ cursor: 'pointer', gap: '4px' }}
-                onClick={() => setLoansDropdownOpen(!loansDropdownOpen)}
-              >
-                Loans
-                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s', transform: loansDropdownOpen ? 'rotate(180deg)' : 'none' }}>
-                  <path d="M1 1l4 4 4-4" />
-                </svg>
-              </button>
-              {loansDropdownOpen && (
-                <ul className="dropdown-menu" style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  background: 'var(--color-bg-glass-heavy)',
-                  backdropFilter: 'blur(20px)',
-                  border: 'var(--border-light)',
-                  borderRadius: '10px',
-                  boxShadow: 'var(--shadow-md)',
-                  padding: '8px 0',
-                  margin: '4px 0 0 0',
-                  listStyle: 'none',
-                  minWidth: '180px',
-                  zIndex: 99999
-                }}>
-                  <li>
-                    <Link 
-                      href="/banks/instant" 
-                      className="dropdown-item" 
-                      onClick={() => setLoansDropdownOpen(false)}
-                      style={{ display: 'block', padding: '8px 16px', color: 'var(--color-text-primary)', textDecoration: 'none', fontSize: '13px', transition: 'background 0.2s' }}
-                    >
-                      ⚡ Instant Loan
-                    </Link>
-                  </li>
-                  <li>
-                    <Link 
-                      href="/banks/business" 
-                      className="dropdown-item" 
-                      onClick={() => setLoansDropdownOpen(false)}
-                      style={{ display: 'block', padding: '8px 16px', color: 'var(--color-text-primary)', textDecoration: 'none', fontSize: '13px', transition: 'background 0.2s' }}
-                    >
-                      🏢 Business Loan
-                    </Link>
-                  </li>
-                  <li>
-                    <Link 
-                      href="/banks/salary" 
-                      className="dropdown-item" 
-                      onClick={() => setLoansDropdownOpen(false)}
-                      style={{ display: 'block', padding: '8px 16px', color: 'var(--color-text-primary)', textDecoration: 'none', fontSize: '13px', transition: 'background 0.2s' }}
-                    >
-                      💼 Salary Loan
-                    </Link>
-                  </li>
-                </ul>
-              )}
-            </li>
-
-            {/* 4. Our Services Dropdown */}
-            <li 
-              className="dropdown-container"
-              onMouseEnter={() => setServicesDropdownOpen(true)}
-              onMouseLeave={() => setServicesDropdownOpen(false)}
-              style={{ position: 'relative', display: 'inline-block' }}
-            >
-              <button 
-                className={`btn btn-primary btn-sm header-btn-primary dropdown-toggle ${servicesDropdownOpen ? 'active' : ''}`}
-                style={{ 
-                  cursor: 'pointer', 
-                  gap: '4px'
-                }}
-                onClick={() => setServicesDropdownOpen(!servicesDropdownOpen)}
-              >
-                Our Services
-                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s', transform: servicesDropdownOpen ? 'rotate(180deg)' : 'none' }}>
-                  <path d="M1 1l4 4 4-4" />
-                </svg>
-              </button>
-              {servicesDropdownOpen && (
-                <ul className="dropdown-menu" style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  background: 'var(--color-bg-glass-heavy)',
-                  backdropFilter: 'blur(20px)',
-                  border: 'var(--border-light)',
-                  borderRadius: '12px',
-                  boxShadow: 'var(--shadow-lg)',
-                  padding: '10px 0',
-                  margin: '4px 0 0 0',
-                  listStyle: 'none',
-                  minWidth: '280px',
-                  maxHeight: '440px',
-                  overflowY: 'auto',
-                  zIndex: 99999
-                }}>
-                  {OUR_SERVICES_ITEMS.map((service, idx) => (
-                    <li key={idx}>
-                      <Link 
-                        href={service.href} 
-                        className="dropdown-item" 
-                        onClick={() => setServicesDropdownOpen(false)}
-                        style={{
-                          display: 'block',
-                          padding: '8px 16px',
-                          color: 'var(--color-text-primary)',
-                          textDecoration: 'none',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          transition: 'background 0.2s'
-                        }}
-                      >
-                        {service.name}
-                      </Link>
-                    </li>
-                  ))}
-                  <li style={{ borderTop: '1px solid var(--border-default)', marginTop: '4px', paddingTop: '4px' }}>
-                    <Link 
-                      href="/services" 
-                      className="dropdown-item" 
-                      onClick={() => setServicesDropdownOpen(false)}
-                      style={{
-                        display: 'block',
-                        padding: '8px 16px',
-                        color: 'var(--color-primary)',
-                        fontWeight: '800',
-                        textDecoration: 'none',
-                        fontSize: '13px',
-                        transition: 'background 0.2s'
+                    <button
+                      className={`${styles.profileDropdownItem} ${styles.logoutBtn}`}
+                      onClick={() => {
+                        setProfileDropdownOpen(false);
+                        handleLogout();
                       }}
                     >
-                      See All 15 Services ➔
-                    </Link>
-                  </li>
-                </ul>
-              )}
-            </li>
-
-            {/* 5. EMI Calculator Dropdown */}
-            <li 
-              style={{ position: 'relative' }}
-              onMouseEnter={() => setEmiDropdownOpen(true)}
-              onMouseLeave={() => setEmiDropdownOpen(false)}
-            >
-              <button
-                className={`btn btn-primary btn-sm header-btn-primary ${isLinkActive('/emi-calculator') || isLinkActive('/personal-loan-emi-calculator') || isLinkActive('/home-loan-emi-calculator') || isLinkActive('/business-loan-emi-calculator') ? 'active' : ''}`}
-                style={{
-                  gap: '6px',
-                  cursor: 'pointer'
-                }}
-                onClick={() => setEmiDropdownOpen(!emiDropdownOpen)}
-              >
-                EMI Calculator
-                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s', transform: emiDropdownOpen ? 'rotate(180deg)' : 'none' }}>
-                  <path d="M1 1l4 4 4-4" />
-                </svg>
-              </button>
-              {emiDropdownOpen && (
-                <ul className="dropdown-menu" style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  background: 'var(--color-bg-glass-heavy)',
-                  backdropFilter: 'blur(20px)',
-                  border: 'var(--border-light)',
-                  borderRadius: '10px',
-                  boxShadow: 'var(--shadow-md)',
-                  padding: '8px 0',
-                  margin: '4px 0 0 0',
-                  listStyle: 'none',
-                  minWidth: '220px',
-                  zIndex: 99999
-                }}>
-                  <li>
-                    <Link 
-                      href="/emi-calculator" 
-                      className="dropdown-item" 
-                      onClick={() => setEmiDropdownOpen(false)}
-                      style={{ display: 'block', padding: '8px 16px', color: 'var(--color-primary)', fontWeight: '700', textDecoration: 'none', fontSize: '13px', transition: 'background 0.2s' }}
-                    >
-                      All Types EMI Calculator
-                    </Link>
-                  </li>
-                  <li>
-                    <Link 
-                      href="/personal-loan-emi-calculator" 
-                      className="dropdown-item" 
-                      onClick={() => setEmiDropdownOpen(false)}
-                      style={{ display: 'block', padding: '8px 16px', color: 'var(--color-text-primary)', textDecoration: 'none', fontSize: '13px', transition: 'background 0.2s' }}
-                    >
-                      Personal Loan EMI
-                    </Link>
-                  </li>
-                  <li>
-                    <Link 
-                      href="/home-loan-emi-calculator" 
-                      className="dropdown-item" 
-                      onClick={() => setEmiDropdownOpen(false)}
-                      style={{ display: 'block', padding: '8px 16px', color: 'var(--color-text-primary)', textDecoration: 'none', fontSize: '13px', transition: 'background 0.2s' }}
-                    >
-                      Home Loan EMI
-                    </Link>
-                  </li>
-                  <li>
-                    <Link 
-                      href="/business-loan-emi-calculator" 
-                      className="dropdown-item" 
-                      onClick={() => setEmiDropdownOpen(false)}
-                      style={{ display: 'block', padding: '8px 16px', color: 'var(--color-text-primary)', textDecoration: 'none', fontSize: '13px', transition: 'background 0.2s' }}
-                    >
-                      Business Loan EMI
-                    </Link>
-                  </li>
-                  <li>
-                    <Link 
-                      href="/calculators" 
-                      className="dropdown-item" 
-                      onClick={() => setEmiDropdownOpen(false)}
-                      style={{ display: 'block', padding: '8px 16px', color: 'var(--color-primary)', fontWeight: 'bold', textDecoration: 'none', fontSize: '13px', transition: 'background 0.2s' }}
-                    >
-                      More Calculators ➔
-                    </Link>
-                  </li>
-                </ul>
-              )}
-            </li>
-
-            {/* 6. CIBIL */}
-            <li>
-              <Link
-                href="/cibil"
-                className={`btn btn-primary btn-sm header-btn-primary ${isLinkActive('/cibil') ? 'active' : ''}`}
-                title="Free CIBIL report check in collaboration with PNB"
-              >
-                CIBIL
-              </Link>
-            </li>
-
-            {/* 7. Blogs */}
-            <li>
-              <Link
-                href="/blog"
-                className={`btn btn-primary btn-sm header-btn-primary ${isLinkActive('/blog') ? 'active' : ''}`}
-              >
-                Blogs
-              </Link>
-            </li>
-
-            {/* 8. Verify Agent */}
-            <li>
-              <Link
-                href="/verify-agreement"
-                className={`btn btn-primary btn-sm header-btn-primary ${isLinkActive('/verify-agreement') ? 'active' : ''}`}
-              >
-                Verify Agent
-              </Link>
-            </li>
-
-            {/* Become a Partner Button */}
-            <li>
-              <Link
-                href="/become-a-partner"
-                className={`btn btn-primary btn-sm header-btn-primary ${isLinkActive('/become-a-partner') ? 'active' : ''}`}
-                style={{
-                  background: 'var(--color-primary-light)',
-                  border: '1px solid var(--color-primary)',
-                  color: 'var(--color-primary)',
-                  fontWeight: '700'
-                }}
-              >
-                Become a Partner
-              </Link>
-            </li>
-
-            {/* Sign In Button (only when logged out) */}
-            {!user && (
-              <li>
-                <Link href="/login" className="btn btn-primary btn-sm header-btn-primary">
-                  Sign In
-                </Link>
-              </li>
-            )}
-          </ul>
-        </nav>
-
-        {/* Right Header Actions (Notifications & Hamburger) */}
-        <div className="header-actions">
-
-          {mounted && user && (
-            <div id="notif-dropdown-container" style={{ position: 'relative' }}>
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="theme-toggle-btn"
-                style={{ margin: 0, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                title="Notifications"
-              >
-                {/* Bell Icon */}
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9z" />
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                </svg>
-                {unreadCount > 0 && (
-                  <span style={{
-                    position: 'absolute',
-                    top: '-2px',
-                    right: '-2px',
-                    background: '#dc2626',
-                    color: '#ffffff',
-                    fontSize: '9px',
-                    fontWeight: 800,
-                    borderRadius: '50%',
-                    width: '14px',
-                    height: '14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '1.5px solid var(--color-bg-secondary)',
-                    lineHeight: 1
-                  }}>
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-
-              {showNotifications && (
-                <div className="header-notification-dropdown">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid var(--border-default)' }}>
-                    <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text-primary)' }}>Notifications</span>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      {unreadCount > 0 && (
-                        <button onClick={markAllRead} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontSize: '10px', fontWeight: 600, cursor: 'pointer' }}>
-                          Mark all read
-                        </button>
-                      )}
-                      {notifications.some(n => n.read) && (
-                        <button onClick={clearReadNotifications} style={{ background: 'none', border: 'none', color: 'var(--color-error)', fontSize: '10px', fontWeight: 600, cursor: 'pointer' }}>
-                          Clear Read
-                        </button>
-                      )}
-                    </div>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                      </svg>
+                      Logout
+                    </button>
                   </div>
-                  {notifications.length === 0 ? (
-                    <div style={{ padding: '24px 0', color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)', textAlign: 'center' }}>
-                      No new notifications.
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {notifications.map(n => (
-                        <div
-                          key={n.id}
-                          onClick={() => handleNotificationClick(n)}
-                          className={`header-notification-item ${n.read ? 'read' : 'unread'}`}
-                          style={{
-                            padding: '10px',
-                            borderRadius: '8px',
-                            borderLeft: n.read ? '3px solid transparent' : '3px solid var(--color-primary)',
-                            fontSize: 'var(--text-xs)',
-                            lineHeight: 1.4,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                          }}
-                        >
-                          <div style={{ fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '2px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span>{n.title}</span>
-                            {!n.read && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--color-primary)' }}></span>}
-                          </div>
-                          <div style={{ color: 'var(--color-text-secondary)' }}>{n.message}</div>
-                          <div style={{ fontSize: '9px', color: 'var(--color-text-tertiary)', marginTop: '4px' }}>
-                            {new Date(n.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-
-
-          <button
-            className={`hamburger ${mounted && menuOpen ? 'active' : ''}`}
-            onClick={mounted ? toggleMenu : undefined}
-            aria-label="Toggle menu"
-            style={{ flexShrink: 0, marginLeft: '2px' }}
-          >
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Menu Backdrop */}
-      {mounted && menuOpen && (
-        <div className="mobile-menu-backdrop" onClick={closeMenu} />
-      )}
-
-      {/* Mobile Menu */}
-      <div className={`mobile-menu ${mounted && menuOpen ? 'open' : ''}`}>
-        {user && (
-          <Link href="/dashboard?tab=profile" onClick={closeMenu} style={{ textDecoration: 'none', display: 'block', color: 'inherit' }}>
-            <div className="mobile-profile-card" style={{ cursor: 'pointer' }}>
-              <div className="mobile-profile-avatar">
-                {userProfile?.avatar ? (
-                  <img src={userProfile.avatar} alt="Avatar" />
-                ) : (
-                  getInitials(userProfile, user)
                 )}
               </div>
-              <div className="mobile-profile-details">
-                <div className="mobile-profile-name">{userProfile?.full_name || 'User'}</div>
-                <div className="mobile-profile-phone" style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                  {userProfile?.phone || user.user_metadata?.phone || 'No Mobile'}
-                </div>
-                <span className="mobile-profile-role-badge">
-                   {userRole === 'agent' ? 'Agent' : userRole === 'admin' ? 'Admin' : 'Client'}
-                </span>
-              </div>
             </div>
+          ) : (
+            <Link href="/login" className={styles.loginLink}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0b1668" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <span>Login</span>
+            </Link>
+          )}
+
+          {/* 13. Check Eligibility Button */}
+          <Link href="/check" className={styles.btnBlue}>
+            Check Eligibility
           </Link>
-        )}
-        {/* 1. Home */}
-        <Link href="/" className={`btn btn-primary btn-sm header-btn-primary nav-link ${isLinkActive('/') ? 'active' : ''}`} onClick={closeMenu}>
-          Home
-        </Link>
-        
-        {/* 2. Check Eligibility (Dark Button) */}
-        <Link 
-          href="/check" 
-          className={`btn btn-sm header-btn-dark nav-link ${isLinkActive('/check') ? 'active' : ''}`} 
-          style={{ 
-            borderRadius: '8px', 
-            fontWeight: 700, 
-            textAlign: 'center',
-            justifyContent: 'center',
-            width: '100%'
-          }} 
-          onClick={closeMenu}
-        >
-          Check Eligibility
-        </Link>
 
-        {/* 3. Mobile Loans Accordion */}
-        <div style={{ padding: '2px 0', width: '100%' }}>
-          <button
-            onClick={() => setMobileLoansOpen(!mobileLoansOpen)}
-            className={`btn btn-primary btn-sm header-btn-primary nav-link ${mobileLoansOpen ? 'active' : ''}`}
-            style={{ justifyContent: 'space-between', cursor: 'pointer', width: '100%' }}
-          >
-            <span>Loans</span>
-            <svg width="12" height="8" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s', transform: mobileLoansOpen ? 'rotate(180deg)' : 'none' }}>
-              <path d="M1 1l4 4 4-4" />
-            </svg>
-          </button>
-          
-          {mobileLoansOpen && (
-            <div style={{ display: 'flex', flexDirection: 'column', background: 'none', padding: '6px 0 6px 10px', gap: '6px' }}>
-              <Link href="/banks/instant" className="mobile-dropdown-item btn btn-sm" onClick={closeMenu}>
-                ⚡ Instant Loan
-              </Link>
-              <Link href="/banks/business" className="mobile-dropdown-item btn btn-sm" onClick={closeMenu}>
-                🏢 Business Loan
-              </Link>
-              <Link href="/banks/salary" className="mobile-dropdown-item btn btn-sm" onClick={closeMenu}>
-                💼 Salary Loan
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* 4. Our Services Accordion */}
-        <div style={{ padding: '2px 0', width: '100%' }}>
-          <button
-            onClick={() => setMobileServicesOpen(!mobileServicesOpen)}
-            className={`btn btn-primary btn-sm header-btn-primary nav-link ${mobileServicesOpen ? 'active' : ''}`}
-            style={{
-              justifyContent: 'space-between',
-              cursor: 'pointer',
-              width: '100%'
-            }}
-          >
-            <span>Our Services</span>
-            <svg width="12" height="8" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s', transform: mobileServicesOpen ? 'rotate(180deg)' : 'none' }}>
-              <path d="M1 1l4 4 4-4" />
-            </svg>
-          </button>
-          
-          {mobileServicesOpen && (
-            <div style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              background: 'none',
-              padding: '6px 0 6px 10px',
-              gap: '6px'
-            }}>
-              {OUR_SERVICES_ITEMS.map((service, idx) => (
-                <Link key={idx} href={service.href} className="mobile-dropdown-item btn btn-sm" onClick={closeMenu}>
-                  {service.name}
-                </Link>
-              ))}
-              <Link
-                href="/services"
-                className="mobile-dropdown-item btn btn-sm"
-                onClick={closeMenu}
-                style={{ color: 'var(--color-primary)', fontWeight: 800, borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '4px', paddingTop: '6px' }}
-              >
-                See All 15 Services ➔
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* 5. Mobile EMI Calculator Dropdown */}
-        <div style={{ width: '100%', padding: '2px 0' }}>
-          <button
-            onClick={() => setMobileEmiOpen(!mobileEmiOpen)}
-            className={`btn btn-primary btn-sm header-btn-primary nav-link ${mobileEmiOpen ? 'active' : ''}`}
-            style={{
-              justifyContent: 'space-between',
-              cursor: 'pointer',
-              width: '100%'
-            }}
-          >
-            <span>EMI Calculator</span>
-            <svg width="12" height="8" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s', transform: mobileEmiOpen ? 'rotate(180deg)' : 'none' }}>
-              <path d="M1 1l4 4 4-4" />
-            </svg>
-          </button>
-          
-          {mobileEmiOpen && (
-            <div style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              background: 'none',
-              padding: '6px 0 6px 10px',
-              gap: '6px'
-            }}>
-              <Link href="/emi-calculator" className="mobile-dropdown-item btn btn-sm" onClick={closeMenu} style={{ fontWeight: 700 }}>
-                All Types EMI Calculator
-              </Link>
-              <Link href="/personal-loan-emi-calculator" className="mobile-dropdown-item btn btn-sm" onClick={closeMenu}>
-                Personal Loan EMI
-              </Link>
-              <Link href="/home-loan-emi-calculator" className="mobile-dropdown-item btn btn-sm" onClick={closeMenu}>
-                Home Loan EMI
-              </Link>
-              <Link href="/business-loan-emi-calculator" className="mobile-dropdown-item btn btn-sm" onClick={closeMenu}>
-                Business Loan EMI
-              </Link>
-              <Link href="/calculators" className="mobile-dropdown-item btn btn-sm" onClick={closeMenu} style={{ color: 'var(--color-primary)', fontWeight: 700 }}>
-                More Calculators ➔
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* 6. CIBIL */}
-        <Link
-          href="/cibil"
-          className={`btn btn-primary btn-sm header-btn-primary nav-link ${isLinkActive('/cibil') ? 'active' : ''}`}
-          onClick={closeMenu}
-        >
-          CIBIL
-        </Link>
-
-        {/* 7. Blogs */}
-        <Link
-          href="/blog"
-          className={`btn btn-primary btn-sm header-btn-primary nav-link ${isLinkActive('/blog') ? 'active' : ''}`}
-          onClick={closeMenu}
-        >
-          Blogs
-        </Link>
-
-        {/* 8. Verify Agent */}
-        <Link
-          href="/verify-agreement"
-          className={`btn btn-primary btn-sm header-btn-primary nav-link ${isLinkActive('/verify-agreement') ? 'active' : ''}`}
-          onClick={closeMenu}
-        >
-          Verify Agent
-        </Link>
-
-        {/* 9. Become a Partner */}
-        <Link
-          href="/become-a-partner"
-          className={`btn btn-primary btn-sm header-btn-primary nav-link ${isLinkActive('/become-a-partner') ? 'active' : ''}`}
-          style={{
-            background: 'var(--color-primary-light)',
-            border: '1px solid var(--color-primary)',
-            color: 'var(--color-primary)',
-            fontWeight: 700
-          }}
-          onClick={closeMenu}
-        >
-          Become a Partner
-        </Link>
-
-        {/* 10. Sign In Button (only when logged out) */}
-        {!user && (
-          <Link href="/login" className="btn btn-primary btn-sm header-btn-primary nav-link nav-cta" style={{ width: '100%', textAlign: 'center', justifyContent: 'center' }} onClick={closeMenu}>
-            Sign In
+          {/* 14. Become a Partner Button */}
+          <Link href="/signup?role=agent" className={styles.btnGreen}>
+            Become a Partner
           </Link>
-        )}
 
-
+          {/* Mobile Hamburger toggle */}
+          <button
+            className={`${styles.hamburgerBtn} ${mobileMenuOpen ? styles.hamburgerActive : ''}`}
+            onClick={toggleMobileMenu}
+            aria-label="Toggle Navigation Menu"
+            aria-expanded={mobileMenuOpen}
+          >
+            <span className={styles.bar}></span>
+            <span className={styles.bar}></span>
+            <span className={styles.bar}></span>
+          </button>
+        </div>
       </div>
 
-      {/* Global Applied/Not Applied Return Popup */}
-      {pendingApplication && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.75)',
-          backdropFilter: 'blur(12px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 99999,
-          padding: '16px'
-        }}>
-          <div className="form-card modal-drawer" style={{
-            maxWidth: 'min(440px, 96vw)',
-            width: '100%',
-            margin: '0 auto',
-            display: 'grid',
-            gap: '20px',
-            border: 'var(--border-accent)',
-            background: 'var(--color-bg-tertiary)',
-            backdropFilter: 'blur(20px)',
-            padding: '28px 24px',
-            borderRadius: '16px',
-            boxShadow: 'var(--shadow-xl)',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '48px', margin: '0 auto', color: 'var(--color-primary)', fontWeight: 'bold' }}>✓</div>
-            <div>
-              <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, marginBottom: '8px', fontFamily: 'var(--font-heading)' }}>
-                Update Lead Status
-              </h3>
-              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-                You were redirected to apply for <strong>{pendingApplication.clientName}</strong> at <strong>{pendingApplication.bankName}</strong>. 
-                Did you complete the application?
-              </p>
+      {/* Mobile Drawer */}
+      <div className={`${styles.mobileDrawer} ${mobileMenuOpen ? styles.mobileDrawerOpen : ''}`}>
+        <div className={styles.mobileNavLinks}>
+          {/* 1. Home */}
+          <Link href="/" className={`${styles.mobileNavLink} ${pathname === '/' ? styles.mobileNavActive : ''}`} onClick={closeMobileMenu}>
+            Home
+          </Link>
+
+          {/* 2. Banks */}
+          <Link href="/banks" className={styles.mobileNavLink} onClick={closeMobileMenu}>
+            Banks
+          </Link>
+
+          {/* 3. Loans with Accordion Sub-sections */}
+          <div className={styles.mobileAccordionWrap}>
+            <div
+              className={styles.mobileAccordionHeader}
+              onClick={() => setMobileLoansOpen(!mobileLoansOpen)}
+            >
+              <span className={styles.mobileNavLinkInner}>Loans</span>
+              <svg
+                className={`${styles.mobileChevron} ${mobileLoansOpen ? styles.mobileChevronOpen : ''}`}
+                width="12"
+                height="8"
+                viewBox="0 0 10 6"
+                fill="none"
+              >
+                <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '8px' }}>
-              <button
-                onClick={handleConfirmNotApplied}
-                className="btn btn-secondary"
-                style={{ justifyContent: 'center', padding: '12px 16px', borderRadius: '10px' }}
-                disabled={submittingStatus}
+            {/* Mobile Loans Sub-sections Dropdown List */}
+            {mobileLoansOpen && (
+              <div className={styles.mobileSubList}>
+                {loanSubSections.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    className={styles.mobileSubItem}
+                    onClick={closeMobileMenu}
+                  >
+                    <div className={styles.mobileSubIcon} style={{ backgroundColor: item.bg }}>
+                      {item.icon}
+                    </div>
+                    <div className={styles.mobileSubItemInfo}>
+                      <span className={styles.mobileSubItemName}>{item.name}</span>
+                      <span className={styles.mobileSubItemDesc}>{item.desc}</span>
+                    </div>
+                    <span className={styles.mobileSubItemTag} style={{ color: item.color, backgroundColor: item.bg }}>
+                      {item.tag}
+                    </span>
+                  </Link>
+                ))}
+                <Link
+                  href="/services"
+                  className={styles.mobileSeeAllLink}
+                  onClick={closeMobileMenu}
+                >
+                  View All 6 Loan Products &rarr;
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* 4. Credit Cards */}
+          <Link href="/credit-cards" className={styles.mobileNavLink} onClick={closeMobileMenu}>
+            Credit Cards
+          </Link>
+
+          {/* 5. Our Services with Accordion Sub-sections */}
+          <div className={styles.mobileAccordionWrap}>
+            <div
+              className={styles.mobileAccordionHeader}
+              onClick={() => setMobileServicesOpen(!mobileServicesOpen)}
+            >
+              <span className={styles.mobileNavLinkInner}>Our Services</span>
+              <svg
+                className={`${styles.mobileChevron} ${mobileServicesOpen ? styles.mobileChevronOpen : ''}`}
+                width="12"
+                height="8"
+                viewBox="0 0 10 6"
+                fill="none"
               >
-                Not Applied
-              </button>
-              <button
-                onClick={handleConfirmApplied}
-                className="btn btn-primary"
-                style={{ justifyContent: 'center', padding: '12px 16px', borderRadius: '10px', background: 'var(--gradient-primary)', border: 'none' }}
-                disabled={submittingStatus}
-              >
-                {submittingStatus ? 'Saving Lead...' : 'Applied'}
-              </button>
+                <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </div>
+
+            {/* Mobile Services Sub-sections Dropdown List */}
+            {mobileServicesOpen && (
+              <div className={styles.mobileSubList}>
+                {servicesSubSections.map((item) => {
+                  if (item.hasDropdown) {
+                    return (
+                      <div key={item.id} className={styles.mobileDeepAccordionWrap}>
+                        <div
+                          className={styles.mobileDeepAccordionHeader}
+                          onClick={() => setMobileServicesLoansOpen(!mobileServicesLoansOpen)}
+                        >
+                          <div className={styles.mobileDeepHeaderLeft}>
+                            <div className={styles.mobileSubIcon} style={{ backgroundColor: item.bg }}>
+                              {item.icon}
+                            </div>
+                            <span className={styles.mobileSubItemName}>{item.name}</span>
+                          </div>
+                          <svg
+                            className={`${styles.mobileChevron} ${mobileServicesLoansOpen ? styles.mobileChevronOpen : ''}`}
+                            width="10"
+                            height="6"
+                            viewBox="0 0 10 6"
+                            fill="none"
+                          >
+                            <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+
+                        {/* Mobile Loans Sub-list under Our Services */}
+                        {mobileServicesLoansOpen && (
+                          <div className={styles.mobileDeepSubList}>
+                            {ourServicesLoansSubSections.map((loanSub) => (
+                              <Link
+                                key={loanSub.id}
+                                href={loanSub.href}
+                                className={styles.mobileDeepSubItem}
+                                onClick={closeMobileMenu}
+                              >
+                                <div className={styles.mobileSubIcon} style={{ backgroundColor: loanSub.bg }}>
+                                  {loanSub.icon}
+                                </div>
+                                <div className={styles.mobileSubItemInfo}>
+                                  <span className={styles.mobileSubItemName}>{loanSub.name}</span>
+                                  <span className={styles.mobileSubItemDesc}>{loanSub.desc}</span>
+                                </div>
+                                <span className={styles.mobileSubItemTag} style={{ color: loanSub.color, backgroundColor: loanSub.bg }}>
+                                  {loanSub.tag}
+                                </span>
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      className={styles.mobileSubItem}
+                      onClick={closeMobileMenu}
+                    >
+                      <div className={styles.mobileSubIcon} style={{ backgroundColor: item.bg }}>
+                        {item.icon}
+                      </div>
+                      <div className={styles.mobileSubItemInfo}>
+                        <span className={styles.mobileSubItemName}>{item.name}</span>
+                        <span className={styles.mobileSubItemDesc}>{item.desc}</span>
+                      </div>
+                      <span className={styles.mobileSubItemTag} style={{ color: item.color, backgroundColor: item.bg }}>
+                        {item.tag}
+                      </span>
+                    </Link>
+                  );
+                })}
+                <Link
+                  href="/services"
+                  className={styles.mobileSeeAllLink}
+                  onClick={closeMobileMenu}
+                >
+                  See all 15 services &rarr;
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* 6. EMI Calculator with Accordion Sub-sections */}
+          <div className={styles.mobileAccordionWrap}>
+            <div
+              className={styles.mobileAccordionHeader}
+              onClick={() => setMobileEmiOpen(!mobileEmiOpen)}
+            >
+              <span className={`${styles.mobileNavLinkInner} ${isEmiActive ? styles.mobileNavActive : ''}`}>EMI Calculator</span>
+              <svg
+                className={`${styles.mobileChevron} ${mobileEmiOpen ? styles.mobileChevronOpen : ''}`}
+                width="12"
+                height="8"
+                viewBox="0 0 10 6"
+                fill="none"
+              >
+                <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+
+            {/* Mobile EMI Calculator Sub-sections Dropdown List */}
+            {mobileEmiOpen && (
+              <div className={styles.mobileSubList}>
+                {emiCalculatorSubSections.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    className={styles.mobileSubItem}
+                    onClick={closeMobileMenu}
+                  >
+                    <div className={styles.mobileSubIcon} style={{ backgroundColor: item.bg }}>
+                      {item.icon}
+                    </div>
+                    <div className={styles.mobileSubItemInfo}>
+                      <span className={styles.mobileSubItemName}>{item.name}</span>
+                      <span className={styles.mobileSubItemDesc}>{item.desc}</span>
+                    </div>
+                    <span className={styles.mobileSubItemTag} style={{ color: item.color, backgroundColor: item.bg }}>
+                      {item.tag}
+                    </span>
+                  </Link>
+                ))}
+                <Link
+                  href="/calculators"
+                  className={styles.mobileSeeAllLink}
+                  onClick={closeMobileMenu}
+                >
+                  View All Financial Calculators &rarr;
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* 7. CIBIL */}
+          <Link href="/cibil" className={styles.mobileNavLink} onClick={closeMobileMenu}>
+            CIBIL
+          </Link>
+
+          {/* 8. Resources with Accordion Sub-sections */}
+          <div className={styles.mobileAccordionWrap}>
+            <div
+              className={styles.mobileAccordionHeader}
+              onClick={() => setMobileResourcesOpen(!mobileResourcesOpen)}
+            >
+              <span className={styles.mobileNavLinkInner}>Resources</span>
+              <svg
+                className={`${styles.mobileChevron} ${mobileResourcesOpen ? styles.mobileChevronOpen : ''}`}
+                width="12"
+                height="8"
+                viewBox="0 0 10 6"
+                fill="none"
+              >
+                <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+
+            {/* Mobile Resources Sub-sections Dropdown List */}
+            {mobileResourcesOpen && (
+              <div className={styles.mobileSubList}>
+                {resourcesSubSections.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    className={styles.mobileSubItem}
+                    onClick={closeMobileMenu}
+                  >
+                    <div className={styles.mobileSubIcon} style={{ backgroundColor: item.bg }}>
+                      {item.icon}
+                    </div>
+                    <div className={styles.mobileSubItemInfo}>
+                      <span className={styles.mobileSubItemName}>{item.name}</span>
+                      <span className={styles.mobileSubItemDesc}>{item.desc}</span>
+                    </div>
+                    <span className={styles.mobileSubItemTag} style={{ color: item.color, backgroundColor: item.bg }}>
+                      {item.tag}
+                    </span>
+                  </Link>
+                ))}
+                <Link
+                  href="/blog"
+                  className={styles.mobileSeeAllLink}
+                  onClick={closeMobileMenu}
+                >
+                  See all resources &rarr;
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* 9. About Us */}
+          <Link href="/about" className={styles.mobileNavLink} onClick={closeMobileMenu}>
+            About Us
+          </Link>
+
+          {/* 10. Contact Us */}
+          <Link href="/contact" className={styles.mobileNavLink} onClick={closeMobileMenu}>
+            Contact Us
+          </Link>
+        </div>
+
+        {/* Mobile Footer Actions (11. Support, 12. Login/Profile, 13. Check Eligibility, 14. Become a Partner) */}
+        <div className={styles.mobileFooterActions}>
+          {/* 11. Support */}
+          <a href="tel:+9118001234567" className={styles.mobileSupportBox} onClick={closeMobileMenu}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0068fb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+              <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+            </svg>
+            <div className={styles.mobileSupportText}>
+              <span className={styles.mobileSupportLabel}>Support</span>
+              <span className={styles.mobileSupportPhone}>+91 9389119399</span>
+            </div>
+          </a>
+
+          {/* 12. Login / Dashboard */}
+          {user ? (
+            <Link href="/dashboard" className={styles.mobileLoginRow} onClick={closeMobileMenu}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0b1668" strokeWidth="2.2">
+                <rect x="3" y="3" width="7" height="9" />
+                <rect x="14" y="3" width="7" height="5" />
+                <rect x="14" y="12" width="7" height="9" />
+                <rect x="3" y="16" width="7" height="5" />
+              </svg>
+              <span>Go to Partner Dashboard ({userProfile?.full_name || 'My Account'})</span>
+            </Link>
+          ) : (
+            <Link href="/login" className={styles.mobileLoginRow} onClick={closeMobileMenu}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0b1668" strokeWidth="2.2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <span>Login to Customer Portal</span>
+            </Link>
+          )}
+
+          {/* 13. Check Eligibility & 14. Become a Partner */}
+          <div className={styles.mobileButtonsRow}>
+            <Link href="/check" className={styles.mobileBtnBlue} onClick={closeMobileMenu}>
+              Check Eligibility
+            </Link>
+            <Link href="/signup?role=agent" className={styles.mobileBtnGreen} onClick={closeMobileMenu}>
+              Become a Partner
+            </Link>
           </div>
         </div>
-      )}
+      </div>
     </header>
   );
 }

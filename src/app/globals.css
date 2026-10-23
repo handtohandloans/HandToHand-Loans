@@ -196,7 +196,7 @@ body {
   background-color: var(--color-bg-primary);
   min-height: 100vh;
   overflow-x: hidden;
-  padding-top: var(--header-height);
+  padding-top: 0 !important;
 }
 
 /* ---------- Custom Scrollbar ---------- */
@@ -2858,8 +2858,8 @@ textarea.input-field {
 [data-theme='light'] {
   /* --- Premium Warm Ivory Cream & Deep Forest Light Design Tokens --- */
   --bg-base: #FAF7EC;
-  --bg-surface: #ffffff;
-  --bg-subtle: #f3efe0;
+  --bg-surface: rgba(255, 255, 255, 0.58);
+  --bg-subtle: rgba(255, 255, 255, 0.42);
 
   --color-primary: #0B3C11;
   --color-primary-hover: #17521e;
@@ -2888,11 +2888,11 @@ textarea.input-field {
   --text-secondary: #2e4831;
   --text-muted: #526e55;
 
-  --border-default: #e2dac2;
+  --border-default: rgba(11, 22, 104, 0.12);
 
-  --shadow-sm: 0 1px 2px 0 rgba(10, 36, 12, 0.05);
-  --shadow-md: 0 4px 10px -1px rgba(10, 36, 12, 0.06), 0 2px 4px -1px rgba(10, 36, 12, 0.03);
-  --shadow-lg: 0 10px 20px -3px rgba(10, 36, 12, 0.1), 0 4px 6px -2px rgba(10, 36, 12, 0.05);
+  --shadow-sm: 0 2px 8px rgba(11, 22, 104, 0.04);
+  --shadow-md: 0 8px 24px -4px rgba(11, 22, 104, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 20px 48px -10px rgba(11, 22, 104, 0.14), 0 6px 20px rgba(0, 0, 0, 0.04);
 
   --gradient-brand: linear-gradient(135deg, #0B3C11 0%, #1a6320 50%, #298c31 100%);
 
@@ -2900,12 +2900,12 @@ textarea.input-field {
   --color-bg-primary: var(--bg-base);
   --color-bg-secondary: var(--bg-surface);
   --color-bg-tertiary: var(--bg-subtle);
-  --color-bg-card: var(--bg-surface);
-  --color-bg-card-hover: var(--bg-subtle);
-  --color-bg-glass: rgba(255, 255, 255, 0.75);
-  --color-bg-glass-heavy: rgba(255, 255, 255, 0.9);
-  --color-bg-input: var(--bg-base);
-  --color-bg-input-focus: var(--bg-surface);
+  --color-bg-card: rgba(255, 255, 255, 0.58);
+  --color-bg-card-hover: rgba(255, 255, 255, 0.78);
+  --color-bg-glass: rgba(255, 255, 255, 0.52);
+  --color-bg-glass-heavy: rgba(255, 255, 255, 0.72);
+  --color-bg-input: rgba(255, 255, 255, 0.65);
+  --color-bg-input-focus: rgba(255, 255, 255, 0.85);
   --color-bg-section-subtle: var(--bg-subtle);
 
   /* Accent Colors */
@@ -3376,9 +3376,11 @@ select.input-field option {
 }
 
 [data-theme='light'] .form-card {
-  background: #ffffff !important;
-  border: 1px solid var(--border-default) !important;
-  box-shadow: var(--shadow-sm) !important;
+  background: rgba(255, 255, 255, 0.58) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  box-shadow: 0 20px 48px -10px rgba(11, 22, 104, 0.12), 0 6px 20px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.85) !important;
 }
 
 [data-theme='light'] .form-card::before {
@@ -3386,21 +3388,25 @@ select.input-field option {
 }
 
 [data-theme='light'] .tabs-sidebar {
-  background: #ffffff !important;
-  border: 1px solid var(--border-default) !important;
-  box-shadow: var(--shadow-sm) !important;
+  background: rgba(255, 255, 255, 0.58) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  box-shadow: 0 12px 30px rgba(11, 22, 104, 0.08) !important;
 }
 
 [data-theme='light'] .tabs-sidebar-button {
-  background: #ffffff !important;
+  background: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
   color: var(--text-secondary) !important;
-  border: 1px solid var(--border-default) !important;
+  border: 1px solid rgba(255, 255, 255, 0.65) !important;
 }
 
 [data-theme='light'] .tabs-sidebar-button:hover {
-  background: var(--bg-subtle) !important;
+  background: rgba(255, 255, 255, 0.75) !important;
   color: var(--text-primary) !important;
-  border-color: var(--border-default) !important;
+  border-color: rgba(0, 104, 251, 0.3) !important;
 }
 
 [data-theme='light'] .tabs-sidebar-button.btn-primary,
@@ -3486,19 +3492,23 @@ select.input-field option {
 
 /* Light Theme Header & Notification UI Overrides */
 [data-theme='light'] .theme-toggle-btn {
-  background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.15);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.75);
   color: #0f172a;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 [data-theme='light'] .theme-toggle-btn:hover {
-  background: #f8fafc;
+  background: rgba(255, 255, 255, 0.85);
   border-color: var(--color-primary);
 }
 [data-theme='light'] .header-notification-dropdown {
-  background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.15);
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 20px 48px -10px rgba(11, 22, 104, 0.16), inset 0 1px 1px rgba(255, 255, 255, 0.85);
 }
 [data-theme='light'] .header-notification-item.read {
   background: #f8fafc !important;

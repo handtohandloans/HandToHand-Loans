@@ -10,7 +10,7 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'ContactPage',
   'name': 'Contact HandToHand Loans',
-  'description': 'Customer support desk for queries regarding loans, credit scoring, and partner bank portals.',
+  'description': 'Support desk for queries regarding loans, credit scoring, and partner bank portals.',
   'url': 'https://handtohandloans.in/contact'
 };
 
