@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import PhoneEmailSignInBtn from '@/components/PhoneEmailSignInBtn';
 
 function LoginContent() {
   const router = useRouter();
@@ -26,6 +27,97 @@ function LoginContent() {
   );
   const [showPassword, setShowPassword] = useState(false);
   const [success, setSuccess] = useState('');
+  const [loginMethod, setLoginMethod] = useState('email'); // 'email' | 'otp'
+  const [mobile, setMobile] = useState('');
+  const [otpModalOpened, setOtpModalOpened] = useState(false);
+  const hasVerifiedRef = useRef(false);
+
+  const handlePhoneEmailSuccess = async (user_json_url) => {
+    if (hasVerifiedRef.current) return;
+    hasVerifiedRef.current = true;
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    try {
+      const res = await fetch('/api/auth/phone-email-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_json_url }),
+      });
+
+      const result = await res.json();
+      if (!res.ok) {
+        hasVerifiedRef.current = false;
+        setError(result.error || 'Failed to authenticate via Mobile OTP.');
+        setLoading(false);
+        return;
+      }
+
+      if (result.token_hash) {
+        // Authenticate into Supabase using the verified token hash
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash: result.token_hash,
+          type: 'magiclink',
+        });
+
+        if (verifyError) {
+          hasVerifiedRef.current = false;
+          setError(verifyError.message || 'Failed to establish login session. Please try again.');
+          setLoading(false);
+          return;
+        }
+
+        setSuccess(`Welcome back, ${result.fullName || 'User'}! Redirecting...`);
+        setTimeout(() => {
+          router.push(redirectPath);
+          router.refresh();
+        }, 1000);
+      } else {
+        hasVerifiedRef.current = false;
+        setError('No authentication token received from server.');
+        setLoading(false);
+      }
+    } catch (err) {
+      hasVerifiedRef.current = false;
+      console.error('Phone email login error:', err);
+      setError('An unexpected error occurred during OTP login. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMobileOtpLogin = (e) => {
+    if (e) e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!mobile.trim() || !/^\d{10}$/.test(mobile.trim())) {
+      setError('Please enter your 10-digit registered mobile number to log in via OTP.');
+      return;
+    }
+
+    const peInput = document.querySelector('.pe_phone_number');
+    if (peInput) {
+      peInput.value = mobile.trim();
+    }
+
+    setLoading(true);
+    setOtpModalOpened(true);
+
+    const phBtn = document.getElementById('btn_ph_login');
+    if (phBtn) {
+      phBtn.click();
+    } else {
+      const client_id = process.env.NEXT_PUBLIC_PHONE_EMAIL_CLIENT_ID || '15695407177920574360';
+      const curr_url = window.location.href;
+      const user_phone_no_prefilled = '&user_phone_no=' + encodeURIComponent(mobile.trim());
+      window.open(
+        'https://auth.phone.email/log-in?client_id=' + client_id + '&auth_type=8&origin=' + encodeURIComponent(curr_url) + user_phone_no_prefilled,
+        'peLoginWindow',
+        'toolbar=0,scrollbars=0,location=0,statusbar=0,menubar=0,resizable=0,width=500,height=560,top=' + (screen.height - 600) / 2 + ',left=' + (screen.width - 500) / 2
+      );
+    }
+  };
 
   // If already logged in, redirect to sanitized path
   useEffect(() => {
@@ -242,6 +334,69 @@ function LoginContent() {
         </div>
       </div>
 
+      {/* Login Method Switcher */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '8px',
+        background: 'rgba(255, 255, 255, 0.04)',
+        padding: '4px',
+        borderRadius: '10px',
+        margin: '20px 0 16px 0',
+        border: 'var(--border-subtle)'
+      }}>
+        <button
+          type="button"
+          onClick={() => { setLoginMethod('email'); setError(''); }}
+          style={{
+            padding: '10px 12px',
+            fontSize: 'var(--text-sm)',
+            fontWeight: 700,
+            borderRadius: '8px',
+            background: loginMethod === 'email' ? 'var(--color-primary)' : 'transparent',
+            color: loginMethod === 'email' ? '#000000' : 'var(--color-text-secondary)',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+            <polyline points="22,6 12,13 2,6" />
+          </svg>
+          Email & Password
+        </button>
+        <button
+          type="button"
+          onClick={() => { setLoginMethod('otp'); setError(''); }}
+          style={{
+            padding: '10px 12px',
+            fontSize: 'var(--text-sm)',
+            fontWeight: 700,
+            borderRadius: '8px',
+            background: loginMethod === 'otp' ? 'var(--color-primary)' : 'transparent',
+            color: loginMethod === 'otp' ? '#000000' : 'var(--color-text-secondary)',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+            <line x1="12" y1="18" x2="12.01" y2="18" />
+          </svg>
+          Mobile OTP
+        </button>
+      </div>
+
       {error && (
         <div style={{
           padding: '12px 16px',
@@ -256,108 +411,244 @@ function LoginContent() {
         }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
             <span style={{ marginTop: '2px' }}></span>
-            <span>{error}</span>
+            <div>
+              <span>{error}</span>
+              {error.includes('sign up first') && (
+                <div style={{ marginTop: '8px' }}>
+                  <Link
+                    href={`/signup?redirect=${encodeURIComponent(redirectPath)}`}
+                    style={{
+                      display: 'inline-block',
+                      background: 'var(--color-primary)',
+                      color: '#000',
+                      padding: '6px 14px',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      textDecoration: 'none'
+                    }}
+                  >
+                    Go to Sign Up Page →
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
       {success && <div style={{ color: 'var(--color-success)', padding: '12px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', margin: '16px 0' }}>✓ {success}</div>}
 
-      <form onSubmit={handleLogin} style={{ textAlign: 'left', marginTop: '24px' }}>
-        <div className="input-group">
-          <label className="input-label">Email Address</label>
-          <input
-            type="email"
-            className="input-field"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-
-        <div className="input-group">
-          <label className="input-label">Password</label>
-          <div style={{ position: 'relative' }}>
+      {loginMethod === 'email' ? (
+        <form onSubmit={handleLogin} style={{ textAlign: 'left', marginTop: '16px' }}>
+          <div className="input-group">
+            <label className="input-label">Email Address</label>
             <input
-              type={showPassword ? 'text' : 'password'}
+              type="email"
               className="input-field"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{ paddingRight: '48px' }}
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
+          </div>
+
+          <div className="input-group">
+            <label className="input-label">Password</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="input-field"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{ paddingRight: '48px' }}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--color-text-secondary)',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {showPassword ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-primary)',
+                  fontSize: 'var(--text-xs)',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  padding: 0,
+                  textDecoration: 'underline'
+                }}
+              >
+                Forgot Password?
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '24px' }}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ width: '100%', justifyContent: 'center', margin: 0 }}
+              disabled={loading}
+            >
+              {loading ? 'Logging In...' : 'Log In'}
+            </button>
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: 'absolute',
-                right: '12px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'var(--color-text-secondary)',
-                padding: '4px',
+              onClick={handleMagicLinkLogin}
+              className="btn btn-secondary"
+              style={{ width: '100%', justifyContent: 'center', margin: 0, border: 'var(--border-accent)', background: 'var(--color-bg-glass)' }}
+              disabled={loading}
+            >
+              Magic Link
+            </button>
+          </div>
+        </form>
+      ) : (
+        <form onSubmit={handleMobileOtpLogin} style={{ textAlign: 'left', marginTop: '16px' }}>
+          <div className="input-group">
+            <label className="input-label">Registered Mobile Number</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{
+                padding: '12px 14px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: 'var(--border-light)',
+                borderRadius: 'var(--border-radius-md)',
+                color: 'var(--color-text-primary)',
+                fontWeight: 700,
+                fontSize: 'var(--text-sm)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {showPassword ? (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                  <line x1="1" y1="1" x2="23" y2="23" />
-                </svg>
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-              )}
-            </button>
+              }}>
+                🇮🇳 +91
+              </div>
+              <input
+                type="tel"
+                className="input-field"
+                placeholder="Enter 10-digit mobile number"
+                value={mobile}
+                onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
+                maxLength={10}
+                required
+                style={{ flex: 1 }}
+              />
+            </div>
+            <p style={{ fontSize: '11.5px', color: 'var(--color-text-muted)', marginTop: '6px' }}>
+              We will send a one-time SMS verification code to your registered mobile number via Phone.Email.
+            </p>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
-            <button
-              type="button"
-              onClick={handleForgotPassword}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--color-primary)',
-                fontSize: 'var(--text-xs)',
-                fontWeight: 600,
-                cursor: 'pointer',
-                padding: 0,
-                textDecoration: 'underline'
-              }}
-            >
-              Forgot Password?
-            </button>
-          </div>
-        </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '24px' }}>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            style={{ width: '100%', justifyContent: 'center', margin: 0 }}
-            disabled={loading}
-          >
-            {loading ? 'Logging In...' : 'Log In'}
-          </button>
           <button
             type="button"
-            onClick={handleMagicLinkLogin}
-            className="btn btn-secondary"
-            style={{ width: '100%', justifyContent: 'center', margin: 0, border: 'var(--border-accent)', background: 'var(--color-bg-glass)' }}
+            onClick={handleMobileOtpLogin}
+            className="btn btn-primary"
+            style={{
+              width: '100%',
+              justifyContent: 'center',
+              padding: '13px 16px',
+              fontSize: '14px',
+              fontWeight: 700,
+              marginTop: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
             disabled={loading}
           >
-            Magic Link
+            {loading ? (
+              <>
+                <div className="loading-spinner" style={{ width: '16px', height: '16px' }}></div>
+                <span>Verifying with OTP...</span>
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                  <line x1="12" y1="18" x2="12.01" y2="18" />
+                </svg>
+                <span>Log In with Mobile OTP</span>
+              </>
+            )}
           </button>
-        </div>
-      </form>
+
+          {/* Hidden PhoneEmail widget container for script loading and message event listener */}
+          <div style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+            <PhoneEmailSignInBtn onSuccess={handlePhoneEmailSuccess} prefillPhone={mobile} />
+          </div>
+
+          {otpModalOpened && !success && (
+            <div
+              style={{
+                marginTop: '14px',
+                padding: '12px 14px',
+                background: 'rgba(28, 178, 57, 0.08)',
+                border: '1px solid rgba(28, 178, 57, 0.25)',
+                borderRadius: '10px',
+                fontSize: '12.5px',
+                color: 'var(--color-text-secondary)',
+                textAlign: 'left',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '10px',
+                lineHeight: '1.4',
+              }}
+            >
+              <span>
+                📱 OTP window opened for <strong>+91 {mobile}</strong>. Enter code in popup to confirm login.
+              </span>
+              <button
+                type="button"
+                onClick={handleMobileOtpLogin}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-primary)',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  whiteSpace: 'nowrap',
+                  textDecoration: 'underline',
+                  padding: '4px 6px',
+                }}
+              >
+                Re-open
+              </button>
+            </div>
+          )}
+        </form>
+      )}
 
       <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0', color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)' }}>
         <div style={{ flex: 1, height: '1px', background: 'var(--border-subtle)' }}></div>

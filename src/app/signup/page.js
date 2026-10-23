@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -58,7 +58,7 @@ function SignupContent() {
     setSuccess('');
 
     if (!name.trim() || !mobile.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
-      setError('Please fill in all fields.');
+      setError('Please fill in all fields (Full Name, Mobile, Email, and Password).');
       setLoading(false);
       return;
     }
@@ -82,15 +82,6 @@ function SignupContent() {
     }
 
     // Check for duplicate email or mobile number via secure RPC function.
-    // The RPC (check_user_exists) is a SECURITY DEFINER function that checks
-    // both email AND phone in a single call, bypassing RLS restrictions safely.
-    //
-    // Security note: this check intentionally confirms whether an email/phone
-    // is already registered. This is a UX trade-off — the alternative is to let
-    // Supabase Auth return an empty identities array post-signup (also checked
-    // below in step 3), but that gives no phone-duplicate feedback.
-    // The fallback direct-select queries were REMOVED because they also allowed
-    // unauthenticated user enumeration without going through the controlled RPC.
     let isDuplicate = false;
     try {
       const { data: userExists, error: rpcError } = await supabase
@@ -102,9 +93,6 @@ function SignupContent() {
       if (!rpcError && userExists) {
         isDuplicate = true;
       }
-      // If the RPC fails (not installed yet), silently proceed —
-      // Supabase Auth's empty-identities check (step 3 below) will catch
-      // email duplicates. Phone duplicates would be missed until RPC is deployed.
     } catch (checkErr) {
       console.warn('Profile duplicate check warning:', checkErr);
     }
@@ -114,7 +102,6 @@ function SignupContent() {
       setLoading(false);
       return;
     }
-
 
     try {
       const { data, error: signUpError } = await supabase.auth.signUp({
@@ -133,7 +120,6 @@ function SignupContent() {
       if (signUpError) {
         setError(signUpError.message);
       } else if (data?.user && (!data.user.identities || data.user.identities.length === 0)) {
-        // 3. Post-signup Check (Supabase Auth returns an empty identities array for duplicate signups to prevent user enumeration)
         setError('An account with this email address or mobile number is already registered.');
       } else {
         if (role === 'agent') {
@@ -223,186 +209,199 @@ function SignupContent() {
         )}
         {success && <div style={{ color: 'var(--color-success)', padding: '12px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', margin: '16px 0' }}>✓ {success}</div>}
 
-        <form onSubmit={handleSignup} style={{ textAlign: 'left', marginTop: '24px' }}>
-          <div className="input-group">
-            <label className="input-label">Full Name</label>
-            <input
-              type="text"
-              className="input-field"
-              placeholder="Enter your full name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="input-group">
-            <label className="input-label">Mobile Number</label>
-            <input
-              type="tel"
-              className="input-field"
-              placeholder="Enter your 10-digit mobile number"
-              value={mobile}
-              onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
-              maxLength={10}
-              required
-            />
-          </div>
-
-          <div className="input-group">
-            <label className="input-label">I want to Register as</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '8px' }}>
-              <button
-                type="button"
-                className={`btn ${role === 'user' ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ justifyContent: 'center', padding: '10px 8px', fontSize: 'var(--text-sm)' }}
-                onClick={() => setRole('user')}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                Customer
-              </button>
-              <button
-                type="button"
-                className={`btn ${role === 'agent' ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ justifyContent: 'center', padding: '10px 8px', fontSize: 'var(--text-sm)' }}
-                onClick={() => setRole('agent')}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
-                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-                </svg>
-                Agent
-              </button>
-            </div>
-          </div>
-
-          {role === 'agent' && (
+        {/* Unified Registration Form with Email and Mobile OTP Options */}
+        <form onSubmit={handleSignup} style={{ textAlign: 'left', marginTop: '16px' }}>
             <div className="input-group">
-              <label className="input-label">Referral Agent Code (Optional)</label>
+              <label className="input-label">Full Name</label>
               <input
                 type="text"
                 className="input-field"
-                placeholder="e.g. H2H-12345"
-                value={referredBy}
-                onChange={(e) => setReferredBy(e.target.value)}
-              />
-            </div>
-          )}
-
-          <div className="input-group">
-            <label className="input-label">Email Address</label>
-            <input
-              type="email"
-              className="input-field"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="input-group">
-            <label className="input-label">Password</label>
-            <div style={{ position: 'relative' }}>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                className="input-field"
-                placeholder="Create a password (min 6 chars)"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{ paddingRight: '48px' }}
+                placeholder="Enter your full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: 'var(--color-text-secondary)',
-                  padding: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {showPassword ? (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                    <line x1="1" y1="1" x2="23" y2="23" />
-                  </svg>
-                ) : (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                )}
-              </button>
             </div>
-          </div>
 
-          <div className="input-group">
-            <label className="input-label">Confirm Password</label>
-            <div style={{ position: 'relative' }}>
+            <div className="input-group">
+              <label className="input-label">Mobile Number</label>
               <input
-                type={showConfirmPassword ? 'text' : 'password'}
+                type="tel"
                 className="input-field"
-                placeholder="Confirm your password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                style={{ paddingRight: '48px' }}
+                placeholder="Enter your 10-digit mobile number"
+                value={mobile}
+                onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
+                maxLength={10}
                 required
               />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: 'var(--color-text-secondary)',
-                  padding: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {showConfirmPassword ? (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                    <line x1="1" y1="1" x2="23" y2="23" />
-                  </svg>
-                ) : (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                )}
-              </button>
             </div>
-          </div>
 
-          <button
-            type="submit"
-            className="btn btn-primary btn-lg"
-            style={{ width: '100%', marginTop: '16px', justifyContent: 'center' }}
-            disabled={loading}
-          >
-            {loading ? 'Creating Account...' : 'Sign Up'}
-          </button>
-        </form>
+            <div className="input-group">
+              <label className="input-label">I want to Register as</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '8px' }}>
+                <button
+                  type="button"
+                  className={`btn ${role === 'user' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ justifyContent: 'center', padding: '10px 8px', fontSize: 'var(--text-sm)' }}
+                  onClick={() => setRole('user')}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  Customer
+                </button>
+                <button
+                  type="button"
+                  className={`btn ${role === 'agent' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ justifyContent: 'center', padding: '10px 8px', fontSize: 'var(--text-sm)' }}
+                  onClick={() => setRole('agent')}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                  </svg>
+                  Agent
+                </button>
+              </div>
+            </div>
+
+            {role === 'agent' && (
+              <div className="input-group">
+                <label className="input-label">Referral Agent Code (Optional)</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="e.g. H2H-12345"
+                  value={referredBy}
+                  onChange={(e) => setReferredBy(e.target.value)}
+                />
+              </div>
+            )}
+
+            <div className="input-group">
+              <label className="input-label">Email Address</label>
+              <input
+                type="email"
+                className="input-field"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+
+            <div className="input-group">
+              <label className="input-label">Password</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="input-field"
+                  placeholder="Create a password (min 6 chars)"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={{ paddingRight: '48px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--color-text-secondary)',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {showPassword ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="input-group">
+              <label className="input-label">Confirm Password</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  className="input-field"
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  style={{ paddingRight: '48px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--color-text-secondary)',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {showConfirmPassword ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              id="btn-signup-submit"
+              className="btn btn-primary"
+              style={{
+                width: '100%',
+                justifyContent: 'center',
+                padding: '13px 16px',
+                fontSize: 'var(--text-md)',
+                fontWeight: 700,
+                marginTop: '24px',
+              }}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <div className="loading-spinner" style={{ width: '16px', height: '16px', marginRight: '8px' }}></div>
+                  <span>Creating Account...</span>
+                </>
+              ) : (
+                <span>Create Account</span>
+              )}
+            </button>
+          </form>
 
         <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0', color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)' }}>
           <div style={{ flex: 1, height: '1px', background: 'var(--border-subtle)' }}></div>
