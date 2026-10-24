@@ -461,6 +461,183 @@
   color: #0068fb;
 }
 
+/* Authenticated User Profile & Notifications */
+.authContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.notifBtn {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0b1668;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.notifBtn:hover {
+  background-color: #f1f5f9;
+}
+
+.notifBadge {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 9.5px;
+  font-weight: 700;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.profileWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.profileAvatarBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  padding: 3px 10px 3px 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.profileAvatarBtn:hover {
+  border-color: #0068fb;
+  background: #eef2ff;
+}
+
+.avatarCircle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #0068fb;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.avatarCircle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profileName {
+  font-size: 11px;
+  font-weight: 600;
+  color: #0b1668;
+  max-width: 85px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profileChevron {
+  color: #64748b;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.profileDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  max-width: calc(100vw - 24px);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border-radius: 14px;
+  box-shadow:
+    0 20px 48px -10px rgba(11, 22, 104, 0.16),
+    0 6px 20px rgba(0, 0, 0, 0.05),
+    inset 0 1px 1px rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  padding: 8px 0;
+  z-index: 1050;
+}
+
+.profileDropdownHeader {
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.profileDropdownName {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0b1668;
+}
+
+.profileDropdownRole {
+  font-size: 11px;
+  color: #10b981;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.profileDropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  text-decoration: none;
+  transition: background-color 0.15s;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.profileDropdownItem:hover {
+  background-color: #f8fafc;
+  color: #0068fb;
+}
+
+.logoutBtn {
+  color: #ef4444;
+  border-top: 1px solid #f1f5f9;
+  margin-top: 4px;
+  padding-top: 10px;
+}
+
+.logoutBtn:hover {
+  color: #dc2626;
+  background-color: #fef2f2;
+}
+
 /* 13. Check Eligibility */
 .btnBlue {
   background-color: #0068fb;
@@ -844,6 +1021,32 @@
   text-decoration: none;
 }
 
+.mobileLogoutBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.mobileLogoutBtn:hover {
+  background: rgba(239, 68, 68, 0.16);
+  color: #dc2626;
+}
+
+/* =========================================================
+   RESPONSIVE BREAKPOINTS (Fluid auto-resize for all devices)
+   ========================================================= */
+
 /* Breakpoint 1: Extra-Wide Monitors (>= 1680px) */
 @media (min-width: 1680px) {
   .supportLabel {
@@ -851,25 +1054,29 @@
   }
 }
 
-/* Breakpoint 2: Standard Desktop & 1080p Scaled Laptops (1261px - 1580px) */
+/* Breakpoint 2: Standard Desktop & 1080p Laptops (1301px - 1580px) */
 @media (max-width: 1580px) {
   .supportLabel {
     display: none !important;
   }
 
   .navMenu {
-    gap: clamp(5px, 0.65vw, 8px);
+    gap: clamp(3px, 0.45vw, 6px);
   }
 
   .navLink {
-    font-size: clamp(11.2px, 0.72vw, 12px);
-    padding: 5px clamp(2px, 0.25vw, 4px);
+    font-size: clamp(10.8px, 0.7vw, 11.8px);
+    padding: 5px clamp(2px, 0.2vw, 4px);
   }
 
   .btnBlue,
   .btnGreen {
-    padding: 6.5px 11px;
-    font-size: 11.5px;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .profileName {
+    max-width: 75px;
   }
 
   .container {
@@ -878,7 +1085,7 @@
   }
 }
 
-/* Breakpoint 3: Compact Laptops (<= 1440px) */
+/* Breakpoint 3: Compact Laptops (1301px - 1440px) */
 @media (max-width: 1440px) {
   .supportBox {
     padding: 3.5px 7px;
@@ -897,28 +1104,32 @@
   }
 
   .supportNumber {
-    font-size: 11px;
+    font-size: 10.5px;
     gap: 3.5px;
   }
 
   .navMenu {
-    gap: clamp(4px, 0.5vw, 6px);
+    gap: clamp(2px, 0.3vw, 4px);
   }
 
   .navLink {
-    font-size: 11.2px;
+    font-size: 10.5px;
     padding: 4px 2px;
   }
 
   .btnBlue,
   .btnGreen {
-    padding: 6px 10px;
-    font-size: 11px;
+    padding: 5px 8px;
+    font-size: 10.5px;
+  }
+
+  .profileName {
+    max-width: 65px;
   }
 
   .brandLogoImg {
-    height: 44px;
-    max-width: 155px;
+    height: 40px;
+    max-width: 140px;
   }
 
   .container {
@@ -933,8 +1144,8 @@
   }
 }
 
-/* Breakpoint 4: Compact Laptop & Tablet (<= 1260px) - Switch to Hamburger Menu */
-@media (max-width: 1260px) {
+/* Breakpoint 4: Compact Laptop & Tablet (<= 1300px) - Switch to Clean Hamburger Menu */
+@media (max-width: 1300px) {
   .navMenu {
     display: none !important;
   }
@@ -943,69 +1154,6 @@
     display: flex !important;
   }
 
-  .supportBox {
-    display: inline-flex !important;
-    align-items: center;
-    gap: 4px;
-    padding: 5px 9px;
-    background: rgba(37, 211, 102, 0.12);
-    border: 1px solid rgba(37, 211, 102, 0.35);
-    border-radius: 9999px !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 2px 6px rgba(37, 211, 102, 0.12);
-    width: auto !important;
-    height: auto !important;
-  }
-
-  .supportBox:hover {
-    background: rgba(37, 211, 102, 0.22);
-    border-color: #25D366;
-    transform: translateY(-1px);
-  }
-
-  .supportText {
-    display: flex !important;
-  }
-
-  .supportLabel {
-    display: none !important;
-  }
-
-  .supportNumber {
-    font-size: 11px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    color: #0b1668;
-    font-weight: 700;
-  }
-
-  .whatsappIcon {
-    width: 14px;
-    height: 14px;
-  }
-
-  .brandLogoImg {
-    height: 44px;
-    max-width: 155px;
-  }
-
-  .rightActions {
-    gap: 8px;
-  }
-
-  .btnBlue,
-  .btnGreen {
-    display: inline-flex !important;
-    padding: 6.5px 12px;
-    font-size: 11.5px;
-    border-radius: 9999px;
-  }
-}
-
-/* Breakpoint 5: Tablet Portrait (<= 992px) */
-@media (max-width: 992px) {
   .supportBox {
     display: inline-flex !important;
     align-items: center;
@@ -1055,7 +1203,7 @@
   }
 
   .rightActions {
-    gap: 7px;
+    gap: 8px;
   }
 
   .btnBlue,
@@ -1065,10 +1213,14 @@
     font-size: 11px;
     border-radius: 9999px;
   }
+
+  .profileName {
+    max-width: 65px;
+  }
 }
 
-/* Breakpoint 6: Small Tablet / Large Mobile (<= 768px) */
-@media (max-width: 768px) {
+/* Breakpoint 5: Tablet Portrait (<= 992px) */
+@media (max-width: 992px) {
   .container {
     padding: 7px 10px;
     min-height: 56px;
@@ -1076,14 +1228,71 @@
   }
 
   .brandLogoImg {
-    height: 36px;
-    max-width: 125px;
+    height: 38px;
+    max-width: 130px;
+  }
+
+  .supportBox {
+    padding: 4px 7.5px;
+    gap: 3.5px;
+  }
+
+  .supportNumber {
+    font-size: 10.5px;
+  }
+
+  /* Hide Become a Partner from header bar on tablets - it is inside hamburger drawer */
+  .btnGreen,
+  .btnPartner {
+    display: none !important;
+  }
+
+  .btnBlue {
+    display: inline-flex !important;
+    padding: 5px 9px;
+    font-size: 10.5px;
+    border-radius: 9999px;
+  }
+
+  .btnTextFull {
+    display: none !important;
+  }
+
+  .btnTextCompact {
+    display: inline !important;
+  }
+
+  .btnTextMini {
+    display: none !important;
+  }
+
+  .profileName {
+    max-width: 55px;
+    font-size: 10.5px;
+  }
+
+  .rightActions {
+    gap: 6px;
+  }
+}
+
+/* Breakpoint 6: Small Tablet / Large Mobile (<= 768px) */
+@media (max-width: 768px) {
+  .container {
+    padding: 6px 8px;
+    min-height: 52px;
+    gap: 6px;
+  }
+
+  .brandLogoImg {
+    height: 32px;
+    max-width: 110px;
   }
 
   .supportBox {
     display: inline-flex !important;
     align-items: center;
-    gap: 4px;
+    gap: 3.5px;
     padding: 4px 7px;
     background: rgba(37, 211, 102, 0.12);
     border: 1px solid rgba(37, 211, 102, 0.35);
@@ -1103,11 +1312,12 @@
   }
 
   .supportNumber {
-    font-size: 10.5px;
+    font-size: 10px;
     font-weight: 700;
     display: inline-flex;
     align-items: center;
-    gap: 3.5px;
+    gap: 3px;
+    color: #0b1668;
   }
 
   .whatsappIcon {
@@ -1119,78 +1329,109 @@
     display: none !important;
   }
 
-  .rightActions {
-    gap: 5px;
-  }
-
+  /* Hide call-to-action buttons from header bar on mobile - prominently inside mobile drawer */
   .btnBlue,
-  .btnGreen {
-    display: inline-flex !important;
-    padding: 5px 8px;
-    font-size: 10.5px;
-    border-radius: 9999px;
-  }
-
-  .btnTextFull {
+  .btnGreen,
+  .btnPartner {
     display: none !important;
   }
 
-  .btnTextCompact {
-    display: inline !important;
+  /* Responsive Authenticated Profile on Mobile */
+  .authContainer {
+    display: flex !important;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
   }
 
-  .btnTextMini {
+  .notifBtn {
+    padding: 4px;
+    color: #0b1668;
+  }
+
+  .notifBtn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .notifBadge {
+    top: 0px;
+    right: 0px;
+    min-width: 14px;
+    height: 14px;
+    font-size: 8.5px;
+  }
+
+  .profileAvatarBtn {
+    padding: 1.5px;
+    background: transparent;
+    border: none;
+    gap: 0;
+  }
+
+  .profileAvatarBtn:hover {
+    background: transparent;
+  }
+
+  .avatarCircle {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+    border: 2px solid #0068fb;
+    box-shadow: 0 1px 4px rgba(0, 104, 251, 0.25);
+  }
+
+  /* HIDE full name string on mobile to guarantee zero overflow */
+  .profileName {
     display: none !important;
+  }
+
+  /* HIDE chevron arrow on mobile */
+  .profileChevron {
+    display: none !important;
+  }
+
+  .profileDropdown {
+    right: -8px;
+    width: 215px;
+    max-width: calc(100vw - 20px);
   }
 
   .hamburgerBtn {
-    width: 28px;
-    height: 25px;
-    padding: 3px;
+    width: 26px;
+    height: 24px;
+    padding: 2.5px;
+    display: flex !important;
+  }
+
+  .rightActions {
+    gap: 6px;
+    flex-shrink: 0;
   }
 }
 
 /* Breakpoint 7: Standard Mobile & Compact Devices (<= 560px) */
 @media (max-width: 560px) {
   .container {
-    padding: 6px 6px;
-    min-height: 50px;
+    padding: 5px 6px;
+    min-height: 48px;
     gap: 4px;
   }
 
   .brandLogoImg {
-    height: 30px;
+    height: 28px;
     max-width: 95px;
   }
 
   .supportBox {
     display: inline-flex !important;
-    padding: 3.5px 6px;
+    padding: 3px 6px;
     gap: 3px;
-    background: rgba(37, 211, 102, 0.12);
-    border: 1px solid rgba(37, 211, 102, 0.35);
-    border-radius: 9999px !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    width: auto !important;
-    height: auto !important;
-  }
-
-  .supportText {
-    display: flex !important;
-  }
-
-  .supportLabel {
-    display: none !important;
   }
 
   .supportNumber {
-    font-size: 9.5px;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    color: #0b1668;
+    font-size: 9px;
+    gap: 2.5px;
   }
 
   .whatsappIcon {
@@ -1198,80 +1439,53 @@
     height: 12px;
   }
 
-  .rightActions {
-    gap: 4px;
+  .avatarCircle {
+    width: 26px;
+    height: 26px;
+    font-size: 10px;
   }
 
-  .btnBlue,
-  .btnGreen {
-    display: inline-flex !important;
-    padding: 4px 6.5px;
-    font-size: 9.5px;
-    font-weight: 700;
-    border-radius: 9999px;
+  .notifBtn {
+    padding: 3px;
   }
 
-  .btnTextFull {
-    display: none !important;
-  }
-
-  .btnTextCompact {
-    display: inline !important;
-  }
-
-  .btnTextMini {
-    display: none !important;
+  .notifBtn svg {
+    width: 15px;
+    height: 15px;
   }
 
   .hamburgerBtn {
-    width: 25px;
-    height: 23px;
-    padding: 2.5px;
+    width: 24px;
+    height: 22px;
+    padding: 2px;
+  }
+
+  .rightActions {
+    gap: 4px;
   }
 }
 
 /* Breakpoint 8: Small Mobile (<= 380px) */
 @media (max-width: 380px) {
   .container {
-    padding: 5px 4px;
-    min-height: 46px;
+    padding: 4px 5px;
+    min-height: 44px;
     gap: 3px;
   }
 
   .brandLogoImg {
-    height: 26px;
-    max-width: 80px;
-  }
-
-  .rightActions {
-    gap: 3px;
+    height: 24px;
+    max-width: 78px;
   }
 
   .supportBox {
-    display: inline-flex !important;
-    padding: 3px 5px;
-    gap: 2.5px;
-    background: rgba(37, 211, 102, 0.12);
-    border: 1px solid rgba(37, 211, 102, 0.35);
-    border-radius: 9999px !important;
-    width: auto !important;
-    height: auto !important;
-  }
-
-  .supportText {
-    display: flex !important;
-  }
-
-  .supportLabel {
-    display: none !important;
+    padding: 2.5px 5px;
+    gap: 2px;
   }
 
   .supportNumber {
     font-size: 8.5px;
-    letter-spacing: -0.2px;
-    display: inline-flex;
-    align-items: center;
-    gap: 2.5px;
+    letter-spacing: -0.3px;
   }
 
   .whatsappIcon {
@@ -1279,260 +1493,70 @@
     height: 11px;
   }
 
-  .btnBlue,
-  .btnGreen {
-    display: inline-flex !important;
-    padding: 3.5px 5px;
-    font-size: 8.5px;
-    font-weight: 700;
-    border-radius: 9999px;
+  .avatarCircle {
+    width: 24px;
+    height: 24px;
+    font-size: 9.5px;
   }
 
-  .btnTextFull {
-    display: none !important;
+  .notifBtn {
+    padding: 2px;
   }
 
-  .btnTextCompact {
-    display: none !important;
-  }
-
-  .btnTextMini {
-    display: inline !important;
+  .notifBtn svg {
+    width: 14px;
+    height: 14px;
   }
 
   .hamburgerBtn {
     width: 22px;
     height: 20px;
-    padding: 2px;
+    padding: 1.5px;
+  }
+
+  .rightActions {
+    gap: 3px;
   }
 }
 
 /* Breakpoint 9: Ultra-Narrow Mobile (<= 330px) */
 @media (max-width: 330px) {
   .container {
-    padding: 4px 3px;
+    padding: 3px 4px;
     min-height: 42px;
     gap: 2px;
   }
 
   .brandLogoImg {
-    height: 22px;
-    max-width: 68px;
+    height: 20px;
+    max-width: 65px;
   }
 
-  .rightActions {
-    gap: 2px;
+  .supportText {
+    display: none !important;
   }
 
   .supportBox {
-    display: inline-flex !important;
-    padding: 2px 3.5px;
-    gap: 2px;
-    background: rgba(37, 211, 102, 0.12);
-    border: 1px solid rgba(37, 211, 102, 0.35);
-    border-radius: 9999px !important;
-    width: auto !important;
-    height: auto !important;
-  }
-
-  .supportNumber {
-    font-size: 8px;
-    letter-spacing: -0.3px;
-  }
-
-  .whatsappIcon {
-    width: 10px;
-    height: 10px;
-  }
-
-  .btnBlue,
-  .btnGreen {
-    display: inline-flex !important;
     padding: 2.5px 4px;
-    font-size: 7.5px;
-    font-weight: 700;
-    letter-spacing: -0.2px;
-    border-radius: 9999px;
   }
 
-  .btnTextFull {
-    display: none !important;
+  .avatarCircle {
+    width: 22px;
+    height: 22px;
+    font-size: 9px;
   }
 
-  .btnTextCompact {
-    display: none !important;
-  }
-
-  .btnTextMini {
-    display: inline !important;
+  .notifBtn svg {
+    width: 13px;
+    height: 13px;
   }
 
   .hamburgerBtn {
     width: 20px;
     height: 18px;
-    padding: 1.5px;
   }
-}
 
-/* Authenticated User Profile & Notifications */
-.authContainer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-}
-
-.notifBtn {
-  position: relative;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #0b1668;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-}
-
-.notifBtn:hover {
-  background-color: #f1f5f9;
-}
-
-.notifBadge {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  background-color: #ef4444;
-  color: white;
-  font-size: 10px;
-  font-weight: 700;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.profileWrap {
-  position: relative;
-}
-
-.profileAvatarBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: 9999px;
-  padding: 3px 10px 3px 3px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.profileAvatarBtn:hover {
-  border-color: #0068fb;
-  background: #eef2ff;
-}
-
-.avatarCircle {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #0068fb;
-  color: #ffffff;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.avatarCircle img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.profileName {
-  font-size: 11px;
-  font-weight: 600;
-  color: #0b1668;
-  max-width: 90px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.profileDropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  width: 220px;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
-  border-radius: 14px;
-  box-shadow:
-    0 20px 48px -10px rgba(11, 22, 104, 0.16),
-    0 6px 20px rgba(0, 0, 0, 0.05),
-    inset 0 1px 1px rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  padding: 8px 0;
-  z-index: 1050;
-}
-
-.profileDropdownHeader {
-  padding: 10px 14px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.profileDropdownName {
-  font-size: 13px;
-  font-weight: 700;
-  color: #0b1668;
-}
-
-.profileDropdownRole {
-  font-size: 11px;
-  color: #10b981;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
-.profileDropdownItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #334155;
-  text-decoration: none;
-  transition: background-color 0.15s;
-  cursor: pointer;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-}
-
-.profileDropdownItem:hover {
-  background-color: #f8fafc;
-  color: #0068fb;
-}
-
-.logoutBtn {
-  color: #ef4444;
-  border-top: 1px solid #f1f5f9;
-  margin-top: 4px;
-  padding-top: 10px;
-}
-
-.logoutBtn:hover {
-  color: #dc2626;
-  background-color: #fef2f2;
+  .rightActions {
+    gap: 2px;
+  }
 }

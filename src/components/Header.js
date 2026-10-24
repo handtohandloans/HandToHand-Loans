@@ -523,7 +523,45 @@ export default function Header() {
     };
   }, []);
 
-  // Close profile dropdown on outside click
+  // Active Screen Size Detection for seamless auto-resizing across all devices
+  const [screenCategory, setScreenCategory] = useState('desktop');
+
+  useEffect(() => {
+    function updateScreenCategory() {
+      const width = window.innerWidth;
+      if (width <= 560) {
+        setScreenCategory('mobile');
+      } else if (width <= 768) {
+        setScreenCategory('small-tablet');
+      } else if (width <= 992) {
+        setScreenCategory('tablet');
+      } else if (width <= 1300) {
+        setScreenCategory('laptop');
+      } else {
+        setScreenCategory('desktop');
+      }
+
+      if (width > 1300) {
+        setMobileMenuOpen(false);
+      }
+    }
+
+    updateScreenCategory();
+    window.addEventListener('resize', updateScreenCategory, { passive: true });
+    window.addEventListener('orientationchange', updateScreenCategory, { passive: true });
+    return () => {
+      window.removeEventListener('resize', updateScreenCategory);
+      window.removeEventListener('orientationchange', updateScreenCategory);
+    };
+  }, []);
+
+  // Auto-close open menus on route change
+  useEffect(() => {
+    closeMobileMenu();
+    setProfileDropdownOpen(false);
+  }, [pathname]);
+
+  // Close profile dropdown on outside click or tap
   useEffect(() => {
     function handleClickOutside(event) {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
@@ -531,7 +569,11 @@ export default function Header() {
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -570,7 +612,7 @@ export default function Header() {
     pathname.startsWith('/calculators');
 
   return (
-    <header className={styles.header}>
+    <header className={`${styles.header} ${styles[screenCategory] || ''}`} data-screen={screenCategory}>
       <div className={styles.container}>
         {/* Brand Logo */}
         <div className={styles.logoWrapper}>
@@ -995,7 +1037,7 @@ export default function Header() {
                   <span className={styles.profileName}>
                     {userProfile?.full_name || 'My Account'}
                   </span>
-                  <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+                  <svg className={styles.profileChevron} width="10" height="6" viewBox="0 0 10 6" fill="none">
                     <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
@@ -1062,12 +1104,16 @@ export default function Header() {
 
           {/* 13. Check Eligibility Button */}
           <Link href="/check" className={styles.btnBlue}>
-            Check Eligibility
+            <span className={styles.btnTextFull}>Check Eligibility</span>
+            <span className={styles.btnTextCompact}>Eligibility</span>
+            <span className={styles.btnTextMini}>Check</span>
           </Link>
 
           {/* 14. Become a Partner Button */}
-          <Link href="/signup?role=agent" className={styles.btnGreen}>
-            Become a Partner
+          <Link href="/signup?role=agent" className={`${styles.btnGreen} ${styles.btnPartner}`}>
+            <span className={styles.btnTextFull}>Become a Partner</span>
+            <span className={styles.btnTextCompact}>Partner</span>
+            <span className={styles.btnTextMini}>Join</span>
           </Link>
 
           {/* Mobile Hamburger toggle */}
@@ -1392,22 +1438,38 @@ export default function Header() {
 
           {/* 12. Login / Dashboard */}
           {user ? (
-            <Link href="/dashboard" className={styles.mobileLoginRow} onClick={closeMobileMenu}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0b1668" strokeWidth="2.2">
-                <rect x="3" y="3" width="7" height="9" />
-                <rect x="14" y="3" width="7" height="5" />
-                <rect x="14" y="12" width="7" height="9" />
-                <rect x="3" y="16" width="7" height="5" />
-              </svg>
-              <span>Go to Partner Dashboard ({userProfile?.full_name || 'My Account'})</span>
-            </Link>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Link href="/dashboard" className={styles.mobileLoginRow} onClick={closeMobileMenu}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0b1668" strokeWidth="2.2">
+                  <rect x="3" y="3" width="7" height="9" />
+                  <rect x="14" y="3" width="7" height="5" />
+                  <rect x="14" y="12" width="7" height="9" />
+                  <rect x="3" y="16" width="7" height="5" />
+                </svg>
+                <span>Dashboard ({userProfile?.full_name || 'My Account'})</span>
+              </Link>
+              <button
+                className={styles.mobileLogoutBtn}
+                onClick={() => {
+                  closeMobileMenu();
+                  handleLogout();
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span>Logout</span>
+              </button>
+            </div>
           ) : (
             <Link href="/login" className={styles.mobileLoginRow} onClick={closeMobileMenu}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0b1668" strokeWidth="2.2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>
-              <span>Login to Customer Portal</span>
+              <span>Login to Account</span>
             </Link>
           )}
 

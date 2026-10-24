@@ -334,7 +334,8 @@ function LoginContent() {
         </div>
       </div>
 
-      {/* Login Method Switcher */}
+      {/* Login Method Switcher - temporarily hidden as requested */}
+      {/* 
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
@@ -345,57 +346,10 @@ function LoginContent() {
         margin: '20px 0 16px 0',
         border: 'var(--border-subtle)'
       }}>
-        <button
-          type="button"
-          onClick={() => { setLoginMethod('email'); setError(''); }}
-          style={{
-            padding: '10px 12px',
-            fontSize: 'var(--text-sm)',
-            fontWeight: 700,
-            borderRadius: '8px',
-            background: loginMethod === 'email' ? 'var(--color-primary)' : 'transparent',
-            color: loginMethod === 'email' ? '#000000' : 'var(--color-text-secondary)',
-            border: 'none',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-          }}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-            <polyline points="22,6 12,13 2,6" />
-          </svg>
-          Email & Password
-        </button>
-        <button
-          type="button"
-          onClick={() => { setLoginMethod('otp'); setError(''); }}
-          style={{
-            padding: '10px 12px',
-            fontSize: 'var(--text-sm)',
-            fontWeight: 700,
-            borderRadius: '8px',
-            background: loginMethod === 'otp' ? 'var(--color-primary)' : 'transparent',
-            color: loginMethod === 'otp' ? '#000000' : 'var(--color-text-secondary)',
-            border: 'none',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-          }}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
-            <line x1="12" y1="18" x2="12.01" y2="18" />
-          </svg>
-          Mobile OTP
-        </button>
-      </div>
+        <button type="button" onClick={() => setLoginMethod('email')}>Email & Password</button>
+        <button type="button" onClick={() => setLoginMethod('otp')}>Mobile OTP</button>
+      </div> 
+      */}
 
       {error && (
         <div style={{
