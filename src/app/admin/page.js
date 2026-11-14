@@ -3787,7 +3787,8 @@ export default function AdminDashboard() {
                                   <th style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--color-text-secondary)' }}>Agent Name</th>
                                   <th style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--color-text-secondary)' }}>Email</th>
                                   <th style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--color-text-secondary)' }}>Phone Number</th>
-                                  <th style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--color-text-secondary)' }}>Status</th>
+                                  <th style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--color-text-secondary)' }}>Registration Status</th>
+                                  <th style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--color-text-secondary)' }}>Agreement / Signature</th>
                                   <th style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--color-text-secondary)' }}>Referrer</th>
                                   <th style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--color-text-secondary)' }}>Registered Date</th>
                                   <th style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--color-text-secondary)', textAlign: 'right' }}>Action</th>
@@ -3796,7 +3797,7 @@ export default function AdminDashboard() {
                               <tbody>
                                 {filteredPending.length === 0 ? (
                                   <tr>
-                                    <td colSpan={7} style={{ padding: '32px 24px', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
+                                    <td colSpan={8} style={{ padding: '32px 24px', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
                                       No pending agent approvals match search.
                                     </td>
                                   </tr>
@@ -3804,8 +3805,15 @@ export default function AdminDashboard() {
                                   filteredPending.map((sa) => {
                                   const isRejected = sa.profile_update_message && sa.profile_update_message.startsWith('REJECTED:');
                                   const rejectReason = isRejected ? sa.profile_update_message.replace('REJECTED:', '').trim() : '';
+                                  const agentAg = agreements.find(x => x.agent_id === sa.id);
                                   return (
-                                    <tr key={sa.id} style={{ borderBottom: 'var(--border-subtle)' }}>
+                                    <tr 
+                                      key={sa.id} 
+                                      onClick={() => handleSelectAgent(sa)} 
+                                      className="table-row-hover" 
+                                      style={{ borderBottom: 'var(--border-subtle)', cursor: 'pointer' }}
+                                      title="Click to inspect agent profile and agreement"
+                                    >
                                       <td style={{ padding: '16px 24px', fontWeight: 500 }}>
                                         {sa.full_name}
                                         {isRejected && (
@@ -3823,9 +3831,59 @@ export default function AdminDashboard() {
                                           <span className="badge badge-warning" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.2)', padding: '2.5px 6px', borderRadius: '4px', fontSize: '11px' }}>Pending</span>
                                         )}
                                       </td>
+                                      <td style={{ padding: '16px 24px' }} onClick={(e) => e.stopPropagation()}>
+                                        {agentAg ? (
+                                          agentAg.status === 'pending' ? (
+                                            <button
+                                              onClick={() => setReviewingAgreement(agentAg)}
+                                              className="btn btn-primary btn-sm"
+                                              style={{
+                                                padding: '4px 10px',
+                                                fontSize: '11px',
+                                                background: 'var(--gradient-primary)',
+                                                border: 'none',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '5px'
+                                              }}
+                                              title="Click to view and approve uploaded signature"
+                                            >
+                                              ✍️ Review Signature
+                                            </button>
+                                          ) : agentAg.status === 'active' ? (
+                                            <span style={{
+                                              padding: '2px 8px',
+                                              borderRadius: '6px',
+                                              fontSize: '11px',
+                                              fontWeight: 600,
+                                              background: 'rgba(16, 185, 129, 0.12)',
+                                              color: 'var(--color-success)',
+                                              border: '1px solid rgba(16, 185, 129, 0.25)'
+                                            }}>
+                                              ✓ Signed & Active
+                                            </span>
+                                          ) : (
+                                            <span style={{
+                                              padding: '2px 8px',
+                                              borderRadius: '6px',
+                                              fontSize: '11px',
+                                              fontWeight: 600,
+                                              background: 'rgba(239, 68, 68, 0.12)',
+                                              color: '#ef4444',
+                                              border: '1px solid rgba(239, 68, 68, 0.25)'
+                                            }}>
+                                              ✗ Rejected
+                                            </span>
+                                          )
+                                        ) : (
+                                          <span style={{ color: 'var(--color-text-tertiary)', fontSize: '11px' }}>
+                                            Not signed yet
+                                          </span>
+                                        )}
+                                      </td>
                                       <td style={{ padding: '16px 24px' }}>{sa.referred_by || 'None'}</td>
                                       <td style={{ padding: '16px 24px', color: 'var(--color-text-tertiary)' }}>{new Date(sa.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
-                                      <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                                      <td style={{ padding: '16px 24px', textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
                                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                           <button
                                             onClick={() => handleApproveAgent(sa)}
@@ -5589,6 +5647,7 @@ export default function AdminDashboard() {
                                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Agent Name</th>
                                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Phone</th>
                                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Email</th>
+                                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>Signature Preview</th>
                                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>
                                     {agreementFilter === 'revoked' ? 'Date Revoked' : agreementFilter === 'rejected' ? 'Date Rejected' : 'Date Signed/Submitted'}
                                   </th>
@@ -5604,6 +5663,33 @@ export default function AdminDashboard() {
                                     <td style={{ padding: '12px 16px', fontWeight: 500 }}>{a.profiles?.full_name}</td>
                                     <td style={{ padding: '12px 16px', color: 'var(--color-text-secondary)' }}>{a.profiles?.phone}</td>
                                     <td style={{ padding: '12px 16px', color: 'var(--color-text-secondary)', fontSize: 'var(--text-xs)' }}>{a.profiles?.email}</td>
+                                    <td style={{ padding: '8px 16px' }}>
+                                      {a.signature_base64 ? (
+                                        <div
+                                          onClick={() => setReviewingAgreement(a)}
+                                          title="Click to review signature"
+                                          style={{
+                                            background: '#ffffff',
+                                            border: '1px solid var(--border-default)',
+                                            borderRadius: '6px',
+                                            padding: '4px 8px',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            cursor: 'pointer',
+                                            boxShadow: 'var(--shadow-sm)'
+                                          }}
+                                        >
+                                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                                          <img
+                                            src={a.signature_base64.startsWith('data:') || a.signature_base64.startsWith('http') ? a.signature_base64 : `data:image/png;base64,${a.signature_base64}`}
+                                            alt="Signature Preview"
+                                            style={{ maxHeight: '28px', maxWidth: '80px', objectFit: 'contain' }}
+                                          />
+                                        </div>
+                                      ) : (
+                                        <span style={{ fontSize: '11px', color: 'var(--color-text-tertiary)' }}>No signature</span>
+                                      )}
+                                    </td>
                                     <td style={{ padding: '12px 16px', color: 'var(--color-text-secondary)' }}>
                                       {['revoked', 'rejected'].includes(a.status) && a.revoked_at
                                         ? new Date(a.revoked_at).toLocaleDateString('en-IN', { dateStyle: 'medium' })
@@ -6910,42 +6996,99 @@ export default function AdminDashboard() {
                     );
                   }
                   return (
-                    <div style={{ display: 'grid', gap: '12px' }}>
+                    <div style={{ display: 'grid', gap: '14px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-sm)' }}>
                         <span style={{ color: 'var(--color-text-secondary)' }}>Agreement Number:</span>
                         <strong style={{ fontFamily: 'monospace', color: 'var(--color-primary)' }}>{ag.agreement_no}</strong>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-sm)' }}>
                         <span style={{ color: 'var(--color-text-secondary)' }}>Signed On:</span>
-                        <strong style={{ color: 'var(--color-text-primary)' }}>{new Date(ag.signed_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong>
+                        <strong style={{ color: 'var(--color-text-primary)' }}>{new Date(ag.signed_at || ag.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-sm)' }}>
                         <span style={{ color: 'var(--color-text-secondary)' }}>Agreement Status:</span>
                         <span style={{
-                          padding: '2px 8px',
+                          padding: '3px 10px',
                           borderRadius: '8px',
-                          fontSize: '10px',
+                          fontSize: '11px',
                           fontWeight: 800,
-                          background: ag.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                          color: ag.status === 'active' ? 'var(--color-success)' : '#ef4444',
+                          background: ag.status === 'active' 
+                            ? 'rgba(16, 185, 129, 0.15)' 
+                            : ag.status === 'pending'
+                            ? 'rgba(245, 158, 11, 0.15)'
+                            : 'rgba(239, 68, 68, 0.15)',
+                          color: ag.status === 'active' 
+                            ? 'var(--color-success)' 
+                            : ag.status === 'pending'
+                            ? '#f59e0b'
+                            : '#ef4444',
                           textTransform: 'uppercase'
-                        }}>{ag.status}</span>
+                        }}>
+                          {ag.status === 'pending' ? 'Pending Approval' : ag.status}
+                        </span>
                       </div>
+
+                      {/* Uploaded Scanned Signature Display */}
+                      <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '12px' }}>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: '8px' }}>
+                          Uploaded Scanned Signature:
+                        </div>
+                        {ag.signature_base64 ? (
+                          <div style={{
+                            background: '#ffffff',
+                            border: '1px solid var(--border-default)',
+                            borderRadius: '8px',
+                            padding: '12px 16px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            maxWidth: '100%',
+                            boxShadow: 'var(--shadow-sm)'
+                          }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={ag.signature_base64.startsWith('data:') || ag.signature_base64.startsWith('http') ? ag.signature_base64 : `data:image/png;base64,${ag.signature_base64}`}
+                              alt="Agent Signature"
+                              style={{ maxHeight: '75px', maxWidth: '280px', objectFit: 'contain' }}
+                            />
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: '11px', color: '#ef4444' }}>No signature image attached to this agreement.</div>
+                        )}
+                      </div>
+
                       {ag.status !== 'active' && ag.revocation_reason && (
                         <div style={{ borderTop: '1px solid rgba(239, 68, 68, 0.2)', paddingTop: '10px', marginTop: '4px' }}>
-                          <span style={{ color: '#ef4444', fontWeight: 600, fontSize: 'var(--text-xs)' }}>Revocation Reason:</span>
+                          <span style={{ color: '#ef4444', fontWeight: 600, fontSize: 'var(--text-xs)' }}>
+                            {ag.status === 'rejected' ? 'Rejection Reason:' : 'Revocation Reason:'}
+                          </span>
                           <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-xs)', marginTop: '4px', lineHeight: '1.5' }}>{ag.revocation_reason}</p>
                         </div>
                       )}
-                      <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                        <button
-                          onClick={() => window.open(`/agreement-print?id=${selectedAgent.id}`, '_blank')}
-                          className="btn btn-secondary btn-sm"
-                          style={{ margin: 0, flex: 1, padding: '6px 12px', fontSize: 'var(--text-xs)' }}
-                        >
-                          Download / Print PDF
-                        </button>
-                        {ag.status === 'active' ? (
+
+                      {/* Action buttons based on status */}
+                      {ag.status === 'pending' ? (
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                          <button
+                            onClick={() => {
+                              setSelectedAgent(null); // close drawer to open modal
+                              setReviewingAgreement(ag);
+                            }}
+                            className="btn btn-primary btn-sm"
+                            style={{ margin: 0, flex: 1, padding: '8px 14px', fontSize: 'var(--text-xs)', background: 'var(--gradient-primary)', border: 'none' }}
+                          >
+                            ✍️ Review & Approve Signature
+                          </button>
+                        </div>
+                      ) : ag.status === 'active' ? (
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                          <button
+                            onClick={() => window.open(`/agreement-print?id=${selectedAgent.id}`, '_blank')}
+                            className="btn btn-secondary btn-sm"
+                            style={{ margin: 0, flex: 1, padding: '6px 12px', fontSize: 'var(--text-xs)' }}
+                          >
+                            Download / Print PDF
+                          </button>
                           <button
                             onClick={() => {
                               setSelectedAgent(null); // close drawer to reveal modal cleanly
@@ -6956,7 +7099,9 @@ export default function AdminDashboard() {
                           >
                             Revoke
                           </button>
-                        ) : (
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                           <button
                             onClick={async () => {
                               if (!confirm(`Are you sure you want to reactivate agreement ${ag.agreement_no}?`)) return;
@@ -6992,8 +7137,8 @@ export default function AdminDashboard() {
                           >
                             Reactivate
                           </button>
-                        )}
-                      </div>
+                        </div>
+                      )}
                       <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                         <button
                           onClick={async () => {
@@ -8581,14 +8726,23 @@ export default function AdminDashboard() {
                             <div style={{ display: 'grid', gap: '12px' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <span style={{ color: 'var(--color-text-secondary)' }}>Agent Name:</span>
-                                <strong style={{ color: '#fff' }}>{reviewingAgreement.profiles?.full_name}</strong>
+                                <strong style={{ color: '#fff' }}>
+                                  {reviewingAgreement.profiles?.full_name || 
+                                   activeAgents.find(a => a.id === reviewingAgreement.agent_id)?.full_name || 
+                                   pendingAgents.find(a => a.id === reviewingAgreement.agent_id)?.full_name || 
+                                   'Agent'}
+                                </strong>
                               </div>
                               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <span style={{ color: 'var(--color-text-secondary)' }}>
-                                  {reviewingAgreement.profiles?.phone ? 'Phone:' : 'Email:'}
+                                  {(reviewingAgreement.profiles?.phone || pendingAgents.find(a => a.id === reviewingAgreement.agent_id)?.phone) ? 'Phone:' : 'Email:'}
                                 </span>
                                 <span style={{ color: 'var(--color-text-primary)' }}>
-                                  {reviewingAgreement.profiles?.phone || reviewingAgreement.profiles?.email}
+                                  {reviewingAgreement.profiles?.phone || 
+                                   pendingAgents.find(a => a.id === reviewingAgreement.agent_id)?.phone || 
+                                   activeAgents.find(a => a.id === reviewingAgreement.agent_id)?.phone || 
+                                   reviewingAgreement.profiles?.email || 
+                                   'N/A'}
                                 </span>
                               </div>
                               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -8609,11 +8763,22 @@ export default function AdminDashboard() {
                                 justifyContent: 'center',
                                 minHeight: '150px'
                               }}>
-                                <img
-                                  src={reviewingAgreement.signature_base64}
-                                  alt="Uploaded signature"
-                                  style={{ maxWidth: '100%', maxHeight: '180px', objectFit: 'contain' }}
-                                />
+                                {reviewingAgreement.signature_base64 ? (
+                                  /* eslint-disable-next-line @next/next/no-img-element */
+                                  <img
+                                    src={
+                                      reviewingAgreement.signature_base64.startsWith('data:') || reviewingAgreement.signature_base64.startsWith('http')
+                                        ? reviewingAgreement.signature_base64
+                                        : `data:image/png;base64,${reviewingAgreement.signature_base64}`
+                                    }
+                                    alt="Uploaded signature"
+                                    style={{ maxWidth: '100%', maxHeight: '180px', objectFit: 'contain' }}
+                                  />
+                                ) : (
+                                  <p style={{ color: '#ef4444', fontSize: 'var(--text-xs)', margin: 0 }}>
+                                    ⚠️ No signature image found on this agreement record.
+                                  </p>
+                                )}
                               </div>
                             </div>
 
@@ -8713,6 +8878,7 @@ export default function AdminDashboard() {
                                       setReviewingAgreement(null);
                                       setRejectionReason('');
                                       await fetchAgreementsData();
+                                      await fetchAgentsData();
                                     }
                                   } catch (err) {
                                     console.error(err);

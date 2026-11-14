@@ -22,6 +22,10 @@ const calculateAge = (dobString) => {
   return age;
 };
 
+const generatePrivateDocPath = (userId, fieldName, ext) => {
+  return `${userId}/${fieldName}_${Date.now()}.${ext}`;
+};
+
 function AgentSelfiePreview({ selfiePath }) {
   const [signedUrl, setSignedUrl] = useState('');
 
@@ -1046,7 +1050,7 @@ export default function UserDashboard() {
     if (!file || !user) return null;
     const compressedFile = await compressFile(file);
     const ext = compressedFile.name.split('.').pop() || (compressedFile.type === 'application/pdf' ? 'pdf' : 'jpg');
-    const filePath = `${user.id}/${fieldName}_${Date.now()}.${ext}`;
+    const filePath = generatePrivateDocPath(user.id, fieldName, ext);
 
     const { error: uploadErr } = await supabase.storage
       .from('agent-documents')
@@ -4029,22 +4033,40 @@ export default function UserDashboard() {
                                       }
                                     }
                                     
-                                    const { data, error } = await supabase
+                                    const basePayload = {
+                                      agent_id: profile.id,
+                                      agreement_no: agreementNo,
+                                      signature_base64: signatureFile,
+                                      status: 'pending'
+                                    };
+
+                                    // First attempt insert with ip_address (if available)
+                                    let insertResult = await supabase
                                       .from('agent_agreements')
-                                      .insert({
-                                        agent_id: profile.id,
-                                        agreement_no: agreementNo,
-                                        signature_base64: signatureFile,
-                                        status: 'pending',
-                                        ip_address: deviceIp
-                                      })
+                                      .insert(deviceIp ? { ...basePayload, ip_address: deviceIp } : basePayload)
                                       .select()
                                       .single();
+
+                                    // If schema cache or database table does not have ip_address column yet, fallback cleanly without it
+                                    if (insertResult.error && (
+                                      insertResult.error.message?.includes('ip_address') ||
+                                      insertResult.error.message?.includes('schema cache') ||
+                                      insertResult.error.code === 'PGRST204'
+                                    )) {
+                                      console.warn('agent_agreements table missing ip_address column in schema cache, retrying without ip_address...');
+                                      insertResult = await supabase
+                                        .from('agent_agreements')
+                                        .insert(basePayload)
+                                        .select()
+                                        .single();
+                                    }
+
+                                    const { data, error } = insertResult;
 
                                     if (error) {
                                       setSigningError(error.message);
                                     } else {
-                                      setSigningSuccess('Agreement signed and generated successfully!');
+                                      setSigningSuccess('Agreement signed and generated successfully! Submitted for administrator review.');
                                       setAgreement(data);
 
                                       // Auto-resolve any active/pending regen request in the DB

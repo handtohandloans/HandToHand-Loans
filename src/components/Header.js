@@ -555,6 +555,20 @@ export default function Header() {
     };
   }, []);
 
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+    setMobileLoansOpen(false);
+    setMobileServicesOpen(false);
+    setMobileServicesLoansOpen(false);
+    setMobileResourcesOpen(false);
+    setMobileEmiOpen(false);
+    setProfileDropdownOpen(false);
+  };
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
   // Auto-close open menus on route change
   useEffect(() => {
     closeMobileMenu();
@@ -588,20 +602,6 @@ export default function Header() {
     } catch (err) {
       console.error('Logout error:', err);
     }
-  };
-
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
-
-  const closeMobileMenu = () => {
-    setMobileMenuOpen(false);
-    setMobileLoansOpen(false);
-    setMobileServicesOpen(false);
-    setMobileServicesLoansOpen(false);
-    setMobileResourcesOpen(false);
-    setMobileEmiOpen(false);
-    setProfileDropdownOpen(false);
   };
 
   const isEmiActive =
