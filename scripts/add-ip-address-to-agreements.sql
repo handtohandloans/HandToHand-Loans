@@ -9,3 +9,4 @@ ADD COLUMN IF NOT EXISTS ip_address TEXT;
 
 -- 2. Notify PostgREST to immediately reload its schema cache
 NOTIFY pgrst, 'reload schema';
+

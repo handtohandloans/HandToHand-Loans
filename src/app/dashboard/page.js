@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BankLogo from '@/components/BankLogo';
+import AgentIdCardModal from '@/components/AgentIdCardModal';
 import { cacheUserProfile, getCachedUserProfile } from '@/lib/cookieCache';
 import { compressFile, compressToBase64 } from '@/lib/compressFile';
 
@@ -285,6 +286,7 @@ export default function UserDashboard() {
   const [signingError, setSigningError] = useState('');
   const [signingSuccess, setSigningSuccess] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [showIdCardModal, setShowIdCardModal] = useState(false);
 
   // Agreement Regeneration Request State
   const [regenRequest, setRegenRequest] = useState(null); // latest regen request for this agent
@@ -2202,6 +2204,7 @@ export default function UserDashboard() {
                           {activeTab === 'subagents' && 'Sub-agents'}
                           {activeTab === 'leaderboard' && 'Partner Leaderboard'}
                           {activeTab === 'agreement' && 'Agent Agreement'}
+                          {activeTab === 'id_card' && 'Digital ID Card'}
                           {activeTab === 'updates' && 'Updates'}
                         </span>
                         <span style={{ fontSize: '12px' }}>{isMobileTabSelectOpen ? '▲ Close' : '▼ Menu'}</span>
@@ -2237,6 +2240,7 @@ export default function UserDashboard() {
                             { id: 'subagents', label: 'Sub-agents' },
                             { id: 'leaderboard', label: 'Partner Leaderboard' },
                             { id: 'agreement', label: 'Agent Agreement' },
+                            ...(agreement ? [{ id: 'id_card', label: '🪪 Digital ID Card' }] : []),
                             { id: 'updates', label: `Updates${agentUpdates.length > 0 ? ` (${agentUpdates.length})` : ''}` },
                           ].map((tab) => (
                             <button
@@ -2321,6 +2325,15 @@ export default function UserDashboard() {
                             </svg>
                           )
                         },
+                        ...(agreement ? [{
+                          id: 'id_card',
+                          label: 'Digital ID Card',
+                          icon: (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                              <rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><line x1="15" y1="8" x2="17" y2="8" /><line x1="15" y1="12" x2="17" y2="12" /><line x1="7" y1="16" x2="17" y2="16" />
+                            </svg>
+                          )
+                        }] : []),
                         { 
                           id: 'updates', 
                           label: agentUpdates.length > 0 ? `Updates (${agentUpdates.length})` : 'Updates',
@@ -2445,6 +2458,28 @@ export default function UserDashboard() {
                                   }}>
                                     {profile?.agent_code || 'UNASSIGNED'}
                                   </span>
+                                  {agreement && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowIdCardModal(true)}
+                                      className="btn btn-sm"
+                                      style={{
+                                        padding: '4px 12px',
+                                        background: 'rgba(16, 185, 129, 0.15)',
+                                        color: '#10b981',
+                                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                                        borderRadius: '8px',
+                                        fontSize: '11px',
+                                        fontWeight: 700,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        cursor: 'pointer'
+                                      }}
+                                    >
+                                      🪪 Digital ID Card
+                                    </button>
+                                  )}
                                 </div>
                               </div>
 
@@ -3424,6 +3459,60 @@ export default function UserDashboard() {
                             ) : agreement ? (
                               /* Signed agreement display */
                               <div style={{ display: 'grid', gap: '16px' }}>
+                                {/* Digital ID Card Banner */}
+                                <div style={{
+                                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.15) 100%)',
+                                  border: '1px solid rgba(16, 185, 129, 0.28)',
+                                  borderRadius: '12px',
+                                  padding: '16px 20px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  flexWrap: 'wrap',
+                                  gap: '12px'
+                                }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>
+                                      🪪
+                                    </div>
+                                    <div>
+                                      <div style={{ color: '#10b981', fontWeight: 700, fontSize: 'var(--text-sm)' }}>
+                                        Digital Relationship Manager ID Card
+                                      </div>
+                                      <div style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-xs)', marginTop: '2px' }}>
+                                        Official digital ID card with photo, DSA code & seal is ready. Download as PDF or high-resolution image.
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowIdCardModal(true)}
+                                      className="btn btn-primary btn-sm"
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '8px 16px',
+                                        background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                                        border: 'none',
+                                        fontWeight: 700,
+                                        fontSize: 'var(--text-xs)'
+                                      }}
+                                    >
+                                      🪪 Generate ID Card
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => window.open('/agent-id-card', '_blank')}
+                                      className="btn btn-secondary btn-sm"
+                                      style={{ padding: '8px 12px', fontSize: 'var(--text-xs)' }}
+                                    >
+                                      🔗 Full Studio
+                                    </button>
+                                  </div>
+                                </div>
+
                                 <div style={{
                                   background: agreement.status === 'active' ? 'rgba(16, 185, 129, 0.05)' : agreement.status === 'pending' ? 'rgba(245, 158, 11, 0.05)' : 'rgba(239, 68, 68, 0.05)',
                                   border: agreement.status === 'active' ? '1px solid rgba(16, 185, 129, 0.2)' : agreement.status === 'pending' ? '1px solid rgba(245, 158, 11, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)',
@@ -3580,6 +3669,24 @@ export default function UserDashboard() {
                                     >
                                       📄 View / Download Agreement PDF
                                     </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowIdCardModal(true)}
+                                      className="btn btn-success"
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        padding: '12px 24px',
+                                        background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                                        color: '#ffffff',
+                                        border: 'none',
+                                        fontWeight: 600,
+                                        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)'
+                                      }}
+                                    >
+                                      🪪 Generate & Download ID Card
+                                    </button>
                                     {/* Request Re-sign button — only if no pending/approved request */}
                                     {(!regenRequest || ['rejected', 'resolved'].includes(regenRequest.status)) && (
                                       <button
@@ -3600,16 +3707,40 @@ export default function UserDashboard() {
                                     borderRadius: '10px',
                                     padding: '14px 16px',
                                     display: 'flex',
-                                    alignItems: 'center',
+                                    flexDirection: 'column',
                                     gap: '10px',
                                     marginTop: '8px'
                                   }}>
-                                    <span style={{ fontSize: '18px' }}>⏳</span>
-                                    <div>
-                                      <div style={{ color: '#f59e0b', fontWeight: 600, fontSize: 'var(--text-xs)' }}>Agreement Generation Pending Approval</div>
-                                      <div style={{ color: 'var(--color-text-tertiary)', fontSize: '11px', marginTop: '2px', lineHeight: 1.4 }}>
-                                        Your uploaded signature is pending review by the administrator. Once approved, your official agreement will be generated and made available here for download.
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                      <span style={{ fontSize: '18px' }}>⏳</span>
+                                      <div>
+                                        <div style={{ color: '#f59e0b', fontWeight: 600, fontSize: 'var(--text-xs)' }}>Agreement Generation Pending Approval</div>
+                                        <div style={{ color: 'var(--color-text-tertiary)', fontSize: '11px', marginTop: '2px', lineHeight: 1.4 }}>
+                                          Your uploaded signature is pending review by the administrator. Once approved, your official agreement will be generated and made available here for download.
+                                        </div>
                                       </div>
+                                    </div>
+                                    <div>
+                                      <button
+                                        type="button"
+                                        onClick={() => setShowIdCardModal(true)}
+                                        className="btn btn-sm"
+                                        style={{
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '6px',
+                                          padding: '7px 16px',
+                                          background: 'rgba(16, 185, 129, 0.15)',
+                                          color: '#10b981',
+                                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                                          borderRadius: '8px',
+                                          fontSize: '12px',
+                                          fontWeight: 600,
+                                          cursor: 'pointer'
+                                        }}
+                                      >
+                                        🪪 Preview Digital ID Card
+                                      </button>
                                     </div>
                                   </div>
                                 )}
@@ -4148,7 +4279,32 @@ export default function UserDashboard() {
                                   </div>
 
                                   {signingError && <div style={{ padding: '10px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '6px', fontSize: 'var(--text-xs)', color: 'var(--color-error)' }}>{signingError}</div>}
-                                  {signingSuccess && <div style={{ padding: '10px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '6px', fontSize: 'var(--text-xs)', color: 'var(--color-success)' }}>✓ {signingSuccess}</div>}
+                                                                     {signingSuccess && (
+                                     <div style={{ padding: '12px 16px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: '8px', fontSize: 'var(--text-xs)', color: 'var(--color-success)' }}>
+                                       <div style={{ fontWeight: 600 }}>✓ {signingSuccess}</div>
+                                       <button
+                                         type="button"
+                                         onClick={() => setShowIdCardModal(true)}
+                                         className="btn btn-sm"
+                                         style={{
+                                           marginTop: '8px',
+                                           padding: '6px 14px',
+                                           background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                                           color: '#ffffff',
+                                           border: 'none',
+                                           borderRadius: '6px',
+                                           fontWeight: 700,
+                                           fontSize: '11px',
+                                           display: 'inline-flex',
+                                           alignItems: 'center',
+                                           gap: '6px',
+                                           cursor: 'pointer'
+                                         }}
+                                       >
+                                         🪪 Generate & View Digital ID Card Now
+                                       </button>
+                                     </div>
+                                   )}
 
                                   <button
                                     type="submit"
@@ -4164,6 +4320,93 @@ export default function UserDashboard() {
                           </div>
                         );
                       })()}
+
+                      {/* TAB 7: Digital ID Card */}
+                      {activeTab === 'id_card' && (
+                        <div className="form-card" style={{ display: 'grid', gap: '24px', backdropFilter: 'blur(20px)', border: 'var(--border-light)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', borderBottom: 'var(--border-subtle)', paddingBottom: '14px' }}>
+                            <div>
+                              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--text-xl)', fontWeight: 700, margin: 0 }}>
+                                🪪 Digital Relationship Manager ID Card
+                              </h2>
+                              <p style={{ margin: '4px 0 0', fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
+                                Official HandToHand Loans identity credential for {profile?.full_name}.
+                              </p>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <button
+                                onClick={() => setShowIdCardModal(true)}
+                                className="btn btn-primary"
+                                style={{
+                                  padding: '10px 20px',
+                                  background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                                  border: 'none',
+                                  fontWeight: 700,
+                                  fontSize: 'var(--text-xs)',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px'
+                                }}
+                              >
+                                🪪 Open ID Card Studio
+                              </button>
+                              <button
+                                onClick={() => window.open('/agent-id-card', '_blank')}
+                                className="btn btn-secondary"
+                                style={{ padding: '10px 16px', fontSize: 'var(--text-xs)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                              >
+                                🔗 Open Full Page
+                              </button>
+                            </div>
+                          </div>
+
+                          <div style={{
+                            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.15) 100%)',
+                            border: '1px solid rgba(16, 185, 129, 0.25)',
+                            borderRadius: '12px',
+                            padding: '32px 24px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            textAlign: 'center',
+                            gap: '16px'
+                          }}>
+                            <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>
+                              🪪
+                            </div>
+                            <div style={{ maxWidth: '520px' }}>
+                              <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 700, color: '#ffffff' }}>
+                                Official HandToHand ID Card Ready
+                              </h3>
+                              <p style={{ margin: 0, fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+                                Your digital ID card has been issued with your DSA code <strong>{profile?.agent_code || agreement?.agreement_no}</strong>, photo, verified signature, and official HandToHand Loans company seal. Download in vector PDF or high-resolution PNG format.
+                              </p>
+                            </div>
+                            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '8px' }}>
+                              <button
+                                onClick={() => setShowIdCardModal(true)}
+                                className="btn btn-primary"
+                                style={{
+                                  padding: '12px 24px',
+                                  background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                                  border: 'none',
+                                  fontWeight: 700,
+                                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)'
+                                }}
+                              >
+                                🪪 View & Download ID Card (PDF / Image)
+                              </button>
+                              <button
+                                onClick={() => window.open('/agent-id-card?print=true', '_blank')}
+                                className="btn btn-secondary"
+                                style={{ padding: '12px 20px', fontWeight: 600 }}
+                              >
+                                🖨️ Direct Print ID Card
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       {/* TAB 3: Earnings & Payment History */}
                       {activeTab === 'earnings' && (
@@ -5623,6 +5866,14 @@ export default function UserDashboard() {
           </div>
         );
       })()}
+      {/* Agent Digital ID Card Modal */}
+      <AgentIdCardModal
+        isOpen={showIdCardModal}
+        onClose={() => setShowIdCardModal(false)}
+        profile={profile}
+        agreement={agreement}
+      />
+
       <Footer />
     </>
   );
