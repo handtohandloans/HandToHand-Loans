@@ -250,9 +250,9 @@ export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      return params.get('tab') || 'profile';
+      return params.get('tab') || 'overview';
     }
-    return 'profile';
+    return 'overview';
   });
 
   // Sync tab state with URL search param on load/refresh (deferred to avoid synchronous state transitions in effect)
@@ -1746,7 +1746,7 @@ export default function UserDashboard() {
 
   return (
     <>
-      <Header />
+      {profile?.role !== 'agent' && <Header />}
 
       {/* Toast Popup Notification */}
       {toastMessage && (
@@ -1900,9 +1900,9 @@ export default function UserDashboard() {
           }
         }
       `}</style>
-      <main className="main-content">
-        <section className="dashboard-section">
-          <div className="container" style={{ maxWidth: '1600px', width: '100%', margin: '0 auto' }}>
+      <main className={profile?.role === 'agent' ? '' : 'main-content'} style={profile?.role === 'agent' ? { padding: 0, margin: 0, backgroundColor: '#f3f4f6' } : {}}>
+        <section className={profile?.role === 'agent' ? '' : 'dashboard-section'} style={profile?.role === 'agent' ? { padding: 0, margin: 0 } : {}}>
+          <div className={profile?.role === 'agent' ? '' : 'container'} style={profile?.role === 'agent' ? { padding: 0, margin: 0, maxWidth: '100%' } : { maxWidth: '1600px', width: '100%', margin: '0 auto' }}>
             {loading ? (
               <div className="text-center" style={{ padding: '80px 0' }}>
                 <div className="loading-spinner" style={{ margin: '0 auto' }}></div>
@@ -1910,10 +1910,8 @@ export default function UserDashboard() {
               </div>
             ) : (
               <>
-                {/* Dashboard Header Banner */}
-                {profile?.role === 'agent' ? (
-                  <DashboardSocialHeader profile={profile} onSignOut={handleSignOut} />
-                ) : (
+                {/* Dashboard Header Banner for Regular Users */}
+                {profile?.role !== 'agent' && (
                   <div className="dashboard-header-card">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                       <div style={{
@@ -2174,9 +2172,10 @@ export default function UserDashboard() {
                   })()
                 ) : (
                   /* ========================================================
-                     AGENT PARTNER DASHBOARD VIEW (GLASS TABS)
+                     AGENT PARTNER DASHBOARD VIEW (EXACT MATCHING DESIGN)
                      ======================================================== */
-                  <div className="tabs-container">
+                  <DashboardSocialHeader profile={profile} onSignOut={handleSignOut} setActiveTab={setActiveTab} activeTab={activeTab}>
+                    <div className="tabs-container">
                     {/* MOBILE TABS MENU for Active Agent */}
                     <div className="mobile-tabs-menu" style={{ marginBottom: '20px', position: 'relative' }}>
                       <button
@@ -4810,7 +4809,8 @@ export default function UserDashboard() {
 
                     </div>
                   </div>
-                )}
+                </DashboardSocialHeader>
+              )}
               </>
             )}
           </div>
@@ -5873,7 +5873,7 @@ export default function UserDashboard() {
         agreement={agreement}
       />
 
-      <Footer />
+      {profile?.role !== 'agent' && <Footer />}
     </>
   );
 }
