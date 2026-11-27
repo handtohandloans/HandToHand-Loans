@@ -8,7 +8,6 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BankLogo from '@/components/BankLogo';
 import AgentIdCardModal from '@/components/AgentIdCardModal';
-import DashboardSocialHeader from '@/components/DashboardSocialHeader';
 import { cacheUserProfile, getCachedUserProfile } from '@/lib/cookieCache';
 import { compressFile, compressToBase64 } from '@/lib/compressFile';
 
@@ -250,9 +249,9 @@ export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      return params.get('tab') || 'overview';
+      return params.get('tab') || 'profile';
     }
-    return 'overview';
+    return 'profile';
   });
 
   // Sync tab state with URL search param on load/refresh (deferred to avoid synchronous state transitions in effect)
@@ -1746,7 +1745,7 @@ export default function UserDashboard() {
 
   return (
     <>
-      {profile?.role !== 'agent' && <Header />}
+      <Header />
 
       {/* Toast Popup Notification */}
       {toastMessage && (
@@ -1900,9 +1899,9 @@ export default function UserDashboard() {
           }
         }
       `}</style>
-      <main className={profile?.role === 'agent' ? '' : 'main-content'} style={profile?.role === 'agent' ? { padding: 0, margin: 0, backgroundColor: '#f3f4f6' } : {}}>
-        <section className={profile?.role === 'agent' ? '' : 'dashboard-section'} style={profile?.role === 'agent' ? { padding: 0, margin: 0 } : {}}>
-          <div className={profile?.role === 'agent' ? '' : 'container'} style={profile?.role === 'agent' ? { padding: 0, margin: 0, maxWidth: '100%' } : { maxWidth: '1600px', width: '100%', margin: '0 auto' }}>
+      <main className="main-content">
+        <section className="dashboard-section">
+          <div className="container" style={{ maxWidth: '1600px', width: '100%', margin: '0 auto' }}>
             {loading ? (
               <div className="text-center" style={{ padding: '80px 0' }}>
                 <div className="loading-spinner" style={{ margin: '0 auto' }}></div>
@@ -1910,58 +1909,62 @@ export default function UserDashboard() {
               </div>
             ) : (
               <>
-                {/* Dashboard Header Banner for Regular Users */}
-                {profile?.role !== 'agent' && (
-                  <div className="dashboard-header-card">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                      <div style={{
-                        width: '64px',
-                        height: '64px',
-                        borderRadius: '50%',
-                        background: (profileFormData.avatar || profile?.avatar) ? 'transparent' : 'var(--gradient-primary)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 700,
-                        fontSize: 'var(--text-xl)',
-                        color: '#fff',
-                        overflow: 'hidden',
-                        border: (profileFormData.avatar || profile?.avatar) ? '2px solid rgba(139, 92, 246, 0.5)' : 'none',
-                        boxShadow: (profileFormData.avatar || profile?.avatar) ? '0 0 16px rgba(139, 92, 246, 0.3)' : 'none',
-                        flexShrink: 0
-                      }}>
-                        {(profileFormData.avatar || profile?.avatar) ? (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img src={profileFormData.avatar || profile?.avatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        ) : (
-                          getInitials(profile?.full_name || user?.email)
-                        )}
-                      </div>
-                      <div>
-                        <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--text-2xl)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          Hello, {profile?.full_name || 'User'}
-                          {profile?.demoted_at && (
-                            <span className="badge badge-error" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', fontSize: '10px', verticalAlign: 'middle' }}>
-                              PARTNERSHIP REVOKED
-                            </span>
-                          )}
-                        </h1>
-                        <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
-                          {profile?.email} 
-                          {profile?.demoted_at && ` • Former Agent Code: ${profile?.agent_code}`}
-                        </p>
-                      </div>
+                {/* Dashboard Header Banner */}
+                <div className="dashboard-header-card">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <div style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      background: (profileFormData.avatar || profile?.avatar) ? 'transparent' : 'var(--gradient-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 700,
+                      fontSize: 'var(--text-xl)',
+                      color: '#fff',
+                      overflow: 'hidden',
+                      border: (profileFormData.avatar || profile?.avatar) ? '2px solid rgba(139, 92, 246, 0.5)' : 'none',
+                      boxShadow: (profileFormData.avatar || profile?.avatar) ? '0 0 16px rgba(139, 92, 246, 0.3)' : 'none',
+                      flexShrink: 0
+                    }}>
+                      {(profileFormData.avatar || profile?.avatar) ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={profileFormData.avatar || profile?.avatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        getInitials(profile?.full_name || user?.email)
+                      )}
                     </div>
-                    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                      <Link href="/check" className="btn btn-primary">
-                        + Check New Eligibility
-                      </Link>
-                      <button onClick={handleSignOut} className="btn btn-secondary">
-                        Sign Out
-                      </button>
+                    <div>
+                      <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--text-2xl)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        Hello, {profile?.full_name || 'User'}
+                        {profile?.role === 'agent' && (
+                          <span className="badge badge-primary" style={{ background: 'var(--gradient-primary)', fontSize: '10px', verticalAlign: 'middle', color: '#ffffff' }}>
+                            OFFICIAL PARTNER
+                          </span>
+                        )}
+                        {profile?.demoted_at && (
+                          <span className="badge badge-error" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', fontSize: '10px', verticalAlign: 'middle' }}>
+                            PARTNERSHIP REVOKED
+                          </span>
+                        )}
+                      </h1>
+                      <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
+                        {profile?.email} 
+                        {profile?.role === 'agent' && `• Agent Code: ${profile?.agent_code}`}
+                        {profile?.demoted_at && ` • Former Agent Code: ${profile?.agent_code}`}
+                      </p>
                     </div>
                   </div>
-                )}
+                  <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                    <Link href="/check" className="btn btn-primary">
+                      {profile?.role === 'agent' ? 'Check Client Eligibility' : '+ Check New Eligibility'}
+                    </Link>
+                    <button onClick={handleSignOut} className="btn btn-secondary">
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
 
                 {/* Main Content Grid */}
                 {profile?.role === 'user' ? (
@@ -2172,10 +2175,9 @@ export default function UserDashboard() {
                   })()
                 ) : (
                   /* ========================================================
-                     AGENT PARTNER DASHBOARD VIEW (EXACT MATCHING DESIGN)
+                     AGENT PARTNER DASHBOARD VIEW (GLASS TABS)
                      ======================================================== */
-                  <DashboardSocialHeader profile={profile} onSignOut={handleSignOut} setActiveTab={setActiveTab} activeTab={activeTab}>
-                    <div className="tabs-container">
+                  <div className="tabs-container">
                     {/* MOBILE TABS MENU for Active Agent */}
                     <div className="mobile-tabs-menu" style={{ marginBottom: '20px', position: 'relative' }}>
                       <button
@@ -4809,8 +4811,7 @@ export default function UserDashboard() {
 
                     </div>
                   </div>
-                </DashboardSocialHeader>
-              )}
+                )}
               </>
             )}
           </div>
@@ -5873,7 +5874,7 @@ export default function UserDashboard() {
         agreement={agreement}
       />
 
-      {profile?.role !== 'agent' && <Footer />}
+      <Footer />
     </>
   );
 }

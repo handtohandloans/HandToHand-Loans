@@ -92,12 +92,11 @@ npm run start
 
 ## 🌐 Brand Channels
 * 🎥 [YouTube Channel](https://www.youtube.com/@HANDTOHANDLOANS)
-* 📸 [Instagram Page](http://instagram.com/handtohandloans/)
-* 📘 [Facebook Page](https://www.facebook.com/profile.php?id=61595287053590)
-* 💼 [LinkedIn Page](https://in.linkedin.com/company/handtohandloans)
-* 🟢 [WhatsApp Channel](https://whatsapp.com/channel/0029VbBqKqeAojYmvMmkzE3i)
-* 📢 [Telegram Channel](https://web.telegram.org/k/#@handtohandloans)
+* 📸 [Instagram Page](https://www.instagram.com/handtohandloans)
+* 📘 [Facebook Page](https://www.facebook.com/handtohanloans)
 * 🐦 [Twitter (X)](https://x.com/HandToHandLoans)
+* 📢 [Telegram Channel](https://t.me/handtohandloans)
+* 💼 [LinkedIn Page](https://linkedin.com/company/handtohandloansofficial)
 
 ---
 © 2026 HandToHand Loans. All rights reserved. Built with precision for financial empowerment.
